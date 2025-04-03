@@ -1,5 +1,5 @@
 # coding: utf-8
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, text
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, text
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -36,6 +36,7 @@ class User(Base):
     last_name = Column(String, nullable=False)
     email = Column(String, nullable=False)
     password = Column(String, nullable=False)
+    permission = Column(Text, nullable=False)
 
 
 class GroupChat(Base):
@@ -45,9 +46,20 @@ class GroupChat(Base):
     image_id = Column(ForeignKey('files.id'))
     chat_name = Column(Text, nullable=False)
     creation_date = Column(DateTime, nullable=False)
-    description = Column(Text, nullable=False)
+    description = Column(Text)
 
     image = relationship('File')
+
+
+class Label(Base):
+    __tablename__ = 'labels'
+
+    id = Column(Integer, primary_key=True, server_default=text("nextval('labels_id_seq'::regclass)"))
+    project_id = Column(ForeignKey('projects.id'), nullable=False)
+    label_name = Column(Text, nullable=False)
+    label_hex_color = Column(Text, nullable=False)
+
+    project = relationship('Project')
 
 
 class Notification(Base):
@@ -92,7 +104,7 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True, server_default=text("nextval('tasks_id_seq'::regclass)"))
     project_id = Column(ForeignKey('projects.id'), nullable=False)
-    task_name = Column(String, nullable=False)
+    task_title = Column(String, nullable=False)
     task_description = Column(Text, nullable=False)
     percentage_complete = Column(Float, nullable=False, server_default=text("0"))
     date_created = Column(DateTime, nullable=False)
@@ -109,7 +121,7 @@ class Template(Base):
     user_id = Column(ForeignKey('users.id'), nullable=False)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=False)
-    labels = Column(Text, nullable=False)
+    is_microtask = Column(Boolean, nullable=False)
 
     user = relationship('User')
 
@@ -130,6 +142,39 @@ class ChatLog(Base):
     sender = relationship('User')
 
 
+class LabelsProjectsUser(Base):
+    __tablename__ = 'labels_projects_users'
+
+    id = Column(Integer, primary_key=True, server_default=text("nextval('labels_projects_users_id_seq'::regclass)"))
+    labels_id = Column(ForeignKey('labels.id'), nullable=False, server_default=text("nextval('labels_projects_users_labels_id_seq'::regclass)"))
+    projects_users_id = Column(ForeignKey('projects_users.id'), nullable=False, server_default=text("nextval('labels_projects_users_projects_users_id_seq'::regclass)"))
+
+    labels = relationship('Label')
+    projects_users = relationship('ProjectsUser')
+
+
+class LabelsTask(Base):
+    __tablename__ = 'labels_tasks'
+
+    id = Column(Integer, primary_key=True, server_default=text("nextval('labels_tasks_id_seq'::regclass)"))
+    labels_id = Column(ForeignKey('labels.id'), nullable=False, server_default=text("nextval('labels_tasks_labels_id_seq'::regclass)"))
+    tasks_id = Column(ForeignKey('tasks.id'), nullable=False, server_default=text("nextval('labels_tasks_tasks_id_seq'::regclass)"))
+
+    labels = relationship('Label')
+    tasks = relationship('Task')
+
+
+class LabelsTemplate(Base):
+    __tablename__ = 'labels_templates'
+
+    id = Column(Integer, primary_key=True, server_default=text("nextval('labels_templates_id_seq'::regclass)"))
+    labels_id = Column(ForeignKey('labels.id'), nullable=False, server_default=text("nextval('labels_templates_labels_id_seq'::regclass)"))
+    templates_id = Column(ForeignKey('templates.id'), nullable=False, server_default=text("nextval('labels_templates_templates_id_seq'::regclass)"))
+
+    labels = relationship('Label')
+    templates = relationship('Template')
+
+
 class Microtask(Base):
     __tablename__ = 'microtasks'
 
@@ -140,7 +185,7 @@ class Microtask(Base):
     percentage_complete = Column(Float, nullable=False, server_default=text("0"))
     date_created = Column(DateTime, nullable=False)
     status = Column(Text, nullable=False)
-    reviewed_by_pm = Column(Boolean, nullable=False)
+    due_date = Column(DateTime)
 
     task = relationship('Task')
 
@@ -178,6 +223,31 @@ class TemplatesFile(Base):
 
     files = relationship('File')
     templates = relationship('Template')
+
+
+class ActivityLog(Base):
+    __tablename__ = 'activity_log'
+
+    id = Column(BigInteger, primary_key=True, server_default=text("nextval('activity_log_id_seq'::regclass)"))
+    user_id = Column(ForeignKey('users.id'), nullable=False)
+    object_user_id = Column(ForeignKey('users.id'))
+    project_id = Column(ForeignKey('projects.id'))
+    task_id = Column(ForeignKey('tasks.id'))
+    microtask_id = Column(ForeignKey('microtasks.id'))
+    file_id = Column(ForeignKey('files.id'))
+    groupchat_id = Column(ForeignKey('group_chats.id'))
+    timestamp = Column(DateTime, nullable=False)
+    action = Column(Text, nullable=False)
+    context = Column(Text, nullable=False)
+    changes = Column(Text)
+
+    file = relationship('File')
+    groupchat = relationship('GroupChat')
+    microtask = relationship('Microtask')
+    object_user = relationship('User', primaryjoin='ActivityLog.object_user_id == User.id')
+    project = relationship('Project')
+    task = relationship('Task')
+    user = relationship('User', primaryjoin='ActivityLog.user_id == User.id')
 
 
 class ChatLogsFile(Base):
