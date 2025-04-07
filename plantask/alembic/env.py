@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from plantask.models.models import Base
+from plantask.models.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -3,9 +3,39 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import configure_mappers
 import zope.sqlalchemy
 
-# Import or define all models here to ensure they are attached to the
-# ``Base.metadata`` prior to any initialization routines.
-from .mymodel import MyModel  # flake8: noqa
+"""
+    Imports all models here to ensure their metadata is available
+"""
+# User-related
+from .user import User
+
+# Project-related
+from .project import Project, ProjectsUser, ProjectsUsersMicrotask
+
+# Task-related
+from .task import Task, TaskComment, TasksFile, TaskCommentsFile
+
+# Microtask-related
+from .microtask import Microtask, MicrotaskComment, MicrotasksFile, MicrotaskCommentsFile
+
+# File-related
+from .file import File
+
+# Chat-related
+from .chat import GroupChat, PersonalChat, ChatLog, ChatLogsFile
+
+# Label-related
+from .label import Label, LabelsTask, LabelsTemplate, LabelsProjectsUser
+
+# Notification
+from .notification import Notification
+
+# Templates (if needed separately)
+from .template import Template, TemplatesFile
+
+# Activity log
+from .activity_log import ActivityLog
+
 
 # Run ``configure_mappers`` after defining all of the models to ensure
 # all relationships can be setup.
