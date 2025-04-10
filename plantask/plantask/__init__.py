@@ -2,7 +2,7 @@ from pyramid.config import Configurator
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.security import Allow
-from models.user import User
+from .models.user import User
 
 class RootFactory:
     """
@@ -20,15 +20,6 @@ def main(global_config, **settings):
     secretkey = "sosecretwow"
 
     """
-    Authentication and Authorization policies
-    """
-    authn_policy = AuthTktAuthenticationPolicy(secretkey, hashalg='sha512', cookie_name='auth_tkt', callback=groupfinder)
-    authz_policy = ACLAuthorizationPolicy()
-
-    config.set_authentication_policy(authn_policy)
-    config.set_authorization_policy(authz_policy)
-
-    """
     Groupfinder to find user role, either admin or user
     """
     def groupfinder(userid, request):
@@ -37,11 +28,19 @@ def main(global_config, **settings):
             return [f'role:{user.permission}']  # role:admin, role:pm, etc.
         return []
 
-
+    """
+    Authentication and Authorization policies
+    """
+    authn_policy = AuthTktAuthenticationPolicy(secretkey, hashalg='sha512', cookie_name='auth_tkt', callback=groupfinder)
+    authz_policy = ACLAuthorizationPolicy()
 
     with Configurator(settings=settings) as config:
+        config.set_authentication_policy(authn_policy)
+        config.set_authorization_policy(authz_policy)
         config.include('pyramid_jinja2')
         config.include('.routes')
         config.include('.models')
+        config.add_static_view(name='static', path='plantask:static')
+
         config.scan()
     return config.make_wsgi_app()
