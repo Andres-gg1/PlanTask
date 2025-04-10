@@ -2,7 +2,7 @@ from models import User
 from pyramid.response import Response
 from pyramid.view import view_config
 from sqlalchemy.orm import or_
-import argon2
+from argon2 import PasswordHasher
 from pyramid.security import remember
 
 from pyramid.view import view_config
@@ -27,5 +27,5 @@ def login_user(request):
             headers = remember(request, str(user.id))
             request.session['role'] = user.permission
             request.session['expires_at'] = datetime.now + timedelta(minutes=30)
-            return HTTPFound(location=request.route_url('////'), headers=headers)
+            return HTTPFound(location=request.route_url('////'), headers=headers)A
         return Response(json_body={})
