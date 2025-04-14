@@ -3,6 +3,11 @@ from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.security import Allow
 from .models.user import User
+from pyramid.httpexceptions import HTTPForbidden
+from pyramid.view import forbidden_view_config
+from pyramid.response import Response
+from pyramid.httpexceptions import HTTPFound
+
 
 class RootFactory:
     """
@@ -12,6 +17,15 @@ class RootFactory:
         (Allow, 'role:admin', 'admin'),
         (Allow, 'role:user', 'user')
     ]
+
+@forbidden_view_config()
+def forbidden_view(request):
+    if not request.authenticated_userid:
+        # User not auth -> redirect to login
+        return HTTPFound(location=request.route_url('login'))
+    else:
+        # User is auth but does not have permission -> permissions invalid 
+        return Response("Lol u dont >:(", status=403)
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.

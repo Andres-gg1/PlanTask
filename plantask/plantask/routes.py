@@ -4,3 +4,6 @@ def includeme(config):
     config.add_route('login', '/login')
     config.add_route('validate_ip', '/validate-ip')
     config.add_route('validate_code', '/validate-code')
+    config.add_route('register', '/register')
+    
+    

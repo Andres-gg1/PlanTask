@@ -27,14 +27,13 @@ def login_user(request):
             
             psw_hasher = argon2.PasswordHasher()
 
-            username = data.get('username')
             email = data.get('email')
             password = data.get('password')
-            ping_code = data.get('ping_code')
 
             ip_address = request.remote_addr
 
-            if not all([username, email, password, ping_code]):
+            if not all([email, password]):
+                print(email, password)
                 return Response(json_body={"error": "Missing required fields"}, status=403)
             
             if not email.endswith("@kochcc.com"):
@@ -43,16 +42,16 @@ def login_user(request):
                 # Save -> IP address and email to a database for further analysis
                 return Response(json_body={"error": "Invalid email domain"}, status=403)
 
-            if ip_address not in TRUSTED_IPS:
-                #ADD
-                # Log the untrusted IP address attempt
-                # Save -> IP address and (maybe) machine name to a database for further analysis
-                return Response(json_body={"error": "Untrusted IP address"}, status=403)
+            # if ip_address not in TRUSTED_IPS:
+            #     #ADD
+            #     # Log the untrusted IP address attempt
+            #     # Save -> IP address and (maybe) machine name to a database for further analysis
+            #     return Response(json_body={"error": "Untrusted IP address"}, status=403)
 
-            if ping_code != PING_CODE:
-                return Response(json_body={"error": "Invalid Ping Code"}, status=403)
+            # if ping_code != PING_CODE:
+            #     return Response(json_body={"error": "Invalid Ping Code"}, status=403)
 
-            user = request.dbsession.query(User).filter(or_(User.username == username, User.email == email)).first()
+            user = request.dbsession.query(User).filter(User.email == email).first()
             
             if user:
                 try:
@@ -80,3 +79,31 @@ def validate_code(request):
         return {"isValid": data.get("code") == PING_CODE}
     except json.JSONDecodeError:
         return {"isValid": False}
+    
+@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='GET', permission="admin")
+def register_user_page(request):
+    return {}   
+
+@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='POST', permission="admin")
+def register_user(request):
+    psw_hasher = argon2.PasswordHasher()
+    username = request.POST.get('username')
+    email = request.POST.get('email')
+    password = request.POST.get('password')
+    permission = request.POST.get('permission')
+    
+    user = request.dbsession.query(User).filter(or_(User.username == username, User.email == username)).first()
+    
+    if user:
+        return Response(json_body={"error": "User already exists"})
+    
+    hashed_password = psw_hasher.hash(password)
+    
+    new_user = User(username=username, email=email, password=hashed_password, permission=permission)
+    request.dbsession.add(new_user)
+    
+    headers = remember(request, str(new_user.id))
+    request.session['role'] = new_user.permission
+    request.session['expires_at'] = datetime.now() + timedelta(minutes=30)
+    
+    return HTTPFound(location=request.route_url('home'), headers=headers)

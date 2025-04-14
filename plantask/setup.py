@@ -20,7 +20,8 @@ requires = [
     'SQLAlchemy',
     'transaction',
     'zope.sqlalchemy',
-    'psycopg2'
+    'psycopg2',
+    'argon2-cffi'
 ]
 
 tests_require = [
