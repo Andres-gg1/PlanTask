@@ -1,5 +1,13 @@
 body {
     background-color: #5c656e;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+}
+
+main {
+    flex-grow: 1;
 }
 
 .card, .modal-content {
@@ -103,4 +111,48 @@ body {
     color: #fff;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     letter-spacing: 1px;
+}
+
+/* 404 Page Styles */
+.error-page {
+    text-align: center;
+    color: #fff;
+    margin-top: 100px;
+}
+
+.error-page h1 {
+    font-size: 6rem;
+    font-weight: bold;
+    color: #ff6b6b;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.error-page h2 {
+    font-size: 2rem;
+    font-weight: 300;
+    margin-top: 20px;
+    color: #f8f9fa;
+}
+
+.error-page p {
+    font-size: 1.25rem;
+    margin-top: 20px;
+    color: #dcdcdc;
+}
+
+.error-page a {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007bff;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.error-page a:hover {
+    background-color: #0056b3;
 }

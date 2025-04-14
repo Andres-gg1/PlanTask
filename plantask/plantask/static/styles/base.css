@@ -76,11 +76,19 @@
     min-height: 3.5rem;
 }
 
-.custom-navbar .navbar-collapse {
-    transition: height 0.3s ease-in;
-    padding-top: 1rem;
+.content {
+    margin-top: 5rem;
+    margin-left: 5rem;
+    padding: 1rem;
 }
 
+.custom-navbar .navbar-collapse {
+    transition: height 0.3s ease-in;
+}
+
+.navbar-collapse.collapse.show {
+    padding-top: 1rem;
+}
 .sidebar .nav-link:hover {
     background-color: #5a56a6;
 }

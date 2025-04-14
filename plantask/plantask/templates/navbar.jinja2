@@ -3,7 +3,7 @@
 <nav class="navbar bg-dark navbar-expand-lg fixed-top custom-navbar" data-bs-theme="dark">
     <div class="container-fluid">
         <a href="index.jinja2" class="navbar-brand">
-            <img src="kochlogo.svg" alt="Koch Company Logo" class="logo">
+            <img src="{{ request.static_url('plantask:static/kochlogo.svg') }}" alt="Koch Company Logo" class="logo">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
