@@ -48,6 +48,7 @@ class PersonalChat(Base):
     # Relationship to the project
     project = relationship('Project', back_populates='personal_chats')
 
+
     def __repr__(self):
         return f"<PersonalChat(id={self.id}, user1_id={self.user1_id}, user2_id={self.user2_id})>"
 
