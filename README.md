@@ -1,3 +1,6 @@
+![image](https://github.com/user-attachments/assets/67965073-4ad9-4d41-b4be-8f7485733695)
+
+
 # PlanTask
 Web app where teams can manage projects, assign tasks, do follow-ups on progress and collaborate in real time.
 
