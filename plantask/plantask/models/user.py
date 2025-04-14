@@ -20,7 +20,7 @@ class User(Base):
     email: str = Column(String, nullable=False)
     # Password of the user (cannot be null)
     password: str = Column(String, nullable=False)
-    # Permissions assigned to the user (cannot be null)
+    # Permissions assigned to the user (cannot be null). either "admin" or "user", used for limiting acces to admin functions
     permission: str = Column(Text, nullable=False)
 
     task_comments = relationship('TaskComment', back_populates='user')
