@@ -7,6 +7,26 @@ from pyramid.security import remember
 from pyramid.httpexceptions import HTTPFound
 from datetime import datetime, timedelta
 from ..auth.network import is_ip_trusted, is_valid_ping_code
+from re import search 
+from random import randint
+
+def validate_password(password):
+    errors = []
+    if len(password) < 8:
+        errors.append("The password must be at least 8 characters long.")
+    if not search(r'[a-z]', password):
+        errors.append("The password must contain at least one lowercase letter.")
+    if not search(r'[A-Z]', password):
+        errors.append("The password must contain at least one uppercase letter.")
+    if not search(r'\d', password):
+        errors.append("The password must contain at least one number.")
+    if not search(r'\W', password):
+        errors.append("The password must contain at least one non-alphanumeric character.")
+    if password and (password[0].isspace() or password[-1].isspace()):
+        errors.append("The password cannot begin or end with a blank space.")
+
+    return errors if errors else None
+
 
 @view_config(route_name='login', renderer='/templates/login.jinja2', request_method='GET')
 def login_page(request):
@@ -28,15 +48,15 @@ def login_user(request):
             if not ping_code:
                 return {"show_modal": True, "error_ping": ""}
             if not is_valid_ping_code(ping_code):
-                return {"show_modal": True, "error_ping": "Código incorrecto."}
+                return {"show_modal": True, "error_ping": "Incorrect code."}
             request.session["pingid_ok"] = True
             return HTTPFound(location=request.route_url("login"))
 
         if not all([email, password]):
-            return {"show_modal": False, "error_ping": "Faltan datos"}
+            return {"show_modal": False, "error_ping": "Missing required fields."}
 
         if not email.endswith("@kochcc.com"):
-            return {"show_modal": False, "error_ping": "Dominio de email inválido"}
+            return {"show_modal": False, "error_ping": "Invalid email domain."}
 
         user = request.dbsession.query(User).filter(User.email == email).first()
 
@@ -49,12 +69,12 @@ def login_user(request):
                     request.session.pop("pingid_ok", None)
                     return HTTPFound(location=request.route_url('home'), headers=headers)
             except argon2.exceptions.VerifyMismatchError:
-                return {"show_modal": False, "error_ping": "Contraseña incorrecta"}
+                return {"show_modal": False, "error_ping": "Incorrect password."}
 
-        return {"show_modal": False, "error_ping": "Credenciales inválidas"}
+        return {"show_modal": False, "error_ping": "Invalid credentials."}
 
     except Exception:
-        return {"show_modal": False, "error_ping": "Error interno del servidor"}
+        return {"show_modal": False, "error_ping": "Internal server error."}
 
 
 @view_config(route_name='register', renderer='/templates/register.jinja2', request_method='GET', permission="admin")
@@ -64,44 +84,94 @@ def register_user_page(request):
     return {"show_modal": show_modal}
 
 
-@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='POST', permission="admin")
+@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='POST',permission="admin")
 def register_user(request):
     ip_address = request.remote_addr
     ping_code = request.POST.get("pingCode")
 
+    # IP verification for untrusted networks
     if not is_ip_trusted(ip_address) and not request.session.get("pingid_ok", False):
         if not ping_code:
             return {"show_modal": True, "error_ping": ""}
         if not is_valid_ping_code(ping_code):
-            return {"show_modal": True, "error_ping": "Código incorrecto."}
+            return {"show_modal": True, "error_ping": "Incorrect code."}
         request.session["pingid_ok"] = True
         return HTTPFound(location=request.route_url("register"))
 
     psw_hasher = argon2.PasswordHasher()
-    username = request.POST.get('signupUsername')
+    firstname = request.POST.get('signupFirstname')
+    lastname = request.POST.get('signupLastname')
     email = request.POST.get('signupEmail')
     password = request.POST.get('password')
     confirm_password = request.POST.get('confirm_password')
-    permission = request.POST.get('permission', 'user')  # default a user si no se indica
+    permission = request.POST.get('permission', 'user')  # default to "user" if not specified
+
+    if not email.endswith("@kochcc.com"):
+        return {"show_modal": False, "error_ping": "Invalid email domain."}
+
+    # Password validation
+    password_errors = validate_password(password)
+    if password_errors:
+        return {
+            "show_modal": False,
+            "error_ping": "<br>".join(password_errors),
+            "form_data": {
+                "signupFirstname": firstname,
+                "signupLastname": lastname,
+                "signupEmail": email,
+                "permission": permission,
+            },
+        }
 
     if password != confirm_password:
-        return {"show_modal": False, "error_ping": "Las contraseñas no coinciden."}
+        return {
+            "show_modal": False,
+            "error_ping": "Passwords do not match.",
+            "form_data": {
+                "signupFirstname": firstname,
+                "signupLastname": lastname,
+                "signupEmail": email,
+                "permission": permission,
+            },
+        }
 
-    user = request.dbsession.query(User).filter(
-        or_(User.username == username, User.email == email)
-    ).first()
+    username = generate_unique_username(firstname, lastname, request.dbsession)
 
+    user = request.dbsession.query(User).filter(User.email == email).first()
     if user:
-        return {"show_modal": False, "error_ping": "El usuario ya existe."}
+        return {
+            "show_modal": False,
+            "error_ping": "Email already registered.",
+            "form_data": {
+                "signupFirstname": firstname,
+                "signupLastname": lastname,
+                "signupEmail": email,
+                "permission": permission,
+            },
+        }
 
     hashed_password = psw_hasher.hash(password)
 
-    new_user = User(username=username, email=email, password=hashed_password, permission=permission)
+    new_user = User(first_name=firstname,last_name = lastname,username=username, email=email, password=hashed_password, permission=permission)
     request.dbsession.add(new_user)
+    request.flush()
 
     headers = remember(request, str(new_user.id))
     request.session['role'] = new_user.permission
-    request.session['expires_at'] = datetime.now() + timedelta(minutes=30)
+    request.session['expires_at'] = (datetime.now() + timedelta(minutes=30)).isoformat()
     request.session.pop("pingid_ok", None)
 
     return HTTPFound(location=request.route_url('home'), headers=headers)
+
+
+def generate_unique_username(firstname, lastname, dbsession):
+    """
+    Generate a unique username based on the first three characters of the first and last name,
+    followed by a random number between 1 and 1000. If the username already exists, retry with
+    a new random number until a unique username is found.
+    """
+    while True:
+        username = f"{firstname[:3]}_{lastname[:3]}{randint(1, 1000)}"
+        existing_user = dbsession.query(User).filter(User.username == username).first()
+        if not existing_user:
+            return username
