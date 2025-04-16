@@ -23,9 +23,11 @@ TESTING_DATABASE_URL = "postgresql://postgres:DRbfLrlvWYCYCULVimbRZxufXbujGHaK@t
 # This URL is for a PostgreSQL database hosted on Railway. Use this to run the application in production.
 DATABASE_URL = "postgresql://postgres:hqDGUoMpypystmdWLOYHdzOMrABijDKi@hopper.proxy.rlwy.net:32534/railway"
 
-DATABASES_URL = {
-    DATABASE_URL, TESTING_DATABASE_URL
-}
+DATABASES_URL = [
+    DATABASE_URL,
+    TESTING_DATABASE_URL
+]
+
 
 # --------------------------- TESTING DATABASE CONNECTION --------------------------- #
 # This test suite checks if the database connection is established successfully.

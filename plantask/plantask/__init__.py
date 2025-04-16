@@ -25,7 +25,7 @@ def forbidden_view(request):
         return HTTPFound(location=request.route_url('login'))
     else:
         # User is auth but does not have permission -> permissions invalid 
-        return Response("Lol u dont >:(", status=403)
+        return Response("Invalid permissions", status=403)
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
