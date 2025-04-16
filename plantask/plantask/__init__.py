@@ -7,7 +7,7 @@ from pyramid.httpexceptions import HTTPForbidden
 from pyramid.view import forbidden_view_config
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound
-
+from pyramid.session import SignedCookieSessionFactory  # <-- NUEVO
 
 class RootFactory:
     """
@@ -51,6 +51,10 @@ def main(global_config, **settings):
     with Configurator(settings=settings) as config:
         config.set_authentication_policy(authn_policy)
         config.set_authorization_policy(authz_policy)
+
+        my_session_factory = SignedCookieSessionFactory(secretkey)
+        config.set_session_factory(my_session_factory)
+
         config.include('pyramid_jinja2')
         config.include('.routes')
         config.include('.models')
