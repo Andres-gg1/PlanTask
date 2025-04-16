@@ -11,13 +11,21 @@
             <form id="signupForm" method="POST" action="/register" class="fade-in show">
 
                 <div class="mb-3">
-                    <label for="signupUsername" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="signupUsername" name="signupUsername" required>
+                    <label for="signupFirstname" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="signupFirstname" name="signupFirstname" 
+                           value="{{ form_data.signupUsername if form_data else '' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="signupLastname" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="signupLastname" name="signupLastname" 
+                           value="{{ form_data.signupUsername if form_data else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label for="signupEmail" class="form-label">Email address</label>
-                    <input type="email" class="form-control" id="signupEmail" name="signupEmail" required>
+                    <input type="email" class="form-control" id="signupEmail" name="signupEmail" 
+                           value="{{ form_data.signupEmail if form_data else '' }}" required>
                 </div>
 
                 <div class="mb-3">
@@ -33,13 +41,15 @@
                 <div class="mb-3">
                     <label for="permission" class="form-label">Permission</label>
                     <select class="form-control" id="permission" name="permission" required>
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
+                        <option value="user" {% if form_data and form_data.permission == 'user' %}selected{% endif %}>User</option>
+                        <option value="admin" {% if form_data and form_data.permission == 'admin' %}selected{% endif %}>Admin</option>
                     </select>
                 </div>
 
                 {% if error_ping %}
-                <div class="text-danger small mb-2">{{ error_ping }}</div>
+                <div class="alert alert-danger small p-2 mb-3" role="alert">
+                    {{ error_ping | safe }}
+                </div>
                 {% endif %}
 
                 <button type="submit" class="btn btn-dark w-100">Sign Up</button>
