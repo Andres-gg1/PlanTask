@@ -26,65 +26,53 @@ DATABASES_URL = [
     TESTING_DATABASE_URL
 ]
 
-class DatabaseEngine:
-    def engine_test_database():
-        try:
-            engine = create_engine(TESTING_DATABASE_URL)
-            Session = scoped_session(sessionmaker(bind=engine))
-            session = Session()
 
-            admin = session.query(User).filter(
-                User.id == "1", 
-                User.permission =="Admin"
-            ).first()  
+def engine_test_database():
+    try:
+        engine = create_engine(TESTING_DATABASE_URL)
+        Session = scoped_session(sessionmaker(bind=engine))
+        session = Session()
+        admin = session.query(User).filter(
+            User.id == "1", 
+            User.permission =="Admin"            
+        ).first()  
+        return engine, session, admin
+    except OperationalError as e:
+        print("Error connecting to the database:", e)
 
-            return engine, session, admin
-        except OperationalError as e:
-            print("Error connecting to the database:", e)
-
-        except SQLAlchemyError as e:
-            print("SQLAlchemy error occurred:", e)
-
-        except Exception as e:
-            print("An unexpected error occurred:", e)
-
-    def engine_prod_database():
-        try:
-            engine = create_engine(DATABASE_URL)
-            Session = scoped_session(sessionmaker(bind=engine))
-            session = Session()
-
-            admin = session.query(User).filter(
-                User.id == "1", 
-                User.permission =="Admin"
-            ).first()  
-
-            return engine, session, admin
-        except OperationalError as e:
-            print("Error connecting to the database:", e)
-
-        except SQLAlchemyError as e:
-            print("SQLAlchemy error occurred:", e)
-
-        except Exception as e:
-            print("An unexpected error occurred:", e)
+    except SQLAlchemyError as e:
+        print("SQLAlchemy error occurred:", e)
+    except Exception as e:
+        print("An unexpected error occurred:", e)
 
 # The admin should be able to manipulate the users crud freely
 # The normal user should be able to just get they user (to login)
 #
-
-class TestNonAdminPrivileges:
-    pass
-
-from sqlalchemy.exc import IntegrityError
-
 # pytest fixture to create a session and engine once
+        
 @pytest.fixture(scope='module')
 def setup_database():
-    engine, session, admin = DatabaseEngine.engine_test_database()
+    engine, session, admin = engine_test_database()
     yield session  # Provide the session for tests
     session.close()  # Clean up after the test is done
 
+class TestNonAdminPrivileges:
+    def test_normalLogin():
+        pass
+    def test_untrustedIpAccess():
+        pass
+    def test_viewsSecurity(): #This will be uptaded any time a new view is added
+        pass
+    def test_severalFailedLoginAttempts():
+        pass
+    def test_badPassword():
+        pass
+    def test_trustedEmailExtensions():
+        pass
+    def test_missingFields():
+        pass
+
+from sqlalchemy.exc import IntegrityError
 
 def create_user(session, username, first_name, last_name, email, password, permission):
     """Helper function to create a user"""
