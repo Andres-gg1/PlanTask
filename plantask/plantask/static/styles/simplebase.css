@@ -10,6 +10,11 @@ main {
     flex-grow: 1;
 }
 
+.authmain {
+    margin-top: 10px;
+}
+
+
 .card, .modal-content {
     border-radius: 1rem;
 }
