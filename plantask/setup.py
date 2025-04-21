@@ -24,6 +24,7 @@ requires = [
     'argon2-cffi',
     'pytest',
     'allure-pytest',
+    'WebTest',
 ]
 
 tests_require = [

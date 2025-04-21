@@ -1,8 +1,9 @@
 # test_schema_validation.py
 
-from sqlalchemy import inspect
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.sql import text
 
 import sys
 import os
@@ -42,16 +43,19 @@ If the connection fails, it raises an assertion error.
 @allure.severity(allure.severity_level.CRITICAL)
 @pytest.mark.parametrize("db_url", DATABASES_URL)
 def test_databases_connection(db_url):
+    try:
+        with allure.step(f"Create SQLAlchemy engine for database URL: {db_url}"):
+            engine = create_engine(db_url)
 
-    with allure.step(f"Create SQLAlchemy engine for database URL: {db_url}"):
-        engine = create_engine(db_url)
-
-    with allure.step("Connect to the database"):
-        with engine.connect() as connection:
-            # Check if the connection is established successfully
-            result = connection.scalar("SELECT 1")
-            assert result == 1, "Database connection failed!"  
-
+        with allure.step("Connect to the database and execute test query"):
+            with engine.connect() as connection:
+                result = connection.execute(text("SELECT 1")).fetchone()
+                assert result is not None and result[0] == 1, "Database connection failed!"
+    
+    except SQLAlchemyError as e:
+        allure.attach(str(e), name="Database Error", attachment_type=allure.attachment_type.TEXT)
+        pytest.fail(f"Could not connect to database: {e}")
+            
 
 # --------------------------- TESTING DATABASE SCHEMA --------------------------- #
 # This test suite checks if the database schema matches the SQLAlchemy models defined in the application.

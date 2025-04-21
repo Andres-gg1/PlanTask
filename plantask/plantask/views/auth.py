@@ -77,14 +77,14 @@ def login_user(request):
         return {"show_modal": False, "error_ping": "Internal server error."}
 
 
-@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='GET', permission="admin")
+@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='GET')
 def register_user_page(request):
     ip_address = request.remote_addr
     show_modal = not is_ip_trusted(ip_address) and not request.session.get("pingid_ok", False)
     return {"show_modal": show_modal}
 
 
-@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='POST',permission="admin")
+@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='POST')
 def register_user(request):
     ip_address = request.remote_addr
     ping_code = request.POST.get("pingCode")
