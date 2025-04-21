@@ -27,6 +27,14 @@ def forbidden_view(request):
         # User is auth but does not have permission -> permissions invalid 
         return HTTPFound(location=request.route_url('invalid_permissions'))
 
+from pyramid.events import subscriber, BeforeRender
+
+@subscriber(BeforeRender)
+def add_global_template_variables(event):
+    request = event['request']
+    event['active_page'] = request.matched_route.name if request.matched_route else None
+    event['role'] = request.session.get('role', None)
+
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """

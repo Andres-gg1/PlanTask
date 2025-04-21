@@ -65,7 +65,7 @@ def login_user(request):
                 if psw_hasher.verify(user.password, password):
                     headers = remember(request, str(user.id))
                     request.session['role'] = user.permission
-                    request.session['expires_at'] = datetime.now() + timedelta(minutes=30)
+                    request.session['expires_at'] = str(datetime.now() + timedelta(minutes=30))
                     request.session.pop("pingid_ok", None)
                     return HTTPFound(location=request.route_url('home'), headers=headers)
             except argon2.exceptions.VerifyMismatchError:
