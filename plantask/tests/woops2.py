@@ -24,7 +24,7 @@ users_to_create = [
         "username": "PLANTASK_ADMIN",
         "first_name": "System",
         "last_name": "Administrator",
-        "email": "admin@plantask.local",
+        "email": "admin@kochcc.com",
         "password": "314PLANTASK_SECURE_SUPER_PASSWORD159",
         "permission": "admin"
     },
@@ -32,7 +32,7 @@ users_to_create = [
         "username": "user1",
         "first_name": "Alice",
         "last_name": "Smith",
-        "email": "alice.smith@example.com",
+        "email": "alice.smith@kochcc.com",
         "password": "user1pass",
         "permission": "user"
     },
@@ -40,7 +40,7 @@ users_to_create = [
         "username": "user2",
         "first_name": "Bob",
         "last_name": "Johnson",
-        "email": "bob.johnson@example.com",
+        "email": "bob.johnson@kochcc.com",
         "password": "user2pass",
         "permission": "user"
     },
@@ -48,7 +48,7 @@ users_to_create = [
         "username": "user3",
         "first_name": "Carol",
         "last_name": "Williams",
-        "email": "carol.williams@example.com",
+        "email": "carol.williams@kochcc.com",
         "password": "user3pass",
         "permission": "user"
     },
@@ -56,7 +56,7 @@ users_to_create = [
         "username": "user4",
         "first_name": "David",
         "last_name": "Brown",
-        "email": "david.brown@example.com",
+        "email": "david.brown@kochcc.com",
         "password": "user4pass",
         "permission": "user"
     },

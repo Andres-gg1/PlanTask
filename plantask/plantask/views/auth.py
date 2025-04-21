@@ -1,4 +1,4 @@
-from ..models import User
+from ..models import User, ActivityLog
 from pyramid.response import Response
 from pyramid.view import view_config
 from sqlalchemy import or_
@@ -44,6 +44,13 @@ def login_user(request):
         password = request.POST.get("loginPassword")
         psw_hasher = argon2.PasswordHasher()
 
+        MAX_ATTEMPTS = 5
+
+        if "current_attempt" not in request.session:
+            request.session["current_attempt"] = 0
+        if "failed_email_attempts" not in request.session:
+            request.session["failed_email_attempts"] = []
+
         if not is_ip_trusted(ip_address) and not request.session.get("pingid_ok", False):
             if not ping_code:
                 return {"show_modal": True, "error_ping": ""}
@@ -58,6 +65,16 @@ def login_user(request):
         if not email.endswith("@kochcc.com"):
             return {"show_modal": False, "error_ping": "Invalid email domain."}
 
+        if request.session["current_attempt"] >= MAX_ATTEMPTS:
+            activity_log = ActivityLog(
+                timestamp=datetime.now(),
+                action="Added",
+                context="Several failed log in attempts",
+                changes=f"IP address: {ip_address}, Email/s used: {request.session['failed_email_attempts']}",
+            )
+            request.dbsession.add(activity_log)
+            return {"show_modal": False, "error_ping": "Too many failed attempts. Please try again later."}
+
         user = request.dbsession.query(User).filter(User.email == email).first()
 
         if user:
@@ -67,14 +84,22 @@ def login_user(request):
                     request.session['role'] = user.permission
                     request.session['expires_at'] = datetime.now() + timedelta(minutes=30)
                     request.session.pop("pingid_ok", None)
+                    request.session.pop("failed_email_attempts", None)
+                    request.session.pop("current_attempt", None)
+
                     return HTTPFound(location=request.route_url('home'), headers=headers)
             except argon2.exceptions.VerifyMismatchError:
+                request.session["current_attempt"] += 1
+                if email not in request.session["failed_email_attempts"]:
+                    request.session["failed_email_attempts"].append(email)
+
                 return {"show_modal": False, "error_ping": "Incorrect password."}
 
         return {"show_modal": False, "error_ping": "Invalid credentials."}
 
     except Exception:
         return {"show_modal": False, "error_ping": "Internal server error."}
+
 
 
 @view_config(route_name='register', renderer='/templates/register.jinja2', request_method='GET')
