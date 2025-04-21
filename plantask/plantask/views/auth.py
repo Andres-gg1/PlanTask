@@ -77,14 +77,17 @@ def login_user(request):
         return {"show_modal": False, "error_ping": "Internal server error."}
 
 
-@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='GET')
+@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='GET', permission="admin")
 def register_user_page(request):
     ip_address = request.remote_addr
     show_modal = not is_ip_trusted(ip_address) and not request.session.get("pingid_ok", False)
     return {"show_modal": show_modal}
 
+@view_config(route_name='invalid_permissions', renderer='/templates/invalid_permissions.jinja2', request_method='GET')
+def invalid_permissions(request):
+    return {}
 
-@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='POST')
+@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='POST', permission="admin")
 def register_user(request):
     ip_address = request.remote_addr
     ping_code = request.POST.get("pingCode")
@@ -154,7 +157,7 @@ def register_user(request):
 
     new_user = User(first_name=firstname,last_name = lastname,username=username, email=email, password=hashed_password, permission=permission)
     request.dbsession.add(new_user)
-    request.flush()
+    request.dbsession.flush()
 
     headers = remember(request, str(new_user.id))
     request.session['role'] = new_user.permission

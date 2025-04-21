@@ -7,8 +7,15 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1>Welcome to My Custom Page</h1>
-    <p>This is a custom page using the layout.jinja2 template.</p>
+    <h1>Welcome to PlanTask</h1>
+    <ul class="navtasks nav nav-underline">
+        <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#">Your tasks</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Your team's tasks</a>
+        </li>
+    </ul>
 </div>
 {% endblock content %}
 
