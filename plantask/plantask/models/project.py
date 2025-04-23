@@ -29,7 +29,7 @@ class Project(Base):
     labels = relationship('Label', back_populates='project')
     notifications = relationship('Notification', back_populates='project')
     activity_logs = relationship('ActivityLog', back_populates='project')
-    #personal_chats = relationship('PersonalChat', back_populates='project')
+    personal_chats = relationship('PersonalChat', back_populates='project')
 
 
     def __repr__(self):

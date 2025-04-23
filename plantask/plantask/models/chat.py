@@ -44,14 +44,14 @@ class PersonalChat(Base):
     # Foreign key for the second user in the chat (cannot be null)
     user2_id = Column(ForeignKey('users.id'), nullable=False)
     # Foreign key linking to the 'projects' table (if required)
-    # project_id = Column(ForeignKey('projects.id'), nullable=True)  # Si 'nullable=True' lo puedes dejar opcional
+    project_id = Column(ForeignKey('projects.id'), nullable=True)  # Si 'nullable=True' lo puedes dejar opcional
 
     # Relationships to users
     user1 = relationship('User', primaryjoin='PersonalChat.user1_id == User.id')
     user2 = relationship('User', primaryjoin='PersonalChat.user2_id == User.id')
 
     # Relationship to the project
-    #project = relationship('Project', back_populates='personal_chats')
+    project = relationship('Project', back_populates='personal_chats')
 
 
     def __repr__(self):
