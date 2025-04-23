@@ -42,6 +42,8 @@
     margin: 0 1.875rem;
 }
 
+
+/* Sidebar container */
 .sidebar {
     position: fixed;
     top: 3.125rem;
@@ -57,7 +59,8 @@
     z-index: 999;
 }
 
-.sidebar .nav-link {
+.sidebar .nav-link,
+.sidebar .nav-active {
     color: white;
     margin-top: 1.25rem;
     text-align: center;
@@ -68,51 +71,49 @@
     align-items: center;
     background-color: #6362BA;
     border-radius: 50%;
-    transition: background-color 0.3s ease;
     font-size: 1.875rem;
+    transition: background-color 0.3s ease, transform 0.3s ease, border-radius 0.3s ease;
 }
 
 .sidebar .nav-active {
-    color: white;
-    margin-top: 1.25rem;
-    text-align: center;
-    width: 3.125rem;
-    height: 3.125rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     background-color: black;
-    border-radius: 50%;
-    transition: background-color 0.3s ease;
-    font-size: 1.875rem;
-    border-style: solid;
-    border-color: white;
+    border: 3px solid white;
 }
 
-.custom-navbar {
-    min-height: 3.5rem;
+.sidebar .nav-link:hover,
+.sidebar .nav-active:hover {
+    transform: scale(1.25);
+    border-radius: 30%;
 }
 
-.content {
-    margin-top: 1rem;
-    margin-left: 1rem;
-    padding: 1rem;
-}
-
-.custom-navbar .navbar-collapse {
-    transition: height 0.3s ease-in;
-}
-
-.navbar-collapse.collapse.show {
-    padding-top: 1rem;
-}
 .sidebar .nav-link:hover {
     background-color: #5a56a6;
 }
 
-@media (max-width: 48rem) {
+:root {
+    --box-shadow-navbar: 0px 8px 8px -6px rgba(0, 0, 0, 0.5);
+}
+
+.custom-navbar {
+    min-height: 3.125rem;
+    box-shadow: var(--box-shadow-navbar);
+}
+
+.navbar-collapse.show {
+    opacity: 1;
+    padding-top: 1rem;
+}
+.navbar-collapse.collapsing {
+    overflow: hidden;
+  }
+
+@media (max-width: 100rem) {
     .search-input {
         width: 12rem;
+    }
+
+    .custom-navbar .navbar-collapse {
+        padding: 1rem;
     }
 
     .navbar-nav {
@@ -120,19 +121,29 @@
     }
 }
 
+.mycontainer{
+    margin-top: 5.5rem;
+    margin-bottom: 1rem;
+    margin-left: 5.5rem;
+    margin-right: 1rem;
+}
+
 .navtasks{
-    padding-left: 1.5rem;
+    padding-left: 1rem;
+    padding-right: 0.5rem;
     background-color: #D9D9D9;
-    border-width: 1px;
-    border-top: black;
-    border-bottom: black;
-    border-style: solid;
+    border: 2px solid black;
+    border-left: 0;
+    border-right: 0;
+    font-size: 0.9rem;
+}
+
+.navtasks .nav-link {
+    padding: 0.25rem 0.5rem; 
+    font-size: 0.9rem;
+    color: black;
 }
 
 .navtasks .nav-link.active {
     color: #7574C7;
-}
-
-.navtasks .nav-link {
-    color: black;
 }

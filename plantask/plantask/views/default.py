@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from plantask.auth.verifysession import verify_session
 
 
-@view_config(route_name='home', renderer='plantask:templates/mytemplate.jinja2')
+@view_config(route_name='Home', renderer='plantask:templates/mytemplate.jinja2')
 @verify_session
 def my_view(request):
     return {}

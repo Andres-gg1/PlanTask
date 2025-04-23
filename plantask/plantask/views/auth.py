@@ -67,7 +67,7 @@ def login_user(request):
                     request.session['role'] = user.permission
                     request.session['expires_at'] = str(datetime.now() + timedelta(minutes=30))
                     request.session.pop("pingid_ok", None)
-                    return HTTPFound(location=request.route_url('home'), headers=headers)
+                    return HTTPFound(location=request.route_url('Home'), headers=headers)
             except argon2.exceptions.VerifyMismatchError:
                 return {"show_modal": False, "error_ping": "Incorrect password."}
 
@@ -164,7 +164,7 @@ def register_user(request):
     request.session['expires_at'] = (datetime.now() + timedelta(minutes=30)).isoformat()
     request.session.pop("pingid_ok", None)
 
-    return HTTPFound(location=request.route_url('home'), headers=headers)
+    return HTTPFound(location=request.route_url('Home'), headers=headers)
 
 
 def generate_unique_username(firstname, lastname, dbsession):

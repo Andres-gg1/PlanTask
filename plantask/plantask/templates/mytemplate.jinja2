@@ -6,8 +6,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1>Welcome to PlanTask</h1>
+<main class="mycontainer">
+    {% if active_page %}
+        <h1>{{active_page}}</h1>
+    {% endif%}
     <ul class="navtasks nav nav-underline">
         <li class="nav-item">
             <a class="nav-link active" aria-current="page" href="#">Your tasks</a>
@@ -16,7 +18,7 @@
             <a class="nav-link" href="#">Your team's tasks</a>
         </li>
     </ul>
-</div>
+</main>
 {% endblock content %}
 
 {% block scripts %}
