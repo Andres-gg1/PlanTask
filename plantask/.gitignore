@@ -20,4 +20,5 @@ Data*.fs*
 coverage
 test
 *.sqlite
-tests/allure-results/
+plantask\allure-results
+plantask\tests\allure-results

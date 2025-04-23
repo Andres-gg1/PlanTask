@@ -1,0 +1,42 @@
+{% block sidebar%}
+
+<div class="col-sm-auto sidebar" aria-label="Main Sidebar">
+    <div class="d-flex flex-column align-items-center">
+        <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
+            <li class="nav-item">
+                <a href="#" class="{% if active_page == 'home' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Home" title="Home">
+                    <i class="bi-house-door"></i>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="{% if active_page == 'history' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="History" title="History">
+                    <i class="bi-clock-history"></i>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="{% if active_page == 'people' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="People" title="People">
+                    <i class="bi-people-fill"></i>
+                </a>
+            </li>
+            {% if role == 'pm'%}
+            <li class="nav-item">
+                <a href="#" class="{% if active_page == 'map' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Map" title="Map">
+                    <i class="bi-map-fill"></i>
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a href="#" class="{% if active_page == 'calendar' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Calendar" title="Calendar">
+                    <i class="bi-calendar3"></i>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="{% if active_page == 'chat' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Chat" title="Chat">
+                    <i class="bi-chat-left-text-fill"></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+{% endblock sidebar %}
