@@ -1,7 +1,11 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from .base import Base
+from sqlalchemy.dialects.postgresql import ENUM
 
+user_roles = ('admin','project_manager','member','observer')
+
+user_roles_enum = ENUM(*user_roles, name = 'user_roles')
 
 class Project(Base):
     __tablename__ = 'projects'
@@ -25,7 +29,7 @@ class Project(Base):
     labels = relationship('Label', back_populates='project')
     notifications = relationship('Notification', back_populates='project')
     activity_logs = relationship('ActivityLog', back_populates='project')
-    personal_chats = relationship('PersonalChat', back_populates='project')
+    #personal_chats = relationship('PersonalChat', back_populates='project')
 
 
     def __repr__(self):
@@ -42,10 +46,8 @@ class ProjectsUser(Base):
     project_id = Column(ForeignKey('projects.id'), nullable=False)
     # Foreign key linking to the User table (user ID)
     user_id = Column(ForeignKey('users.id'), nullable=False)
-    # Additional labels for the project-user association
-    labels = Column(Text)
     # Role of the user in the project (cannot be null)
-    role = Column(Text, nullable=False)
+    role = Column(user_roles_enum, nullable=False)
 
     # Relationships with the Project and User tables (many-to-one relationship)
     project = relationship('Project', back_populates='users')

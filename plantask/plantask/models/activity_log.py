@@ -3,10 +3,78 @@ from sqlalchemy import (
     BigInteger,
     Text,
     DateTime,
-    ForeignKey,
+    ForeignKey
 )
 from sqlalchemy.orm import relationship
 from .base import Base
+from sqlalchemy.dialects.postgresql import ENUM
+
+log_actions = (
+    # Project Actions
+    'project_added',
+    'project_removed',
+    'project_added_image',
+    'project_removed_image',
+    'project_edited_title',
+    'project_edited_description',
+    'project_added_user',
+    'project_removed_user',
+    'project_added_label',
+    'project_removed_label',
+    'project_user_assigned_label',
+    'project_user_removed_label',
+    'project_task_assigned_label',
+    'project_task_removed_label',
+
+    # Task Actions
+    'task_created',
+    'task_removed',
+    'task_edited_title',
+    'task_edited_description',
+    'task_edited_status',
+    'task_edited_duedate',
+    'task_added_file',
+    'task_removed_file',
+    'task_added_comment',
+    'task_removed_comment',
+    'task_comment_added_file',
+    'task_comment_removed_file',
+
+    # Microtask Actions
+    'microtask_created',
+    'microtask_removed',
+    'microtask_edited_name',
+    'microtask_edited_description',
+    'microtask_edited_percentage',
+    'microtask_edited_status',
+    'microtask_assigned_user',
+    'microtask_removed_user',
+    'microtask_added_comment',
+    'microtask_removed_comment',
+    'microtask_comment_added_file',
+    'microtask_comment_removed_file',
+    'microtask_added_file',
+    'microtask_removed_file',
+    'microtask_added_duedate',
+    'microtask_removed_duedate',
+
+    # Group Chat Actions
+    'message_group_created',
+    'message_group_deleted',
+    'message_group_edited_name',
+    'message_group_added_image',
+    'message_group_removed_image',
+    'message_group_added_member',
+    'message_group_removed_member',
+    'message_group_added_description',
+    'message_group_edited_description',
+    'message_group_removed_description',
+
+    # Login Actions
+    'login_several_failed_attempts',
+)
+
+log_actions_enum = ENUM(*log_actions, name="log_actions")
 
 
 class ActivityLog(Base):
@@ -40,7 +108,7 @@ class ActivityLog(Base):
     timestamp = Column(DateTime, nullable=False)
 
     # Description of the action performed (e.g., "created", "edited", "deleted")
-    action = Column(Text, nullable=False)
+    action = Column(log_actions_enum, nullable=False)
 
     # Context or category of the action
     context = Column(Text, nullable=False)

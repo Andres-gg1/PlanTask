@@ -3,10 +3,15 @@ from sqlalchemy import (
     Integer, 
     Text, 
     DateTime, 
-    ForeignKey,
+    ForeignKey
 )
 from sqlalchemy.orm import relationship
 from .base import Base
+from sqlalchemy.dialects.postgresql import ENUM
+
+msg_state = ('sent','delivered','read')
+
+msg_state_enum = ENUM(*msg_state, name='msg_state')
 
 class GroupChat(Base):
     __tablename__ = 'group_chats'
@@ -39,14 +44,14 @@ class PersonalChat(Base):
     # Foreign key for the second user in the chat (cannot be null)
     user2_id = Column(ForeignKey('users.id'), nullable=False)
     # Foreign key linking to the 'projects' table (if required)
-    project_id = Column(ForeignKey('projects.id'), nullable=True)  # Si 'nullable=True' lo puedes dejar opcional
+    # project_id = Column(ForeignKey('projects.id'), nullable=True)  # Si 'nullable=True' lo puedes dejar opcional
 
     # Relationships to users
     user1 = relationship('User', primaryjoin='PersonalChat.user1_id == User.id')
     user2 = relationship('User', primaryjoin='PersonalChat.user2_id == User.id')
 
     # Relationship to the project
-    project = relationship('Project', back_populates='personal_chats')
+    #project = relationship('Project', back_populates='personal_chats')
 
 
     def __repr__(self):
@@ -66,7 +71,7 @@ class ChatLog(Base):
     # Date and time the message was sent (cannot be null)
     date_sent = Column(DateTime, nullable=False)
     # State of the message (e.g., sent, delivered, read)
-    state = Column(Text, nullable=False)
+    state = Column(msg_state_enum, nullable=False)
     # Content of the message (optional)
     message_cont = Column(Text)
 
