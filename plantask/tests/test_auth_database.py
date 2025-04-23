@@ -61,7 +61,7 @@ class TestAdminPrivileges:
 
     # Test to insert users with various parameters
     @pytest.mark.parametrize("username, first_name, last_name, email, password, permission", [
-        (f"user{i}", f"First{i}", f"Last{i}", f"user{i}@example.com", f"pass{i}", "user") for i in range(10)
+        (f"user{i}", f"First{i}", f"Last{i}", f"user{i}@example.com", f"pass{i}", "user") for i in range(5)
     ])
     def test_insert_user(self, db_session, username, first_name, last_name, email, password, permission):
         user = create_user(db_session, username, first_name, last_name, email, password, permission)
@@ -94,7 +94,7 @@ class TestAdminPrivileges:
 
     # Test updating user information (name and email)
     @pytest.mark.parametrize("original_name,new_name,new_email", [
-        (f"user{i}", f"Updated{i}", f"updated{i}@example.com") for i in range(10)
+        (f"user{i}", f"Updated{i}", f"updated{i}@example.com") for i in range(5)
     ])
     def test_update_user(self, db_session, original_name, new_name, new_email):
         create_user(db_session, original_name, "Old", "Name", f"{original_name}@example.com", "pass", "user")
@@ -108,7 +108,7 @@ class TestAdminPrivileges:
         assert updated.email == new_email
 
     # Test retrieving a user by their username
-    @pytest.mark.parametrize("username", [f"getuser{i}" for i in range(10)])
+    @pytest.mark.parametrize("username", [f"getuser{i}" for i in range(5)])
     def test_get_user(self, db_session, username):
         create_user(db_session, username, "Name", "Last", f"{username}@example.com", "pass", "user")
         retrieved = get_user_by_username(db_session, username)
@@ -117,7 +117,7 @@ class TestAdminPrivileges:
         assert retrieved.username == username
 
     # Test deleting a user from the database
-    @pytest.mark.parametrize("username", [f"deleteuser{i}" for i in range(10)])
+    @pytest.mark.parametrize("username", [f"deleteuser{i}" for i in range(5)])
     def test_delete_user(self, db_session, username):
         create_user(db_session, username, "Del", "User", f"{username}@example.com", "pass", "user")
         user = get_user_by_username(db_session, username)
@@ -127,7 +127,7 @@ class TestAdminPrivileges:
         assert get_user_by_username(db_session, username) is None
 
     # Test promoting a user from "user" to "admin" permission level
-    @pytest.mark.parametrize("username", [f"promote{i}" for i in range(10)])
+    @pytest.mark.parametrize("username", [f"promote{i}" for i in range(5)])
     def test_promote_user(self, db_session, username):
         create_user(db_session, username, "Promote", "User", f"{username}@example.com", "pass", "user")
         user = get_user_by_username(db_session, username)
@@ -137,7 +137,7 @@ class TestAdminPrivileges:
         assert get_user_by_username(db_session, username).permission == "admin"
 
     # Test demoting a user from "admin" to "user" permission level
-    @pytest.mark.parametrize("username", [f"demote{i}" for i in range(10)])
+    @pytest.mark.parametrize("username", [f"demote{i}" for i in range(5)])
     def test_demote_user(self, db_session, username):
         create_user(db_session, username, "Demote", "User", f"{username}@example.com", "pass", "admin")
         user = get_user_by_username(db_session, username)

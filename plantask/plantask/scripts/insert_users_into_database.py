@@ -68,7 +68,7 @@ for user_data in users_to_create:
     ).first()
 
     if existing_user:
-        print(f"❌ El usuario '{user_data['username']}' ya existe.")
+        print(f"El usuario '{user_data['username']}' ya existe.")
         continue
 
     try:
@@ -82,9 +82,9 @@ for user_data in users_to_create:
             permission=user_data["permission"]
         )
         session.add(new_user)
-        print(f"✅ Usuario '{user_data['username']}' creado exitosamente.")
+        print(f"Usuario '{user_data['username']}' creado exitosamente.")
     except Exception as e:
-        print(f"⚠️ Error al crear el usuario '{user_data['username']}': {e}")
+        print(f"Error al crear el usuario '{user_data['username']}': {e}")
 
 session.commit()
 session.close()
