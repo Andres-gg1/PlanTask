@@ -83,14 +83,10 @@ def login_user(request):
                     request.session['role'] = user.permission
                     request.session['expires_at'] = str(datetime.now() + timedelta(minutes=30))
                     request.session.pop("pingid_ok", None)
-<<<<<<< HEAD
-                    return HTTPFound(location=request.route_url('Home'), headers=headers)
-=======
                     request.session.pop("failed_email_attempts", None)
                     request.session.pop("current_attempt", None)
 
                     return HTTPFound(location=request.route_url('home'), headers=headers)
->>>>>>> 7e059aaaa3d820e2eb0d9ee8fe768eab7d832af9
             except argon2.exceptions.VerifyMismatchError:
                 request.session["current_attempt"] += 1
                 if email not in request.session["failed_email_attempts"]:

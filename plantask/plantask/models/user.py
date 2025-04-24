@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from .base import Base
 from sqlalchemy.dialects.postgresql import ENUM
 
-permissions = ('admin', 'user')
+permissions = ('admin', 'user', 'pm')
 
 permissions_enum = ENUM(*permissions, name='permissions')
 
