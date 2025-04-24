@@ -1,0 +1,39 @@
+/* Members Section Styling */
+.members-section {
+    margin-top: 20px;
+}
+
+.members-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px; /* Adjust height for 10 members */
+    overflow-y: auto; /* Enable scrolling if content exceeds max-height */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.members-list li {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.members-list li:last-child {
+    border-bottom: none;
+}
+
+/* Scrollable list for users */
+.users-list-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

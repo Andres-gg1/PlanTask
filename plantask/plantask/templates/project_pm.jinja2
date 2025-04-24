@@ -1,0 +1,27 @@
+{% extends "layout.jinja2" %}
+
+{% block title %}{{ project.name | default('My New Project') }}{% endblock %}
+
+{% block styles %}
+<link href="{{ request.static_url('plantask:static/styles/projects.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<main class="mycontainer">
+    <h1>{{ project.name | default('My New Project') }}</h1>
+
+    <h3>{{ project.description | default('No description available') }}</h3>
+
+    <button type="button" class="btn btn-info">Info</button>
+    <section class="members-section">
+        <h4>Project Members</h4>
+        <a href="DIRECCION PARA AÑADIR MIEMBRO" class="btn btn-success"><i class="bi-pen-fill"></i>ADD MEMBER</a>
+        <ul class="members-list">
+            <!-- Remove or update this section if members are not relevant -->
+        </ul>
+    </section>
+</main>
+{% endblock content %}
+
+{% block scripts %}
+{% endblock %}

@@ -95,6 +95,7 @@
 }
 .custom-navbar {
     min-height: 3.5rem;
+    box-shadow: var(--box-shadow-navbar);
 }
 
 .custom-navbar .navbar-collapse {
@@ -105,17 +106,13 @@
     padding-top: 1rem;
 }
 
-@media (max-width: 100rem) {
+@media (max-width: 61.969rem) {
     .search-input {
         width: 12rem;
     }
 
     .custom-navbar .navbar-collapse {
         padding: 1rem;
-    }
-
-    .navbar-nav {
-        margin-left: auto;
     }
 }
 

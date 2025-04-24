@@ -83,14 +83,10 @@ def login_user(request):
                     request.session['role'] = user.permission
                     request.session['expires_at'] = str(datetime.now() + timedelta(minutes=30))
                     request.session.pop("pingid_ok", None)
-<<<<<<< HEAD
-                    return HTTPFound(location=request.route_url('Home'), headers=headers)
-=======
                     request.session.pop("failed_email_attempts", None)
                     request.session.pop("current_attempt", None)
 
-                    return HTTPFound(location=request.route_url('home'), headers=headers)
->>>>>>> 7e059aaaa3d820e2eb0d9ee8fe768eab7d832af9
+                    return HTTPFound(location=request.route_url('Home'), headers=headers)
             except argon2.exceptions.VerifyMismatchError:
                 request.session["current_attempt"] += 1
                 if email not in request.session["failed_email_attempts"]:
@@ -100,8 +96,8 @@ def login_user(request):
 
         return {"show_modal": False, "error_ping": "Invalid credentials."}
 
-    except Exception:
-        return {"show_modal": False, "error_ping": "Internal server error."}
+    except Exception as e:
+        return {"show_modal": False, "error_ping": f"Internal server error. {e}" }
 
 
 @view_config(route_name='register', renderer='/templates/register.jinja2', request_method='GET', permission="admin")

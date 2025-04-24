@@ -18,6 +18,10 @@
             <a class="nav-link" href="#">Your team's tasks</a>
         </li>
     </ul>
+    {% if role == 'admin'%}
+        <a href="DIRECCION PARA CREAR PROJECTO" class="btn btn-danger">Create New Project</a>
+    {% endif %}
+
 </main>
 {% endblock content %}
 
