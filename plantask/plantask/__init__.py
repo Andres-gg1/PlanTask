@@ -15,7 +15,8 @@ class RootFactory:
     """
     __acl__ = [
         (Allow, 'role:admin', 'admin'),
-        (Allow, 'role:user', 'user')
+        (Allow, 'role:user', 'user'),
+        (Allow, 'role:pm', 'pm')
     ]
 
 @forbidden_view_config()
