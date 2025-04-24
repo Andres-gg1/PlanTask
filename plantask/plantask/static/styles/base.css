@@ -93,19 +93,17 @@
 :root {
     --box-shadow-navbar: 0px 8px 8px -6px rgba(0, 0, 0, 0.5);
 }
-
 .custom-navbar {
-    min-height: 3.125rem;
-    box-shadow: var(--box-shadow-navbar);
+    min-height: 3.5rem;
 }
 
-.navbar-collapse.show {
-    opacity: 1;
+.custom-navbar .navbar-collapse {
+    transition: height 0.3s ease-in;
+}
+
+.navbar-collapse.collapse.show {
     padding-top: 1rem;
 }
-.navbar-collapse.collapsing {
-    overflow: hidden;
-  }
 
 @media (max-width: 100rem) {
     .search-input {
