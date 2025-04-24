@@ -35,7 +35,7 @@ def login_page(request):
     return {"show_modal": show_modal}
 
 
-@view_config(route_name='login', renderer='/templates/login.jinja2', request_method='POST')
+@view_config(route_name='login', renderer='/templates/login.jinja2', request_method='POST', require_csrf=True)
 def login_user(request):
     try:
         ip_address = request.remote_addr
@@ -83,14 +83,10 @@ def login_user(request):
                     request.session['role'] = user.permission
                     request.session['expires_at'] = str(datetime.now() + timedelta(minutes=30))
                     request.session.pop("pingid_ok", None)
-<<<<<<< HEAD
-                    return HTTPFound(location=request.route_url('Home'), headers=headers)
-=======
                     request.session.pop("failed_email_attempts", None)
                     request.session.pop("current_attempt", None)
 
                     return HTTPFound(location=request.route_url('home'), headers=headers)
->>>>>>> 7e059aaaa3d820e2eb0d9ee8fe768eab7d832af9
             except argon2.exceptions.VerifyMismatchError:
                 request.session["current_attempt"] += 1
                 if email not in request.session["failed_email_attempts"]:
@@ -110,11 +106,9 @@ def register_user_page(request):
     show_modal = not is_ip_trusted(ip_address) and not request.session.get("pingid_ok", False)
     return {"show_modal": show_modal}
 
-@view_config(route_name='invalid_permissions', renderer='/templates/invalid_permissions.jinja2', request_method='GET')
-def invalid_permissions(request):
-    return {}
 
-@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='POST', permission="admin")
+
+@view_config(route_name='register', renderer='/templates/register.jinja2', request_method='POST', permission="admin", require_csrf=True)
 def register_user(request):
     ip_address = request.remote_addr
     ping_code = request.POST.get("pingCode")
@@ -193,6 +187,9 @@ def register_user(request):
 
     return HTTPFound(location=request.route_url('Home'), headers=headers)
 
+@view_config(route_name='invalid_permissions', renderer='/templates/invalid_permissions.jinja2', request_method='GET')
+def invalid_permissions(request):
+    return {}
 
 def generate_unique_username(firstname, lastname, dbsession):
     """

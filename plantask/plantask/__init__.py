@@ -8,6 +8,7 @@ from pyramid.view import forbidden_view_config
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound
 from pyramid.session import SignedCookieSessionFactory  # <-- NUEVO
+from pyramid.csrf import CookieCSRFStoragePolicy
 
 class RootFactory:
     """
@@ -62,6 +63,9 @@ def main(global_config, **settings):
 
         my_session_factory = SignedCookieSessionFactory(secretkey)
         config.set_session_factory(my_session_factory)
+
+        config.set_csrf_storage_policy(CookieCSRFStoragePolicy())
+        config.set_default_csrf_options(require_csrf=True)
 
         config.include('pyramid_jinja2')
         config.include('.routes')
