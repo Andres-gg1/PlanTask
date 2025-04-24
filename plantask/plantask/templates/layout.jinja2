@@ -13,10 +13,8 @@
 <body>
     {% include "navbar.jinja2" %}
     {% include "sidebar.jinja2" %}
-    <main class="content">
-        {% block content %}
-        {% endblock %}
-    </main>
+    {% block content %}
+    {% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}
     {% endblock %}
