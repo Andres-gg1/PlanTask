@@ -9,6 +9,11 @@ from sqlalchemy import(
 )
 from sqlalchemy.orm import relationship
 from .base import Base
+from sqlalchemy.dialects.postgresql import ENUM
+
+task_status = ('assigned', 'in_progress', 'under_review', 'completed')
+
+task_status_enum = ENUM(*task_status, name = 'task_status')
 
 class Task(Base):
     __tablename__ = 'tasks'
@@ -28,7 +33,7 @@ class Task(Base):
     # Due date for the task (cannot be null)
     due_date = Column(DateTime, nullable=False)
     # Status of the task (cannot be null)
-    status = Column(Text, nullable=False)
+    status = Column(task_status_enum, nullable=False)
 
     # Relationship with the 'Project' model
     project = relationship('Project')

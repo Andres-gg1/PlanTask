@@ -68,8 +68,7 @@ def login_user(request):
         if request.session["current_attempt"] >= MAX_ATTEMPTS:
             activity_log = ActivityLog(
                 timestamp=datetime.now(),
-                action="Added",
-                context="Several failed log in attempts",
+                action="login_several_failed_attempts",
                 changes=f"IP address: {ip_address}, Email/s used: {request.session['failed_email_attempts']}",
             )
             request.dbsession.add(activity_log)

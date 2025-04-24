@@ -1,6 +1,11 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 from .base import Base
+from sqlalchemy.dialects.postgresql import ENUM
+
+permissions = ('admin', 'user')
+
+permissions_enum = ENUM(*permissions, name='permissions')
 
 class User(Base):
     """
@@ -20,8 +25,8 @@ class User(Base):
     email: str = Column(String, nullable=False)
     # Password of the user (cannot be null)
     password: str = Column(String, nullable=False)
-    # Permissions assigned to the user (cannot be null). either "admin" or "user", used for limiting acces to admin functions
-    permission: str = Column(Text, nullable=False)
+    # Permissions assigned to the user (cannot be null). either "admin" or "user", used for limiting access to admin functions. Uses enum type
+    permission: str = Column(permissions_enum, nullable=False)
 
     task_comments = relationship('TaskComment', back_populates='user')
     microtask_comments = relationship('MicrotaskComment', back_populates='user')
