@@ -1,0 +1,38 @@
+{% block navbar %}
+
+<nav class="custom-navbar navbar bg-dark navbar-expand-lg fixed-top " data-bs-theme="dark">
+    <div class="container-fluid">
+        <a href="index.jinja2" class="navbar-brand">
+            <img src="{{ request.static_url('plantask:static/kochlogo.svg') }}" alt="Koch Company Logo" class="logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <form class="d-flex ms-auto me-3" role="search">
+                <div class="input-group">
+                    <span class="search-icon-wrapper input-group-text" id="search-icon"><i class="bi bi-search"></i></span>
+                    <input class="form-control search-input shadow-none" type="search" placeholder="Search" aria-label="Search" aria-describedby="search-icon">
+                    <button class="btn btn-light search-button" type="submit" aria-label="Search Button"><i class="bi bi-caret-down-fill"></i></button>
+                </div>
+            </form>
+            <ul class="navbar-nav d-flex align-items-center">
+                <li class="nav-item">
+                    <a class="nav-link navbar-icon-button" href="#" title="Info" aria-label="Info"><i class="bi bi-question-circle"></i></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link navbar-icon-button" href="#" title="Hourglass" aria-label="Hourglass"><i class="bi bi-hourglass-bottom"></i></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link navbar-icon-button" href="#" title="Notifications" aria-label="Notifications"><i class="bi bi-bell"></i></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link navbar-icon-button" href="#" title="Profile" aria-label="Profile"><i class="bi bi-circle-fill"></i></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+{% endblock navbar %}
+

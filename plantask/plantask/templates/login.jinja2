@@ -1,0 +1,61 @@
+{% extends "simple_layout.jinja2" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<main class="pt-5">
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        {% if not show_modal %}
+        <div class="card p-4 shadow w-100" style="max-width: 400px;">
+            <h3 class="text-center mb-4" id="formTitle">Login to Your Account</h3>
+            <form id="loginForm" method="POST" action="/login" class="fade-in show">
+            <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
+                <div class="mb-3">
+                    <label for="loginEmail" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="email" name="loginEmail" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="loginPassword" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="loginPassword" required>
+                </div>
+
+                {% if error_ping %}
+                <div class="text-danger small mb-2">{{ error_ping }}</div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-dark w-100">Login</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</main>
+
+{% if show_modal %}
+<div class="custom-modal show" id="pingModal" tabindex="-1" aria-hidden="false">
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">Network Verification Required</h5>
+            </div>
+            <div class="custom-modal-body">
+                <p>You are attempting to access PlanTask from an unrecognized network. Please enter your verification code below:</p>
+                <form method="POST" action="/login">
+                    <input type="hidden" name="csrf_token" value= "{{ request.session.get_csrf_token() }}">
+                    <input type="text" name="pingCode" class="form-control custom-input mb-2" placeholder="Enter PingID Code" required>
+                    {% if error_ping %}
+                        <div class="text-danger small">{{ error_ping }}</div>
+                    {% endif %}
+                    <div class="custom-modal-footer mt-3">
+                        <button type="submit" class="btn custom-btn w-100">Verify</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock content %}
+
+{% block scripts %}
+{% endblock %}

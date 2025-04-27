@@ -1,6 +1,0 @@
-Error during comparison: // -------------------------------------------- //
-  Tables in DB but not defined in models: 
-  {'alembic_version'}
-  
-  // -------------------------------------------- //
-assert not {'alembic_version'}

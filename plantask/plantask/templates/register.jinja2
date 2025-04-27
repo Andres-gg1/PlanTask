@@ -1,0 +1,89 @@
+{% extends "simple_layout.jinja2" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<main class="pt-5">
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        {% if not show_modal %}
+        <div class="card p-4 shadow w-100" style="max-width: 400px;">
+            <h3 class="text-center mb-4" id="formTitle">Register new user</h3>
+            <form id="signupForm" method="POST" action="/register" class="fade-in show">
+                <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
+                <div class="mb-3">
+                    <label for="signupFirstname" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="signupFirstname" name="signupFirstname" 
+                           value="{{ form_data.signupUsername if form_data else '' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="signupLastname" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="signupLastname" name="signupLastname" 
+                           value="{{ form_data.signupUsername if form_data else '' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="signupEmail" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="signupEmail" name="signupEmail" 
+                           value="{{ form_data.signupEmail if form_data else '' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="signupPassword" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="signupPassword" name="password" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="signupConfirm" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="signupConfirm" name="confirm_password" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="permission" class="form-label">Permission</label>
+                    <select class="form-control" id="permission" name="permission" required>
+                        <option value="user" {% if form_data and form_data.permission == 'user' %}selected{% endif %}>User</option>
+                        <option value="admin" {% if form_data and form_data.permission == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                </div>
+
+                {% if error_ping %}
+                <div class="alert alert-danger small p-2 mb-3" role="alert">
+                    {{ error_ping | safe }}
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-dark w-100">Sign Up</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</main>
+
+{% if show_modal %}
+<div class="custom-modal show" id="pingModal" tabindex="-1" aria-hidden="false">
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">Network Verification Required</h5>
+            </div>
+            <div class="custom-modal-body">
+                <p>You are attempting to access PlanTask from an unrecognized network. Please enter your verification code below:</p>
+                <form method="POST" action="/register">
+                    <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
+                    <input type="text" name="pingCode" class="form-control custom-input mb-2" placeholder="Enter PingID Code" required>
+                    {% if error_ping %}
+                        <div class="text-danger small">{{ error_ping }}</div>
+                    {% endif %}
+                    <div class="custom-modal-footer mt-3">
+                        <button type="submit" class="btn custom-btn w-100">Verify</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock content %}
+
+{% block scripts %}
+{% endblock %}

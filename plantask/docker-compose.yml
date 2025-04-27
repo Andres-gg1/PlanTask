@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  plantask_db:
+    image: postgres:latest
+    container_name: plantask_db
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - plantask_pgdata:/var/lib/postgresql/data
+
+  plantask_app:
+    build: .
+    container_name: plantask_app
+    restart: always
+    ports:
+      - "6543:6543"
+    depends_on:
+      - plantask_db
+    command: ["pserve", "production.ini"]
+
+volumes:
+    plantask_pgdata:
+

@@ -9,6 +9,11 @@ from sqlalchemy import(
 )
 from sqlalchemy.orm import relationship
 from .base import Base
+from sqlalchemy.dialects.postgresql import ENUM
+
+microtask_status = ('undone', 'under_review', 'approved')
+
+microtask_status_enum = ENUM(*microtask_status, name = 'microtask_status')
 
 class Microtask(Base):
     __tablename__ = 'microtasks'
@@ -26,7 +31,7 @@ class Microtask(Base):
     # Date and time when the microtask was created (cannot be null)
     date_created = Column(DateTime, nullable=False)
     # Status of the microtask (cannot be null)
-    status = Column(Text, nullable=False)
+    status = Column(microtask_status_enum, nullable=False)
     # Due date for the microtask
     due_date = Column(DateTime)
 

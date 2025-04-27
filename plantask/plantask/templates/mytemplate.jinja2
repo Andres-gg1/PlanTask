@@ -1,8 +1,25 @@
 {% extends "layout.jinja2" %}
 
+{% block title %}My Custom Page{% endblock %}
+
+{% block styles %}
+{% endblock %}
+
 {% block content %}
-<div class="content">
-  <h1><span class="font-semi-bold">Pyramid</span> <span class="smaller">Starter project</span></h1>
-  <p class="lead">Welcome to <span class="font-normal">{{project}}</span>, a&nbsp;Pyramid application generated&nbsp;by<br><span class="font-normal">Cookiecutter</span>.</p>
-</div>
+<main class="mycontainer">
+    {% if active_page %}
+        <h1>{{active_page}}</h1>
+    {% endif%}
+    <ul class="navtasks nav nav-underline">
+        <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#">Your tasks</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Your team's tasks</a>
+        </li>
+    </ul>
+</main>
 {% endblock content %}
+
+{% block scripts %}
+{% endblock %}

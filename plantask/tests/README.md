@@ -69,7 +69,3 @@ For more information on Allure and Pytest, visit the following resources:
 - Pytest Documentation: [https://docs.pytest.org/en/stable/](https://docs.pytest.org/en/stable/)
 - Allure Documentation: [https://allure.qatools.ru/](https://allure.qatools.ru/)
 ```
-
-Just copy the above text and paste it into your `README.md` file, and it should render correctly on GitHub and other Markdown-compatible platforms.
-
-Let me know if you need any further adjustments!
