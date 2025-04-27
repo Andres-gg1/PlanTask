@@ -1,5 +1,4 @@
 ![image](https://github.com/user-attachments/assets/e9305267-383f-4241-ae30-2d28c7702c11)
-![image](https://github.com/user-attachments/assets/67965073-4ad9-4d41-b4be-8f7485733695)
 
 
 # PlanTask
