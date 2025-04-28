@@ -35,6 +35,7 @@ def add_global_template_variables(event):
     request = event['request']
     event['active_page'] = request.matched_route.name if request.matched_route else None
     event['role'] = request.session.get('role', None)
+    event['csrf_token'] = request.get_csrf_token()
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
@@ -65,6 +66,7 @@ def main(global_config, **settings):
         config.set_session_factory(my_session_factory)
 
         config.set_csrf_storage_policy(CookieCSRFStoragePolicy())
+        config.add_request_method('pyramid.csrf.get_csrf_token', name='get_csrf_token')
         config.set_default_csrf_options(require_csrf=True)
 
         config.include('pyramid_jinja2')

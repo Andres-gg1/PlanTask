@@ -86,7 +86,7 @@ def login_user(request):
                     request.session.pop("failed_email_attempts", None)
                     request.session.pop("current_attempt", None)
 
-                    return HTTPFound(location=request.route_url('home'), headers=headers)
+                    return HTTPFound(location=request.route_url('Home'), headers=headers)
             except argon2.exceptions.VerifyMismatchError:
                 request.session["current_attempt"] += 1
                 if email not in request.session["failed_email_attempts"]:
@@ -96,7 +96,8 @@ def login_user(request):
 
         return {"show_modal": False, "error_ping": "Invalid credentials."}
 
-    except Exception:
+    except Exception as e:
+        print(e)
         return {"show_modal": False, "error_ping": "Internal server error."}
 
 
