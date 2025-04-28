@@ -6,6 +6,6 @@ def includeme(config):
     config.add_route('validate_code', '/validate-code')
     config.add_route('register', '/register')
     config.add_route('invalid_permissions','/invalid-permissions')
-    config.add_route('create_project','/create-project')
+    config.add_route('create_project', '/create-project')
     config.add_route('project_by_id', '/project/{id:\d+}')
     config.add_route('project_by_slug', '/project/{slug}')

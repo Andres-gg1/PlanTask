@@ -117,7 +117,7 @@
 }
 
 .mycontainer{
-    margin-top: 5.5rem;
+    margin-top: 4.7rem;
     margin-bottom: 1rem;
     margin-left: 5.5rem;
     margin-right: 1rem;
@@ -141,4 +141,34 @@
 
 .navtasks .nav-link.active {
     color: #7574C7;
+}
+
+.create-proj-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem; 
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    background-color: #dc3545; 
+    color: white;
+    border-radius: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    font-size: 1.25rem; 
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.create-proj-button:hover {
+    background-color: #c82333; 
+    transform: scale(1.1);
+}
+
+.create-proj-button i {
+    margin-left: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: bolder;
 }

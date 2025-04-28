@@ -7,21 +7,20 @@
 
 {% block content %}
 <main class="mycontainer">
-    {% if active_page %}
-        <h1>{{active_page}}</h1>
-    {% endif%}
-    <ul class="navtasks nav nav-underline">
-        <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Your tasks</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#">Your team's tasks</a>
-        </li>
-    </ul>
-    {% if role == 'admin'%}
-        <a href="DIRECCION PARA CREAR PROJECTO" class="btn btn-danger">Create New Project</a>
-    {% endif %}
-
+  {% if active_page %}
+    <h1>{{active_page}}</h1>
+  {% endif %}
+  <ul class="navtasks nav nav-underline">
+    <li class="nav-item">
+      <a class="nav-link active" aria-current="page" href="#">Your tasks</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Your team's tasks</a>
+    </li>
+  </ul>
+  {% if role == 'admin' %}
+    <a href="/create-project" class="create-proj-button">Create New Project  <i class="bi-plus-lg"></i></a>
+  {% endif %}
 </main>
 {% endblock content %}
 

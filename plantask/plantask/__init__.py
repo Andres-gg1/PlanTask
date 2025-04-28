@@ -18,6 +18,8 @@ class RootFactory:
         (Allow, 'role:user', 'user'),
         (Allow, 'role:pm', 'pm')
     ]
+    def __init__(self, request):
+        pass
 
 @forbidden_view_config()
 def forbidden_view(request):
@@ -48,8 +50,8 @@ def main(global_config, **settings):
     def groupfinder(userid, request):
         user = request.dbsession.query(User).get(userid)
         if user:
-            return [f'role:{user.permission}']  # role:admin, role:pm, etc.
-        return []
+            return [f'role:{user.permission}']
+        return []   
 
     """
     Authentication and Authorization policies
@@ -57,7 +59,7 @@ def main(global_config, **settings):
     authn_policy = AuthTktAuthenticationPolicy(secretkey, hashalg='sha512', cookie_name='auth_tkt', callback=groupfinder)
     authz_policy = ACLAuthorizationPolicy()
 
-    with Configurator(settings=settings) as config:
+    with Configurator(settings=settings, root_factory=RootFactory) as config:
         config.set_authentication_policy(authn_policy)
         config.set_authorization_policy(authz_policy)
 
