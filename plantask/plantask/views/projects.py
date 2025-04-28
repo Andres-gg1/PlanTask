@@ -8,7 +8,7 @@ from plantask.auth.verifysession import verify_session
 
 @view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='GET', permission="admin")
 def create_project_page(request):
-    return {}
+    return { "User" : request.session.get('username')}
 
 
 @view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='POST', permission="admin")

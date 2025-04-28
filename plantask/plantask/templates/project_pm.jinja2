@@ -3,7 +3,7 @@
 {% block title %}{{ project.name | default('My New Project') }}{% endblock %}
 
 {% block styles %}
-<link href="{{ request.static_url('plantask:static/styles/projects.css') }}" rel="stylesheet">
+    <link href="{{ request.static_url('plantask:static/styles/projects.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}

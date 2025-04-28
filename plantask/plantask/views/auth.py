@@ -81,6 +81,7 @@ def login_user(request):
                 if psw_hasher.verify(user.password, password):
                     headers = remember(request, str(user.id))
                     request.session['role'] = user.permission
+                    request.session['username'] = user.username
                     request.session['expires_at'] = str(datetime.now() + timedelta(minutes=30))
                     request.session.pop("pingid_ok", None)
                     request.session.pop("failed_email_attempts", None)
