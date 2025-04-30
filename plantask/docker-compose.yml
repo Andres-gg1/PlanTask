@@ -7,6 +7,10 @@ services:
     restart: always
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: docker_user
+      POSTGRES_PASSWORD: Plantaskwawawa
+      POSTGRES_DB: plantask_db
     volumes:
       - plantask_pgdata:/var/lib/postgresql/data
 
@@ -21,5 +25,5 @@ services:
     command: ["pserve", "production.ini"]
 
 volumes:
-    plantask_pgdata:
+  plantask_pgdata:
 
