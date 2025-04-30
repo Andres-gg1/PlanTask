@@ -2,13 +2,17 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
-from plantask.models.project import Project
+from plantask.models.project import Project, ProjectsUser
 from plantask.auth.verifysession import verify_session
 
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
 @verify_session
-def my_projects(request):
-    return {}
+def my_projects_page(request):
+    projects = projects = request.dbsession.query(Project)\
+        .join(ProjectsUser, Project.id == ProjectsUser.project_id)\
+        .filter(ProjectsUser.user_id == request.session.get('user_id'))\
+        .all()
+    return {'projects' : projects}
 
 @view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='GET', permission="admin")
 @verify_session
@@ -20,7 +24,6 @@ def create_project_page(request):
 @verify_session
 def create_project(request):
     try:
-        print(f"Authenticated User: {request.authenticated_userid}, Role: {request.session.get('role')}")
         # Extract form data
         name = request.POST.get('name')
         description = request.POST.get('description')
@@ -39,6 +42,18 @@ def create_project(request):
         # Add the project to the database
         request.dbsession.add(new_project)
         request.dbsession.flush()  # Flush to ensure the project is saved
+        
+        project_creator_relation = ProjectsUser(
+            project_id = new_project.id,
+            user_id = request.session.get('user_id'),
+            role = "project_manager"
+        )
+        
+        request.dbsession.add(project_creator_relation)
+        
+        request.dbsession.flush()  # Flush to ensure the project is saved
+        
+        
 
         return HTTPFound(location=request.route_url('home'))
 
