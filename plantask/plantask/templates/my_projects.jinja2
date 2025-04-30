@@ -7,8 +7,16 @@
 
 {% block content %}
 <main class="mycontainer">
-    <h1>My Projects</h1>
+  <h1>My Projects</h1>
 
+  {%for project in projects %}
+  <a href="{{ request.url for {{project.id}}}" class="card" style="width: 18rem;">
+    <img src="{{ request.static_url('plantask:static/img_example.jpg') }}" class="card-img-top" alt="...">
+    <div class="card-body">
+      <h5 class="card-title">{{project.title}} </h5>
+      <p class="card-text">{{project.description}}</p>
+  </a>
+  {% endfor %}
 
   {% if role == 'admin' %}
     <a href="/create-project" class="create-proj-button">Create New Project  <i class="bi-plus-lg"></i></a>
