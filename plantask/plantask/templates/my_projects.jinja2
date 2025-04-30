@@ -1,0 +1,20 @@
+{% extends "layout.jinja2" %}
+
+{% block title %}My Custom Page{% endblock %}
+
+{% block styles %}
+{% endblock %}
+
+{% block content %}
+<main class="mycontainer">
+    <h1>My Projects</h1>
+
+
+  {% if role == 'admin' %}
+    <a href="/create-project" class="create-proj-button">Create New Project  <i class="bi-plus-lg"></i></a>
+  {% endif %}
+</main>
+{% endblock content %}
+
+{% block scripts %}
+{% endblock %}

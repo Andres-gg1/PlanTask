@@ -5,13 +5,19 @@ from datetime import datetime
 from plantask.models.project import Project
 from plantask.auth.verifysession import verify_session
 
+@view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
+@verify_session
+def my_projects_page(request):
+    return {}
 
 @view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='GET', permission="admin")
+@verify_session
 def create_project_page(request):
-    return { "User" : request.session.get('username')}
+    return {}
 
 
 @view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='POST', permission="admin")
+@verify_session
 def create_project(request):
     try:
         print(f"Authenticated User: {request.authenticated_userid}, Role: {request.session.get('role')}")
@@ -34,7 +40,7 @@ def create_project(request):
         request.dbsession.add(new_project)
         request.dbsession.flush()  # Flush to ensure the project is saved
 
-        return HTTPFound(location=request.route_url('Home'))
+        return HTTPFound(location=request.route_url('home'))
 
     except SQLAlchemyError as e:
         # Handle database errors

@@ -53,7 +53,8 @@
 {% block content %}
 <main class="mycontainer">
     <div class="form-container">
-        <h1 class="page-title">Create a New Project | {{ User }}</h1>
+        <h1 class="page-title">Create a New Project</h1>
+        <h4 class="page-title">As {{user.username}}</h4>
 
         <form action="/create-project" method="POST">
             <div class="form-group">

@@ -35,6 +35,7 @@ from pyramid.events import subscriber, BeforeRender
 @subscriber(BeforeRender)
 def add_global_template_variables(event):
     request = event['request']
+    event['user'] = request.dbsession.query(User).get(request.authenticated_userid) if request.authenticated_userid else None
     event['active_page'] = request.matched_route.name if request.matched_route else None
     event['role'] = request.session.get('role', None)
 
