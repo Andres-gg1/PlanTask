@@ -10,3 +10,6 @@ def includeme(config):
     config.add_route('my_projects', '/projects')
     config.add_route('create_project', '/create-project')
     config.add_route('project_by_id', '/project/{id:\d+}')
+    config.add_route('edit_project', '/project/{id:\d+}/edit')
+    config.add_route('delete_project', '/project/{id:\d+}/delete')
+    config.add_route('add_member', '/project/{id:\d+}/add-member')

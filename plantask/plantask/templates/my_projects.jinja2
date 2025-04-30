@@ -3,6 +3,13 @@
 {% block title %}My Custom Page{% endblock %}
 
 {% block styles %}
+<style>
+.card {
+  text-decoration: none;
+}
+
+
+</style>
 {% endblock %}
 
 {% block content %}
@@ -13,7 +20,7 @@
   <a href="{{ request.route_url('project_by_id', id=project.id) }}" class="card" style="width: 18rem;">
     <img src="{{ request.static_url('plantask:static/img_example.jpg') }}" class="card-img-top" alt="...">
     <div class="card-body">
-      <h5 class="card-title">{{ project.title }}</h5>
+      <h5 class="card-title">{{ project.name }}</h5>
       <p class="card-text">{{ project.description }}</p>
     </div>
   </a>

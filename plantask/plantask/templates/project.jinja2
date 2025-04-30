@@ -1,0 +1,113 @@
+{% extends "layout.jinja2" %}
+
+{% block title %}{{ project.name | default('My New Project') }}{% endblock %}
+
+{% block styles %}
+    <link href="{{ request.static_url('plantask:static/styles/projects.css') }}" rel="stylesheet">
+    <style>
+    .modal-body,
+    .modal-footer{
+        background-color: #f6f7f8;
+    }
+    .form-label{
+        font-weight: 600;
+    }
+    .mybtn{
+        margin-right: 3rem;
+    }
+    .smooth-dropdown.show {
+        max-height: 15rem;
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+<main class="mycontainer">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div class="d-flex align-items-center">
+            <div>
+                <h1 class="me-3">{{ project.name | default('My New Project') }}</h1>
+                <h3>{{ project.description | default('No description available') }}</h3>
+            </div>
+        </div>
+        <div class="dropdown">
+            <button class="mybtn btn btn-secondary dropdown-toggle" type="button" id="membersDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Members ({{ members.__len__() }}) <i class="bi-people"></i>
+            </button>
+            <ul class="dropdown-menu smooth-dropdown" aria-labelledby="membersDropdown">
+                {% for member in members %}
+                <li>
+                <div class="card" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">{{member.first_name}} {{member.last_name}}</h5>
+                    <a href="#" class="card-link">{{member.username}}</a>
+                    <h6 class="card-subtitle mb-2 text-body-secondary">{{}}</h6>
+                    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+
+                    <a href="#" class="card-link">Another link</a>
+                </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <div class="content-row">
+        {% if role == 'admin' %}
+        <div class="admin-actions">
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editProjectModal">Edit Project <i class="bi-pencil-square"></i></button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteProjectModal">Delete Project <i class="bi-trash3"></i></button>
+            <a href="{{ request.route_url('add_member', id=project.id) }}" class="btn btn-success">Add Member <i class="bi-person-add"></i></a>
+        </div>
+        {% endif %}
+    </div>
+</main>
+
+<!-- Edit Project Modal -->
+<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ request.route_url('edit_project', id=project.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="projectName" class="form-label">Project Name</label>
+                        <input type="text" class="form-control" id="projectName" name="name" value="{{ project.name }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="projectDescription" class="form-label">Project Description</label>
+                        <textarea class="form-control" id="projectDescription" name="description">{{ project.description }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-info">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Project Modal -->
+<div class="modal fade" id="deleteProjectModal" tabindex="-1" aria-labelledby="deleteProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteProjectModalLabel">Delete Project</h5>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the project "{{ project.name }}"?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{{ request.route_url('delete_project', id=project.id) }}" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+{% endblock %}
