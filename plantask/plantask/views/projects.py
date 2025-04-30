@@ -2,13 +2,19 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
-from plantask.models.project import Project
+from plantask.models.project import Project, ProjectsUser
 from plantask.auth.verifysession import verify_session
 
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
 @verify_session
 def my_projects_page(request):
-    return {}
+    projects = projects = request.session.query(Project)\
+        .join(ProjectsUser, Project.id == ProjectsUser.project_id)\
+        .filter(ProjectsUser.user_id == request.session.get('user').id)\
+        .all()
+    return {'projects' : projects}
+
+
 
 @view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='GET', permission="admin")
 @verify_session
