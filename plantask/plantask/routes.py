@@ -13,3 +13,5 @@ def includeme(config):
     config.add_route('edit_project', '/project/{id:\d+}/edit')
     config.add_route('delete_project', '/project/{id:\d+}/delete')
     config.add_route('add_member', '/project/{id:\d+}/add-member')
+    config.add_route('search_users', '/search-users')
+    config.add_route('remove_member', '/project/{id:\d+}/remove-member')

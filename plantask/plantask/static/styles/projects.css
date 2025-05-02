@@ -1,39 +1,67 @@
-/* Members Section Styling */
-.members-section {
-    margin-top: 20px;
+.modal-body,
+.modal-footer {
+    background-color: #f6f7f8;
+}
+.form-label {
+    font-weight: 600;
+}
+.mybtn {
+    margin-right: 3rem;
 }
 
-.members-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    max-height: 300px; /* Adjust height for 10 members */
-    overflow-y: auto; /* Enable scrolling if content exceeds max-height */
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 10px;
+.card-body {
+    padding: 1rem 1rem;
 }
 
-.members-list li {
-    padding: 5px 0;
+.description {
+    font-size: 1.5rem;
+}
+.btn{
+    font-weight: 500;
+}
+
+.dropdown-menu {
+    max-height: 30rem;
+    overflow-y: auto; 
+}
+
+.banner {
+    width: calc(100vw - 4rem);
+    margin-top: 3.5rem;
+    margin-left: 4.5rem;
+    height: 12rem;
+    background-size: cover;
+    background-position: center;
+    border-bottom-left-radius: 25px;
+    border-bottom-right-radius: 25px;
+}
+
+#userSearchResults {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.search-result-item {
+    padding: 0.5rem;
     border-bottom: 1px solid #eee;
 }
 
-.members-list li:last-child {
-    border-bottom: none;
-}
-
-/* Scrollable list for users */
-.users-list-container {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 10px;
-}
-
-.list-group-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+@media (max-width: 62rem) {
+    .d-flex {
+        flex-direction: column !important;
+        align-items: flex-start; 
+    }
+    .dropdown, .admin-actions {
+        width: 100%;
+        margin-top: 1rem; 
+    }
+    .mybtn {
+        margin-right: 0 !important;
+        width: 100%; 
+    }
+    .btn {
+        margin-bottom: 0.2rem;
+    }
 }

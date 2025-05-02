@@ -1,13 +1,13 @@
 from pyramid.config import Configurator
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
-from pyramid.security import Allow
+from pyramid.security import Allow, ALL_PERMISSIONS
 from .models.user import User
 from pyramid.httpexceptions import HTTPForbidden
 from pyramid.view import forbidden_view_config
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound
-from pyramid.session import SignedCookieSessionFactory  # <-- NUEVO
+from pyramid.session import SignedCookieSessionFactory
 
 class RootFactory:
     """
@@ -16,7 +16,10 @@ class RootFactory:
     __acl__ = [
         (Allow, 'role:admin', 'admin'),
         (Allow, 'role:user', 'user'),
-        (Allow, 'role:pm', 'pm')
+        (Allow, 'role:pm', 'pm'),
+        # Compound permission for admin OR project_manager
+        (Allow, 'role:admin', 'admin_or_project_manager'),
+        (Allow, 'role:project_manager', 'admin_or_project_manager')
     ]
     def __init__(self, request):
         pass
@@ -35,7 +38,18 @@ from pyramid.events import subscriber, BeforeRender
 @subscriber(BeforeRender)
 def add_global_template_variables(event):
     request = event['request']
-    event['user'] = request.dbsession.query(User).get(request.authenticated_userid) if request.authenticated_userid else None
+    if request.authenticated_userid:
+        user = request.dbsession.query(User).get(request.authenticated_userid)
+        if user:
+            event['user'] = {
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email
+            }
+    else:
+        event['user'] = None
     event['active_page'] = request.matched_route.name if request.matched_route else None
     event['role'] = request.session.get('role', None)
 
@@ -66,7 +80,6 @@ def main(global_config, **settings):
 
         my_session_factory = SignedCookieSessionFactory(secretkey)
         config.set_session_factory(my_session_factory)
-
         config.include('pyramid_jinja2')
         config.include('.routes')
         config.include('.models')

@@ -26,17 +26,17 @@
                 <li class="nav-item">
                     <a class="nav-link navbar-icon-button" href="#" title="Notifications" aria-label="Notifications"><i class="bi bi-bell"></i></a>
                 </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link navbar-icon-button" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile" aria-label="Profile">
-                    <i class="bi bi-circle-fill"></i>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                    <li class="dropdown-item">{{ user.first_name }} {{ user.last_name }}</li>
-                    <li class="dropdown-item">@{{ user.username }}</li>
-                    <li class="dropdown-item">{{ user.email }}</li>
-                    <li><a class="dropdown-item" href="{{ request.route_url('logout') }}">Logout <i class="bi bi-box-arrow-right"></i></a></li>
-                </ul>
-            </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link navbar-icon-button" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile" aria-label="Profile">
+                        <i class="bi bi-circle-fill"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        <li class="dropdown-item">{{ user.first_name }} {{ user.last_name }}</li>
+                        <li class="dropdown-item">@{{ user.username }}</li>
+                        <li class="dropdown-item">{{ user.email }}</li>
+                        <li><a class="dropdown-item" href="{{ request.route_url('logout') }}">Logout <i class="bi bi-box-arrow-right"></i></a></li>
+                    </ul>
+                </li>
             </ul>
         </div>
     </div>

@@ -59,7 +59,6 @@
     z-index: 999;
 }
 
-
 .sidebar .nav-link,
 .sidebar .nav-active {
     color: white;
@@ -94,6 +93,7 @@
 :root {
     --box-shadow-navbar: 0px 8px 8px -6px rgba(0, 0, 0, 0.5);
 }
+
 .custom-navbar {
     min-height: 3.5rem;
     box-shadow: var(--box-shadow-navbar);
@@ -107,24 +107,41 @@
     padding-top: 1rem;
 }
 
-@media (max-width: 61.969rem) {
+@media (max-width: 62rem) {
+    .navbar-nav {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+
+    .navbar-nav .nav-item {
+        flex-grow: 1;
+        text-align: center;
+    }
+
+    .navbar-nav .nav-item.dropdown {
+        margin-left: 0;
+    }
+
     .search-input {
-        width: 12rem;
+        width: 12rem; /* 12rem = 192px (aproximadamente, dependiendo del tamaño de fuente raíz) */
     }
 
     .custom-navbar .navbar-collapse {
-        padding: 1rem;
+        padding: 1rem; /* Un buen ajuste para márgenes/padding en pantallas más pequeñas */
     }
 }
 
-.mycontainer{
+
+.mycontainer {
     margin-top: 4.7rem;
     margin-bottom: 1rem;
     margin-left: 5.5rem;
     margin-right: 1rem;
 }
 
-.navtasks{
+.navtasks {
     padding-left: 1rem;
     padding-right: 0.5rem;
     background-color: #D9D9D9;
@@ -137,10 +154,12 @@
 .navtasks .nav-link {
     padding: 0.25rem 0.5rem; 
     font-size: 0.9rem;
+    font-family: "Proxima Nova";
     color: black;
 }
 
 .navtasks .nav-link.active {
+    font-family: "Proxima Nova";
     color: #7574C7;
 }
 

@@ -3,49 +3,48 @@
 {% block title %}{{ project.name | default('My New Project') }}{% endblock %}
 
 {% block styles %}
-    <link href="{{ request.static_url('plantask:static/styles/projects.css') }}" rel="stylesheet">
-    <style>
-    .modal-body,
-    .modal-footer{
-        background-color: #f6f7f8;
-    }
-    .form-label{
-        font-weight: 600;
-    }
-    .mybtn{
-        margin-right: 3rem;
-    }
-    .smooth-dropdown.show {
-        max-height: 15rem;
-    }
-    </style>
+<link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/projects.css') }}">
 {% endblock %}
 
 {% block content %}
-<main class="mycontainer">
+<div class="banner" style="background-image: url('{{ request.static_url('plantask:static/img_example.jpg') }}');"></div>
+<main class="mycontainer" style="margin-top: 1rem;">
     <div class="d-flex justify-content-between align-items-center flex-wrap">
         <div class="d-flex align-items-center">
             <div>
-                <h1 class="me-3">{{ project.name | default('My New Project') }}</h1>
-                <h3>{{ project.description | default('No description available') }}</h3>
+                <h1>{{ project.name if project and project.name else 'My New Project' }}</h1>
+                <p class="description">{{ project.description | default('No description available') }}</p>
             </div>
         </div>
         <div class="dropdown">
-            <button class="mybtn btn btn-secondary dropdown-toggle" type="button" id="membersDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                Members ({{ members.__len__() }}) <i class="bi-people"></i>
+            <button class="mybtn btn btn-secondary" type="button" id="membersDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="false">
+                Members ({{ project_members|length }}) 
+                <i class="bi-people"></i>
+                <i class="bi-chevron-down" id="dropdownIcon"></i> <!-- Aquí está el icono de chevron -->
             </button>
-            <ul class="dropdown-menu smooth-dropdown" aria-labelledby="membersDropdown">
-                {% for member in members %}
-                <li>
-                <div class="card" style="width: 18rem;">
-                <div class="card-body">
-                    <h5 class="card-title">{{member.first_name}} {{member.last_name}}</h5>
-                    <a href="#" class="card-link">{{member.username}}</a>
-                    <h6 class="card-subtitle mb-2 text-body-secondary">{{}}</h6>
-                    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-
-                    <a href="#" class="card-link">Another link</a>
-                </div>
+            <ul class="dropdown-menu p-3 smooth-dropdown" aria-labelledby="membersDropdown" style="width: 22rem;">
+                {% for member, show_role in project_members %}
+                <li class="mb-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body d-flex align-items-start justify-content-between">
+                            <div class="d-flex">
+                                <i class="bi-person-circle fs-3 text-primary me-3"></i>
+                                <div>
+                                    <h6 class="card-title mb-1">{{ member.first_name }} {{ member.last_name }}</h6>
+                                    <p class="card-text mb-1 text-muted">@{{ member.username }}</p>
+                                    <small class="text-secondary">{{ show_role }}</small>
+                                </div>
+                            </div>
+                            {% if role == 'admin' and member.id != request.session.get('user_id') %}
+                            <form method="POST" action="{{ request.route_url('remove_member', id=project.id) }}" class="remove-member-form" data-member-name="{{ member.first_name }} {{ member.last_name }}">
+                                <input type="hidden" name="user_id" value="{{ member.id }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove member">
+                                    <i class="bi-person-dash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
                 </li>
                 {% endfor %}
             </ul>
@@ -57,11 +56,29 @@
         <div class="admin-actions">
             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editProjectModal">Edit Project <i class="bi-pencil-square"></i></button>
             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteProjectModal">Delete Project <i class="bi-trash3"></i></button>
-            <a href="{{ request.route_url('add_member', id=project.id) }}" class="btn btn-success">Add Member <i class="bi-person-add"></i></a>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMemberModal">Add Member <i class="bi-person-add"></i></button>
         </div>
         {% endif %}
     </div>
 </main>
+
+<div class="modal fade" id="confirmRemoveMemberModal" tabindex="-1" aria-labelledby="confirmRemoveMemberModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmRemoveMemberModalLabel">Confirm Remove</h5>
+      </div>
+      <div class="modal-body">
+        <p id="removeMemberMessage">Are you sure you want to remove this member?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="confirmRemoveBtn" type="button" class="btn btn-danger">Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- Edit Project Modal -->
 <div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
@@ -70,6 +87,7 @@
             <form method="POST" action="{{ request.route_url('edit_project', id=project.id) }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -96,6 +114,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="deleteProjectModalLabel">Delete Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to delete the project "{{ project.name }}"?
@@ -107,7 +126,46 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="addMemberForm" method="POST" action="{{ request.route_url('add_member', id=project.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addMemberModalLabel">Add Members</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="usernameSearch" class="form-label">Search for users by username</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="usernameSearch" placeholder="Search..." autocomplete="off">
+                            <button class="btn btn-outline-secondary" type="button" onclick="searchUsers()">Search</button>
+                        </div>
+                        <small class="form-text text-muted">Type at least 2 characters to search</small>
+                    </div>
+                    
+                    <div id="userSearchResults" class="mb-3">
+                    </div>
+
+                    <div class="mb-3">
+                        <h6>Selected Users</h6>
+                        <ul id="selectedUsersList" class="list-group">
+                        </ul>
+                    </div>
+                    <div id="hiddenInputsContainer">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success" id="addMembersBtn">Add Members</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock content %}
 
 {% block scripts %}
+<script src="{{ request.static_url('plantask:static/scripts/project.js') }}"></script>
+
 {% endblock %}
