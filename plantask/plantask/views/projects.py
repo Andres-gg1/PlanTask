@@ -10,6 +10,7 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from plantask.models.user import User
 from plantask.models.project import ProjectsUser
+from urllib.parse import urlencode
 
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
 @verify_session
@@ -52,7 +53,7 @@ def create_project(request):
         request.dbsession.add(project_creator_relation)
         request.dbsession.flush()
 
-        return HTTPFound(location=request.route_url('home'))
+        return HTTPFound(location=request.route_url('project_by_id', id=new_project.id))
 
     except SQLAlchemyError:
         request.dbsession.rollback()
@@ -88,11 +89,14 @@ def project_page(request):
         mapped_members = [(member, role_map.get(role, role)) for member, role in project_members]
 
         role = projects_user.role
-
+        announcement = request.params.get('announcement')
+        message = request.params.get('message')
         return {
             "project": project,
             "project_members": mapped_members, 
-            "show_role": role
+            "show_role": role,
+            "announcement": announcement,
+            "message": message 
         }
 
     except SQLAlchemyError:
@@ -224,7 +228,9 @@ def add_member(request):
             
             request.dbsession.flush()
         
-        return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+        query_string = urlencode({"announcement": "success", "message": "Members added successfully."})
+        url = f"{request.route_url('project_by_id', id=project_id)}?{query_string}"
+        return HTTPFound(location=url)
         
     except SQLAlchemyError as e:
         request.dbsession.rollback()
@@ -252,7 +258,9 @@ def remove_member(request):
             request.dbsession.delete(relation)
             request.dbsession.flush()
 
-        return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+        query_string = urlencode({"announcement": "alert", "message": "Members removed from the project successfully."})
+        url = f"{request.route_url('project_by_id', id=project_id)}?{query_string}"
+        return HTTPFound(location=url)
 
     except Exception:
         request.dbsession.rollback()

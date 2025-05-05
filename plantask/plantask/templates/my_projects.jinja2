@@ -16,6 +16,9 @@
 <main class="mycontainer">
   <h1>My Projects</h1>
 
+
+
+
   {% for project in projects %}
   <a href="{{ request.route_url('project_by_id', id=project.id) }}" class="card" style="width: 18rem;">
     <img src="{{ request.static_url('plantask:static/img_example.jpg') }}" class="card-img-top" alt="...">
@@ -30,7 +33,7 @@
     <a href="/create-project" class="create-proj-button">Create New Project  <i class="bi-plus-lg"></i></a>
   {% endif %}
 </main>
-{% endblock content %}
+{% endblock %}
 
 {% block scripts %}
 {% endblock %}

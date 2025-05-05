@@ -16,6 +16,11 @@
                 <p class="description">{{ project.description | default('No description available') }}</p>
             </div>
         </div>
+        {% if announcement %}
+        <div class="alert alert-{{announcement}}" role="alert">
+            {{ message }}
+        </div>
+        {% endif %}
         <div class="dropdown">
             <button class="mybtn btn btn-secondary" type="button" id="membersDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="false">
                 Members ({{ project_members|length }}) 
@@ -167,5 +172,15 @@
 
 {% block scripts %}
 <script src="{{ request.static_url('plantask:static/scripts/project.js') }}"></script>
-
+<script>
+    // Hide the announcement after 15 seconds
+    document.addEventListener('DOMContentLoaded', function () {
+        const announcement = document.getElementById('announcement');
+        if (announcement) {
+            setTimeout(() => {
+                announcement.style.display = 'none';
+            }, 15000); // 15 seconds
+        }
+    });
+</script>
 {% endblock %}
