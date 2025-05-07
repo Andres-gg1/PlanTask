@@ -19,7 +19,7 @@ class RootFactory:
         (Allow, 'role:pm', 'pm'),
         # Compound permission for admin OR project_manager
         (Allow, 'role:admin', 'admin_or_project_manager'),
-        (Allow, 'role:project_manager', 'admin_or_project_manager')
+        (Allow, 'role:pm', 'admin_or_project_manager')
     ]
     def __init__(self, request):
         pass

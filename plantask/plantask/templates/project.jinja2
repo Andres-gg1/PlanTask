@@ -1,6 +1,6 @@
 {% extends "layout.jinja2" %}
 
-{% block title %}{{ project.name | default('My New Project') }}{% endblock %}
+{% block title %}{{ project.name | default('Project') }}{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/projects.css') }}">
@@ -9,23 +9,26 @@
 {% block content %}
 <div class="banner" style="background-image: url('{{ request.static_url('plantask:static/img_example.jpg') }}');"></div>
 <main class="mycontainer" style="margin-top: 1rem;">
-    <div class="d-flex justify-content-between align-items-center flex-wrap">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
         <div class="d-flex align-items-center">
             <div>
                 <h1>{{ project.name if project and project.name else 'My New Project' }}</h1>
-                <p class="description">{{ project.description | default('No description available') }}</p>
+                <p class="description" id="projectDescription">{{ project.description | default('No description available') }}</p>
+                {% if project.description and project.description|length > 200 %}
+                    <span class="read-more-btn" id="readMoreBtn">Read More</span>
+                {% endif %}
             </div>
         </div>
-        {% if announcement %}
-        <div class="alert alert-{{announcement}}" role="alert">
-            {{ message }}
-        </div>
-        {% endif %}
+        {% for f in flashes %}
+            <div class="alert alert-{{ f.style }} announcement" role="alert">
+                {{ f.message }}
+            </div>
+        {% endfor %}
         <div class="dropdown">
             <button class="mybtn btn btn-secondary" type="button" id="membersDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="false">
                 Members ({{ project_members|length }}) 
                 <i class="bi-people"></i>
-                <i class="bi-chevron-down" id="dropdownIcon"></i> <!-- Aquí está el icono de chevron -->
+                <i class="bi-chevron-down" id="dropdownIcon"></i>
             </button>
             <ul class="dropdown-menu p-3 smooth-dropdown" aria-labelledby="membersDropdown" style="width: 22rem;">
                 {% for member, show_role in project_members %}
@@ -173,13 +176,28 @@
 {% block scripts %}
 <script src="{{ request.static_url('plantask:static/scripts/project.js') }}"></script>
 <script>
-    // Hide the announcement after 15 seconds
     document.addEventListener('DOMContentLoaded', function () {
-        const announcement = document.getElementById('announcement');
-        if (announcement) {
+        const announcements = document.querySelectorAll('.announcement');
+        announcements.forEach(a => {
             setTimeout(() => {
-                announcement.style.display = 'none';
-            }, 15000); // 15 seconds
+                a.style.display = 'none';
+            }, 5000);
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+        const description = document.getElementById('projectDescription');
+        const readMoreBtn = document.getElementById('readMoreBtn');
+
+        if (readMoreBtn) {
+            readMoreBtn.addEventListener('click', function () {
+                if (description.classList.contains('expanded')) {
+                    description.classList.remove('expanded');
+                    readMoreBtn.textContent = 'Read More';
+                } else {
+                    description.classList.add('expanded');
+                    readMoreBtn.textContent = 'Show Less';
+                }
+            });
         }
     });
 </script>

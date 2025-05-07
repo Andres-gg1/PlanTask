@@ -89,14 +89,12 @@ def project_page(request):
         mapped_members = [(member, role_map.get(role, role)) for member, role in project_members]
 
         role = projects_user.role
-        announcement = request.params.get('announcement')
-        message = request.params.get('message')
+        flashes = request.session.pop_flash()
         return {
             "project": project,
-            "project_members": mapped_members, 
+            "project_members": mapped_members,
             "show_role": role,
-            "announcement": announcement,
-            "message": message 
+            "flashes": flashes
         }
 
     except SQLAlchemyError:
@@ -228,9 +226,8 @@ def add_member(request):
             
             request.dbsession.flush()
         
-        query_string = urlencode({"announcement": "success", "message": "Members added successfully."})
-        url = f"{request.route_url('project_by_id', id=project_id)}?{query_string}"
-        return HTTPFound(location=url)
+        request.session.flash({'message': 'Members added successfully.', 'style': 'success'})
+        return HTTPFound(location=request.route_url('project_by_id', id=project_id))
         
     except SQLAlchemyError as e:
         request.dbsession.rollback()
@@ -258,9 +255,8 @@ def remove_member(request):
             request.dbsession.delete(relation)
             request.dbsession.flush()
 
-        query_string = urlencode({"announcement": "alert", "message": "Members removed from the project successfully."})
-        url = f"{request.route_url('project_by_id', id=project_id)}?{query_string}"
-        return HTTPFound(location=url)
+        request.session.flash({'message': 'Member removed successfully.', 'style': 'warning'})
+        return HTTPFound(location=request.route_url('project_by_id', id=project_id))
 
     except Exception:
         request.dbsession.rollback()
