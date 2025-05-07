@@ -45,6 +45,7 @@
                             </div>
                             {% if role == 'admin' and member.id != request.session.get('user_id') %}
                             <form method="POST" action="{{ request.route_url('remove_member', id=project.id) }}" class="remove-member-form" data-member-name="{{ member.first_name }} {{ member.last_name }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <input type="hidden" name="user_id" value="{{ member.id }}">
                                 <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove member">
                                     <i class="bi-person-dash"></i>
@@ -93,6 +94,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ request.route_url('edit_project', id=project.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -139,6 +141,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="addMemberForm" method="POST" action="{{ request.route_url('add_member', id=project.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addMemberModalLabel">Add Members</h5>
                 </div>

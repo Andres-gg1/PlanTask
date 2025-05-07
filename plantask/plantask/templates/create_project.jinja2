@@ -57,6 +57,7 @@
         <h4 class="page-title">As {{user.username}}</h4>
 
         <form action="/create-project" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="form-group">
                 <label for="name" class="form-label">Project Name:</label>
                 <input type="text" id="name" name="name" class="form-control" required>

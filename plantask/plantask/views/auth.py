@@ -192,13 +192,7 @@ def register_user(request):
     new_user = User(first_name=firstname,last_name = lastname,username=username, email=email, password=hashed_password, permission=permission)
     request.dbsession.add(new_user)
     request.dbsession.flush()
-
-    headers = remember(request, str(new_user.id))
-    request.session['role'] = new_user.permission
-    request.session['expires_at'] = (datetime.now() + timedelta(minutes=30)).isoformat()
-    request.session.pop("pingid_ok", None)
-
-    return HTTPFound(location=request.route_url('home'), headers=headers)
+    return HTTPFound(location=request.route_url('home'))
 
 @view_config(route_name='invalid_permissions', renderer='/templates/invalid_permissions.jinja2', request_method='GET')
 def invalid_permissions(request):

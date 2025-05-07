@@ -9,7 +9,7 @@
         <div class="card p-4 shadow w-100" style="max-width: 400px;">
             <h3 class="text-center mb-4" id="formTitle">Login to Your Account</h3>
             <form id="loginForm" method="POST" action="/login" class="fade-in show">
-            <input type="hidden" name="csrf_token" value="{{ request.get_csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div class="mb-3">
                     <label for="loginEmail" class="form-label">Email address</label>
                     <input type="email" class="form-control" id="email" name="loginEmail" required>
@@ -41,7 +41,7 @@
             <div class="custom-modal-body">
                 <p>You are attempting to access PlanTask from an unrecognized network. Please enter your verification code below:</p>
                 <form method="POST" action="/login">
-                    <input type="hidden" name="csrf_token" value= "{{ request.get_csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <input type="text" name="pingCode" class="form-control custom-input mb-2" placeholder="Enter PingID Code" required>
                     {% if error_ping %}
                         <div class="text-danger small">{{ error_ping }}</div>
