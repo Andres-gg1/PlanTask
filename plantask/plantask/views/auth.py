@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 from ..auth.network import is_ip_trusted, is_valid_ping_code
 from re import search 
 from random import randint
+from pyramid.security import forget
+
 
 def validate_password(password):
     errors = []
@@ -81,12 +83,15 @@ def login_user(request):
                 if psw_hasher.verify(user.password, password):
                     headers = remember(request, str(user.id))
                     request.session['role'] = user.permission
+                    request.session['username'] = user.username
+                    request.session['user_id'] = user.id
                     request.session['expires_at'] = str(datetime.now() + timedelta(minutes=30))
                     request.session.pop("pingid_ok", None)
                     request.session.pop("failed_email_attempts", None)
                     request.session.pop("current_attempt", None)
 
-                    return HTTPFound(location=request.route_url('Home'), headers=headers)
+                    return HTTPFound(location=request.route_url('home'), headers=headers)
+
             except argon2.exceptions.VerifyMismatchError:
                 request.session["current_attempt"] += 1
                 if email not in request.session["failed_email_attempts"]:
@@ -97,9 +102,16 @@ def login_user(request):
         return {"show_modal": False, "error_ping": "Invalid credentials."}
 
     except Exception as e:
-        print(e)
-        return {"show_modal": False, "error_ping": "Internal server error."}
+        return {"show_modal": False, "error_ping": f"Internal server error. {e}" }
 
+@view_config(route_name='logout')
+def logout_user(request):
+    """
+    Logs out the user by clearing their session and redirecting to the login page.
+    """
+    headers = forget(request)  # Clear authentication headers
+    request.session.invalidate()  # Clear the session
+    return HTTPFound(location=request.route_url('login'), headers=headers)
 
 @view_config(route_name='register', renderer='/templates/register.jinja2', request_method='GET', permission="admin")
 def register_user_page(request):
@@ -180,13 +192,7 @@ def register_user(request):
     new_user = User(first_name=firstname,last_name = lastname,username=username, email=email, password=hashed_password, permission=permission)
     request.dbsession.add(new_user)
     request.dbsession.flush()
-
-    headers = remember(request, str(new_user.id))
-    request.session['role'] = new_user.permission
-    request.session['expires_at'] = (datetime.now() + timedelta(minutes=30)).isoformat()
-    request.session.pop("pingid_ok", None)
-
-    return HTTPFound(location=request.route_url('Home'), headers=headers)
+    return HTTPFound(location=request.route_url('home'))
 
 @view_config(route_name='invalid_permissions', renderer='/templates/invalid_permissions.jinja2', request_method='GET')
 def invalid_permissions(request):

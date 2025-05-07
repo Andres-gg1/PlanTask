@@ -1,0 +1,96 @@
+.modal-body,
+.modal-footer {
+    background-color: #f6f7f8;
+}
+.form-label {
+    font-weight: 600;
+}
+.mybtn {
+    margin-right: 3rem;
+}
+
+.card-body {
+    padding: 1rem 1rem;
+}
+
+.description {
+    font-size: 1.5rem;
+}
+.btn{
+    font-weight: 500;
+}
+
+.dropdown-menu {
+    max-height: 30rem;
+    overflow-y: auto; 
+}
+
+.banner {
+    width: calc(100vw - 4rem);
+    margin-top: 3.5rem;
+    margin-left: 4.5rem;
+    height: 12rem;
+    background-size: cover;
+    background-position: center;
+    border-bottom-left-radius: 25px;
+    border-bottom-right-radius: 25px;
+}
+
+#userSearchResults {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.search-result-item {
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.description {
+    font-size: 1.5rem;
+    max-width: 32rem;
+    max-height: 6rem; /* Limit the height */
+    overflow: hidden; /* Hide overflowing content */
+    text-overflow: ellipsis; /* Add ellipsis for overflow */
+    white-space: pre-wrap;
+    word-break: break-word;
+    position: relative;
+}
+
+.description.expanded {
+    max-height: none; /* Allow full height when expanded */
+    overflow: visible;
+}
+
+.read-more-btn {
+    color: #007bff;
+    cursor: pointer;
+    font-size: 1rem;
+    margin: 0.3rem
+}
+
+.dropdown-menu {
+    max-height: 25rem;
+    overflow-y: auto; 
+    width: 22rem;
+}
+
+@media (max-width: 62rem) {
+    .d-flex {
+        flex-direction: column !important;
+        align-items: flex-start; 
+    }
+    .dropdown, .admin-actions {
+        width: 100%;
+        margin-top: 1rem; 
+    }
+    .mybtn {
+        margin-right: 0 !important;
+        width: 100%; 
+    }
+    .btn {
+        margin-bottom: 0.2rem;
+    }
+}
