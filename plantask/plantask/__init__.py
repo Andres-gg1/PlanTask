@@ -7,7 +7,9 @@ from pyramid.httpexceptions import HTTPForbidden
 from pyramid.view import forbidden_view_config
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound
-from pyramid.session import SignedCookieSessionFactory
+from pyramid.session import SignedCookieSessionFactory  # <-- NUEVO
+from pyramid.csrf import CookieCSRFStoragePolicy
+
 
 class RootFactory:
     """
@@ -52,6 +54,7 @@ def add_global_template_variables(event):
         event['user'] = None
     event['active_page'] = request.matched_route.name if request.matched_route else None
     event['role'] = request.session.get('role', None)
+    event['csrf_token'] = request.get_csrf_token()
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.

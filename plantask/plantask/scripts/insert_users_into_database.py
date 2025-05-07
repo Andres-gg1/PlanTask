@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from plantask.models.user import User
 
 # Configuración de la base de datos
-DATABASE_URL = "postgresql://postgres:DRbfLrlvWYCYCULVimbRZxufXbujGHaK@trolley.proxy.rlwy.net:35649/railway"  # o tu URL de conexión a PostgreSQL/MySQL
+DATABASE_URL = "postgresql://docker_user:Plantaskwawawa@18.227.102.184:5432/plantask_db"  # o tu URL de conexión a PostgreSQL/MySQL
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 session = Session()
