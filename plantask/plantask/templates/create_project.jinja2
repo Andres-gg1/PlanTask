@@ -1,0 +1,82 @@
+{% extends "layout.jinja2" %}
+
+{% block title %}Create Project{% endblock %}
+
+{% block styles %}
+    <style>
+        .mycontainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 1.25rem;
+            background-color: #f9f9f9;
+        }
+        .form-container {
+            width: 100%;
+            max-width: 31.25rem; 
+            background: #ffffff;
+            padding: 1.875rem; 
+            border: 0.0625rem solid #ddd;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+        }
+        .page-title {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 1.25rem; 
+            color: #333;
+        }
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: 0.625rem;
+            font-size: 1rem;
+            background-color: #328be9;
+            color: #fff;
+            border: none;
+            border-radius: 0.3125rem; 
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .btn-primary:hover {
+            background-color: #086dda;
+        }
+        .error-message {
+            margin-top: 0.9375rem;
+            color: #d9534f;
+            text-align: center;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<main class="mycontainer">
+    <div class="form-container">
+        <h1 class="page-title">Create a New Project</h1>
+        <h4 class="page-title">As {{user.username}}</h4>
+
+        <form action="/create-project" method="POST">
+            <div class="form-group">
+                <label for="name" class="form-label">Project Name:</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="description" class="form-label">Description:</label>
+                <textarea id="description" name="description" class="form-control" rows="5" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Project</button>
+        </form>
+
+        {% if error_ping %}
+            <div class="error-message">{{ error_ping }}</div>
+        {% endif %}
+    </div>
+</main>
+
+
+{% endblock content %}
+
+{% block scripts %}
+
+{% endblock %}
