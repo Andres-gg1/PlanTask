@@ -4,6 +4,49 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/projects.css') }}">
+<link href="https://fonts.cdnfonts.com/css/proxima-nova-2" rel="stylesheet">
+<style>
+    .kanban-board,
+    .kanban-board * {
+        font-family: 'Proxima Nova', sans-serif !important;
+        font-weight: 600 !important;
+        color: #465158 !important;
+    }
+
+    .kanban-board-wrapper {
+        overflow-x: hidden;
+        overflow-y: hidden;
+        width: 100%;
+    }
+
+    .kanban-board {
+        display: flex;
+        flex-wrap: wrap; 
+        gap: 1.4rem; 
+        width: 100%;
+    }
+
+    .kanban-column {
+        flex: 1 0 18.75rem;
+        min-width: 18.75rem; 
+        max-width: 26.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .kanban-tasks {
+        height: 37.5rem; 
+        overflow-y: auto;
+    }
+
+    .kanban-board-container {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    body {
+        overflow-x: hidden;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -58,18 +101,57 @@
             </ul>
         </div>
     </div>
-    
-    <div class="content-row">
+
+    <div class="content-row mt-3">
         {% if role == 'admin' %}
-        <div class="admin-actions">
+        <div class="admin-actions mb-3">
             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editProjectModal">Edit Project <i class="bi-pencil-square"></i></button>
             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteProjectModal">Delete Project <i class="bi-trash3"></i></button>
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMemberModal">Add Member <i class="bi-person-add"></i></button>
         </div>
         {% endif %}
     </div>
-</main>
 
+    <!-- Kanban Board -->
+    <div class="kanban-board-wrapper mt-4">
+        <div class="kanban-board">
+            {% for status, icon, date_label in [
+                ('Assigned Tasks', 'bi-pin-angle-fill', 'Final Date and Time'),
+                ('In Progress', 'bi-pen-fill', 'Final Date and Time'),
+                ('Under Review', 'bi-eye-fill', 'Submitted Date'),
+                ('Completed', 'bi-check-circle-fill', 'Completed')
+            ] %}
+            <div class="kanban-column text-center">
+                <h5 class="fw-bold text-dark mb-2" style="font-size: 1.5rem;">
+                    {{ status }}
+                </h5>
+                <div class="bg-white border rounded shadow-sm p-3 kanban-tasks">
+                    {% for task in tasks if task.status == status %}
+                    <div class="card border mb-3 shadow-sm">
+                        <div class="card-body p-2">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="fw-semibold mb-1">{{ task.title }}</h6>
+                                <small class="text-primary">{{ date_label }}</small>
+                            </div>
+                            <p class="mb-2 small text-muted">
+                                {{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}
+                            </p>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for label in task.labels %}
+                                <span class="badge" style="background-color: {{ label.color }}; color: white;">{{ label.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">No tasks</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</main>
 <div class="modal fade" id="confirmRemoveMemberModal" tabindex="-1" aria-labelledby="confirmRemoveMemberModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -93,6 +175,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ request.route_url('edit_project', id=project.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -139,6 +222,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="addMemberForm" method="POST" action="{{ request.route_url('add_member', id=project.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addMemberModalLabel">Add Members</h5>
                 </div>
@@ -171,6 +255,7 @@
         </div>
     </div>
 </div>
+
 {% endblock content %}
 
 {% block scripts %}
@@ -183,8 +268,7 @@
                 a.style.display = 'none';
             }, 5000);
         });
-    });
-    document.addEventListener('DOMContentLoaded', function () {
+
         const description = document.getElementById('projectDescription');
         const readMoreBtn = document.getElementById('readMoreBtn');
 

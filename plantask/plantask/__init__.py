@@ -1,27 +1,20 @@
 from pyramid.config import Configurator
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
-from pyramid.security import Allow, ALL_PERMISSIONS
-from .models.user import User
-from pyramid.httpexceptions import HTTPForbidden
-from pyramid.view import forbidden_view_config
-from pyramid.response import Response
+from pyramid.security import Allow
 from pyramid.httpexceptions import HTTPFound
-from pyramid.session import SignedCookieSessionFactory  # <-- NUEVO
-from pyramid.csrf import CookieCSRFStoragePolicy
-
+from pyramid.view import forbidden_view_config
+from pyramid.session import SignedCookieSessionFactory
+from pyramid.events import subscriber, BeforeRender
+from .models.user import User
+from pyramid.csrf import get_csrf_token
 
 class RootFactory:
-    """
-    Creates user privileges to separate admins from end users
-    """
+    # Creates user privileges to separate admins from end users
     __acl__ = [
         (Allow, 'role:admin', 'admin'),
         (Allow, 'role:user', 'user'),
         (Allow, 'role:pm', 'pm'),
-        # Compound permission for admin OR project_manager
-        (Allow, 'role:admin', 'admin_or_project_manager'),
-        (Allow, 'role:pm', 'admin_or_project_manager')
     ]
     def __init__(self, request):
         pass
@@ -54,26 +47,23 @@ def add_global_template_variables(event):
         event['user'] = None
     event['active_page'] = request.matched_route.name if request.matched_route else None
     event['role'] = request.session.get('role', None)
-    event['csrf_token'] = request.get_csrf_token()
+    event['csrf_token'] = get_csrf_token(request)
 
 def main(global_config, **settings):
-    """ This function returns a Pyramid WSGI application.
-    """
+    # This function returns a Pyramid WSGI application.
 
     secretkey = "sosecretwow"
 
-    """
-    Groupfinder to find user role, either admin or user
-    """
+    # Groupfinder to find user role, either admin or user
+
     def groupfinder(userid, request):
         user = request.dbsession.query(User).get(userid)
         if user:
             return [f'role:{user.permission}']
         return []   
 
-    """
-    Authentication and Authorization policies
-    """
+    # Authentication and Authorization policies
+    
     authn_policy = AuthTktAuthenticationPolicy(secretkey, hashalg='sha512', cookie_name='auth_tkt', callback=groupfinder)
     authz_policy = ACLAuthorizationPolicy()
 

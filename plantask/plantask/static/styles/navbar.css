@@ -1,0 +1,330 @@
+
+:root {
+    --navbar-height: 3.5rem;
+    --navbar-bg-color: #212529;
+    --navbar-text-color: white;
+    --navbar-search-bg: #767097;
+    --navbar-search-focus-bg: #666184;
+  }
+  
+  /* NAVBAR GENERAL (ESCRITORIO) */
+  .main-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--navbar-height);
+    background-color: var(--navbar-bg-color);
+    color: var(--navbar-text-color);
+    display: flex;
+    align-items: center;
+    z-index: 1030;
+    box-shadow: 0px 8px 8px -6px rgba(0, 0, 0, 0.5);
+  }
+  
+  .navbar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 1rem;
+  }
+  
+  .navbar-logo-link {
+    display: flex;
+    align-items: center;
+    padding-left: 2rem;
+  }
+  
+  .navbar-logo {
+    width: 10.625rem;
+    height: 1.5625rem;
+  }
+  
+  .navbar-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    height: 100%;
+    flex-grow: 1;
+  }
+  
+  /* Búsqueda */
+  .navbar-search-form {
+    border: 1px solid white;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+    max-width: 18rem;
+    width: 100%;
+  }
+  
+  .navbar-search-container {
+    display: flex;
+    align-items: center;
+    background-color: var(--navbar-search-bg);
+    border-radius: 0.25rem;
+    overflow: hidden;
+    width: 100%;
+  }
+  
+  .navbar-search-input {
+    height: 2.375rem;
+    border: none;
+    padding: 0 0.5rem;
+    color: white;
+    background: transparent;
+    width: 100%;
+    outline: none;
+  }
+  
+  .navbar-search-icon,
+  .navbar-search-button {
+    padding: 0 0.75rem;
+    color: white;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .navbar-search-button {
+    cursor: pointer;
+    border-left: 1px solid white;
+  }
+  
+  .navbar-search-input:focus {
+    background: var(--navbar-search-focus-bg);
+  }
+  
+  .navbar-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  /* Íconos */
+  .navbar-icons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+  }
+  
+  .navbar-icon {
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    text-decoration: none;
+  }
+  
+  /* Dropdown perfil */
+  .dropdown {
+    position: relative;
+  }
+  
+  #profileDropdown {
+    margin-bottom: 0.25rem; /* separa del menú */
+  }
+  
+  .dropdown-menu {
+    display: none;
+  }
+  
+  .dropdown-menu.show {
+    display: block;
+  }
+  
+  .dropdown-menu.dropdown-profile {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    background-color: #333;
+    color: white;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    min-width: 15rem;
+    z-index: 1031;
+    box-shadow: 0 0.5rem 1.2rem rgba(0, 0, 0, 0.4);
+  }
+  
+  .dropdown-profile .dropdown-arrow {
+    position: absolute;
+    top: -10px;
+    right: 1.3rem;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 10px solid #333;
+  }
+  
+  .dropdown-profile .dropdown-item {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.9rem;
+    color: white;
+    line-height: 1.4;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+  }
+  
+  .dropdown-profile .dropdown-item:hover {
+    background-color: #444;
+  }
+  
+  .dropdown-profile .profile-name {
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+    font-weight: bold;
+  }
+  
+  .dropdown-profile .logout-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 0.7rem;
+    background-color: #555;
+    border-radius: 0.75rem;
+    padding: 0.4rem 1rem;
+    text-decoration: none;
+    font-weight: bold;
+    color: white;
+    transition: background 0.2s ease;
+  }
+  
+  .dropdown-profile .logout-button i {
+    margin-left: 0.5rem;
+  }
+  
+  .dropdown-profile .logout-button:hover {
+    background-color: #666;
+    color: white;
+  }
+  
+  /* Hamburguesa */
+  .navbar-toggle-button {
+    display: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+  
+  .navbar-toggle-icon {
+    width: 1.5rem;
+    height: 2px;
+    background-color: white;
+    position: relative;
+    display: block;
+  }
+  
+  .navbar-toggle-icon::before,
+  .navbar-toggle-icon::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background-color: white;
+    left: 0;
+  }
+  
+  .navbar-toggle-icon::before {
+    top: -6px;
+  }
+  
+  .navbar-toggle-icon::after {
+    bottom: -6px;
+  }
+  
+  /* RESPONSIVE */
+  @media (max-width: 62rem) {
+    .navbar-toggle-button {
+      display: block;
+      margin-left: auto;
+      z-index: 1031;
+    }
+  
+    .navbar-content {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: scaleY(0.95);
+      transform-origin: top;
+      transition: max-height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+      background-color: var(--navbar-bg-color);
+      padding: 0 1rem;
+      position: fixed;
+      top: var(--navbar-height);
+      left: 0;
+      right: 0;
+      z-index: 1020;
+    }
+  
+    .navbar-content.show {
+      max-height: 310px;
+      opacity: 1;
+      transform: scaleY(1);
+      padding: 1rem;
+    }
+  
+    .navbar-content.show.profile-open {
+      max-height: 450px;
+    }
+  
+    .navbar-icons {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      width: 100%;
+    }
+  
+    .navbar-icon {
+      width: 100%;
+      padding-left: 1rem;
+      text-align: left;
+    }
+  
+    .dropdown {
+      width: 100%;
+      justify-content: center;
+    }
+  
+    .dropdown-menu.dropdown-profile {
+      position: static;
+      margin-top: 1rem;
+      width: 100%;
+      max-width: 300px;
+    }
+  
+    .dropdown-profile .dropdown-arrow {
+      display: none;
+    }
+  
+    .navbar-search-form {
+        margin: 0 auto 1rem auto;
+        max-width: 75%;
+    }
+  
+    .navbar-search-container {
+      width: 100%;
+    }
+  
+    .navbar-search-input {
+      width: 100%;
+      height: 2.5rem;
+      font-size: 1rem;
+      padding: 0 0.75rem;
+      border-radius: 0.25rem;
+    }
+  }
+  
