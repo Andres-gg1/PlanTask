@@ -7,7 +7,6 @@
     --navbar-search-focus-bg: #666184;
   }
   
-  /* NAVBAR GENERAL (ESCRITORIO) */
   .main-navbar {
     position: fixed;
     top: 0;
@@ -51,7 +50,6 @@
     flex-grow: 1;
   }
   
-  /* Búsqueda */
   .navbar-search-form {
     border: 1px solid white;
     border-radius: 0.25rem;
@@ -107,7 +105,6 @@
     color: rgba(255, 255, 255, 0.7);
   }
   
-  /* Íconos */
   .navbar-icons {
     display: flex;
     flex-direction: row;
@@ -124,13 +121,12 @@
     text-decoration: none;
   }
   
-  /* Dropdown perfil */
   .dropdown {
     position: relative;
   }
   
   #profileDropdown {
-    margin-bottom: 0.25rem; /* separa del menú */
+    margin-bottom: 0.25rem;
   }
   
   .dropdown-menu {
@@ -242,7 +238,6 @@
     bottom: -6px;
   }
   
-  /* RESPONSIVE */
   @media (max-width: 62rem) {
     .navbar-toggle-button {
       display: block;
