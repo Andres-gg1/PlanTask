@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import and_, select
 from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
+from plantask.models.task import Task
 from plantask.auth.verifysession import verify_session
 
 
@@ -77,12 +78,19 @@ def project_page(request):
         }
         mapped_members = [(member, role_map.get(role, role)) for member, role in project_members]
 
+        # Fetch tasks grouped by status
+        tasks_by_status = {
+            status: request.dbsession.query(Task).filter_by(project_id=project_id, status=status).all()
+            for status in ['assigned', 'in_progress', 'under_review', 'completed']
+        }
+
         flashes = request.session.pop_flash()
         return {
             "project": project,
             "project_members": mapped_members,
             "show_role": projects_user.role,
-            "flashes": flashes
+            "flashes": flashes,
+            "tasks_by_status": tasks_by_status  
         }
 
     except SQLAlchemyError:

@@ -6,30 +6,25 @@
 <link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/projects.css') }}">
 <link href="https://fonts.cdnfonts.com/css/proxima-nova-2" rel="stylesheet">
 <style>
-    .kanban-board,
-    .kanban-board * {
-        font-family: 'Proxima Nova', sans-serif !important;
-        font-weight: 600 !important;
-        color: #465158 !important;
-    }
-
     .kanban-board-wrapper {
-        overflow-x: hidden;
+        overflow-x: auto; /* Enable horizontal scrolling */
         overflow-y: hidden;
         width: 100%;
     }
 
     .kanban-board {
-        display: flex;
-        flex-wrap: wrap; 
-        gap: 1.4rem; 
-        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(25rem, 1fr)); /* Columns grow equally up to 35rem */
+        gap: 1rem; /* Space between columns with a max of 2rem */
+        width: 100%; /* Ensure the board takes up the full width */
+        font-family: 'Proxima Nova', sans-serif !important;
+        font-weight: 600 !important;
+        color: #465158 !important;
     }
 
     .kanban-column {
-        flex: 1 0 18.75rem;
-        min-width: 18.75rem; 
-        max-width: 26.25rem;
+        min-width: 25rem; /* Set a minimum width for each column */
+        max-width: 35rem; /* Set a maximum width for each column */
         margin-bottom: 1rem;
     }
 
@@ -45,6 +40,37 @@
 
     body {
         overflow-x: hidden;
+    }
+    .create-task-button {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem; 
+        width: auto;
+        height: auto;
+        padding: 0.5rem 1rem;
+        background-color: #769dc4; 
+        color: white;
+        border-radius: 1.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+        text-decoration: none;
+        font-size: 1.25rem; 
+        font-family: "Proxima Nova", sans-serif;
+        font-weight: 600;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .create-task-button:hover {
+        background-color: #5882ac; 
+        transform: scale(1.1);
+    }
+
+    .create-task-button i {
+        margin-left: 0.5rem;
+        font-size: 1.5rem;
+        font-weight: bolder;
     }
 </style>
 {% endblock %}
@@ -117,30 +143,28 @@
     <div class="kanban-board-wrapper mt-4">
         <div class="kanban-board">
             {% for status, icon, date_label in [
-                ('Assigned Tasks', 'bi-pin-angle-fill', 'Final Date and Time'),
-                ('In Progress', 'bi-pen-fill', 'Final Date and Time'),
-                ('Under Review', 'bi-eye-fill', 'Submitted Date'),
-                ('Completed', 'bi-check-circle-fill', 'Completed')
+                ('assigned', 'bi-pin-angle-fill', 'Final Date and Time'),
+                ('in_progress', 'bi-pen-fill', 'Final Date and Time'),
+                ('under_review', 'bi-eye-fill', 'Submitted Date'),
+                ('completed', 'bi-check-circle-fill', 'Completed')
             ] %}
             <div class="kanban-column text-center">
                 <h5 class="fw-bold text-dark mb-2" style="font-size: 1.5rem;">
-                    {{ status }}
+                    {{ status.replace('_', ' ').title() }}
                 </h5>
                 <div class="bg-white border rounded shadow-sm p-3 kanban-tasks">
-                    {% for task in tasks if task.status == status %}
+                    {% for task in tasks_by_status[status] %}
                     <div class="card border mb-3 shadow-sm">
                         <div class="card-body p-2">
                             <div class="d-flex justify-content-between">
-                                <h6 class="fw-semibold mb-1">{{ task.title }}</h6>
-                                <small class="text-primary">{{ date_label }}</small>
+                                <h4 class="fw-semibold mb-1">{{ task.task_title }} <i class="{{icon}}"></i></h4>
+                                <small class="text-primary">{{ task.due_date.strftime('%Y-%m-%d') }}</small>
                             </div>
                             <p class="mb-2 small text-muted">
-                                {{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}
+                                {{ task.task_description[:100] }}{% if task.task_description|length > 100 %}...{% endif %}
                             </p>
                             <div class="d-flex flex-wrap gap-1">
-                                {% for label in task.labels %}
-                                <span class="badge" style="background-color: {{ label.color }}; color: white;">{{ label.name }}</span>
-                                {% endfor %}
+                                <!-- Add labels or other task metadata here if needed -->
                             </div>
                         </div>
                     </div>
@@ -152,6 +176,11 @@
             {% endfor %}
         </div>
     </div>
+    {% if role == 'admin' %}
+        <a href="{{ request.route_url('create_task', project_id=project.id) }}" class="create-task-button">
+            Create New Task <i class="bi-plus-lg"></i>
+        </a>
+    {% endif %}
 </main>
 <div class="modal fade" id="confirmRemoveMemberModal" tabindex="-1" aria-labelledby="confirmRemoveMemberModalLabel" aria-hidden="true">
   <div class="modal-dialog">
