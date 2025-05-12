@@ -2,11 +2,11 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
+from sqlalchemy import and_, select
 from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
 from plantask.auth.verifysession import verify_session
-from sqlalchemy import and_, select
-from pyramid.view import view_config
+
 
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
 @verify_session
@@ -31,12 +31,7 @@ def create_project(request):
         if not name or not description:
             return {"error_ping": "Please provide a name and a description for the project."}
 
-        new_project = Project(
-            name=name,
-            description=description,
-            creation_datetime=datetime.now()
-        )
-
+        new_project = Project(name=name, description=description, creation_datetime=datetime.now())
         request.dbsession.add(new_project)
         request.dbsession.flush()
 
@@ -45,7 +40,6 @@ def create_project(request):
             user_id=request.session.get('user_id'),
             role="project_manager"
         )
-
         request.dbsession.add(project_creator_relation)
         request.dbsession.flush()
 
@@ -72,8 +66,8 @@ def project_page(request):
         if not project or not projects_user:
             return {"error_ping": "You don't have access to this project."}
 
-        project_members = request.dbsession.query(User, ProjectsUser.role).join(ProjectsUser).filter(
-            ProjectsUser.project_id == project_id).all()
+        project_members = request.dbsession.query(User, ProjectsUser.role)\
+            .join(ProjectsUser).filter(ProjectsUser.project_id == project_id).all()
 
         role_map = {
             'admin': 'Administrator',
@@ -81,23 +75,19 @@ def project_page(request):
             'member': 'Member',
             'observer': 'Observer'
         }
-
         mapped_members = [(member, role_map.get(role, role)) for member, role in project_members]
 
-        role = projects_user.role
         flashes = request.session.pop_flash()
         return {
             "project": project,
             "project_members": mapped_members,
-            "show_role": role,
+            "show_role": projects_user.role,
             "flashes": flashes
         }
 
     except SQLAlchemyError:
         request.dbsession.rollback()
         return {"error_ping": "An error occurred while fetching the project. Please try again."}
-
-
 
 @view_config(route_name='edit_project', request_method='POST', permission="admin")
 @verify_session
@@ -125,47 +115,36 @@ def delete_project(request):
     request.dbsession.flush()
     return HTTPFound(location=request.route_url('my_projects'))
 
-
 @view_config(route_name='search_users', renderer='json', request_method='GET', permission="admin")
 @verify_session
 def search_users(request):
     try:
         username_search = request.GET.get('username', '').strip()
-        
         if not username_search or len(username_search) < 2:
             return []
-        
+
         project_id = request.GET.get('project_id')
-        
         if project_id:
             try:
                 project_id = int(project_id)
             except ValueError:
                 project_id = None
-        
-        query = request.dbsession.query(User).filter(User.username.ilike(f"%{username_search}%"))
-        
-        if project_id:
-            member_subquery = select(ProjectsUser.user_id).where(
-                ProjectsUser.project_id == project_id
-            )
 
+        query = request.dbsession.query(User).filter(User.username.ilike(f"%{username_search}%"))
+
+        if project_id:
+            member_subquery = select(ProjectsUser.user_id).where(ProjectsUser.project_id == project_id)
             query = query.filter(~User.id.in_(member_subquery))
 
-        
         users = query.limit(10).all()
-        
-        # Return found users
-        result = [{
+        return [{
             'id': user.id,
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
         } for user in users]
-        return result
 
-    
-    except SQLAlchemyError as e:
+    except SQLAlchemyError:
         request.dbsession.rollback()
         return []
 
@@ -174,13 +153,10 @@ def search_users(request):
 def add_member(request):
     try:
         project_id = int(request.matchdict['id'])
-        
         project = request.dbsession.query(Project).filter_by(id=project_id).first()
-        
         if not project:
             return HTTPNotFound()
-        
-        # Verify if user has permissions to add members
+
         user_relation = request.dbsession.query(ProjectsUser).filter(
             and_(
                 ProjectsUser.project_id == project_id,
@@ -188,49 +164,42 @@ def add_member(request):
                 ProjectsUser.role.in_(['admin', 'project_manager'])
             )
         ).first()
-        
         if not user_relation:
             return HTTPFound(location=request.route_url('invalid_permissions'))
-        
+
         user_ids = request.POST.getall('user_ids')
-        
         if user_ids:
             for user_id in user_ids:
                 try:
                     user_id = int(user_id)
-                    
-                    # Check if user is already in the project
                     existing_relation = request.dbsession.query(ProjectsUser).filter(
                         and_(
                             ProjectsUser.project_id == project_id,
                             ProjectsUser.user_id == user_id
                         )
                     ).first()
-                    
-                    # Only add if user is not already in the project
                     if not existing_relation:
                         user = request.dbsession.query(User).filter_by(id=user_id).first()
                         if user:
                             project_user = ProjectsUser(
-                                project_id=project_id, 
-                                user_id=user_id, 
+                                project_id=project_id,
+                                user_id=user_id,
                                 role="member"
                             )
                             request.dbsession.add(project_user)
                 except ValueError:
                     continue
-            
             request.dbsession.flush()
-        
+
         request.session.flash({'message': 'Members added successfully.', 'style': 'success'})
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
-        
+
     except SQLAlchemyError as e:
         request.dbsession.rollback()
         return {"error_ping": f"Error adding members to project: {str(e)}"}
-    except Exception as e:
+    except Exception:
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
-    
+
 @view_config(route_name='remove_member', request_method='POST', permission='admin')
 @verify_session
 def remove_member(request):
@@ -238,11 +207,9 @@ def remove_member(request):
         project_id = int(request.matchdict['id'])
         user_id = int(request.POST.get('user_id'))
 
-        # Asegurarse de que no se elimine a sí mismo
         if user_id == request.session.get('user_id'):
             return HTTPFound(location=request.route_url('project_by_id', id=project_id))
 
-        # Verificar que el usuario pertenece al proyecto
         relation = request.dbsession.query(ProjectsUser).filter_by(
             project_id=project_id, user_id=user_id
         ).first()
