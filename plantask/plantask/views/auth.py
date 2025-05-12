@@ -102,7 +102,7 @@ def login_user(request):
         return {"show_modal": False, "error_ping": "Invalid credentials."}
 
     except Exception as e:
-        return {"show_modal": False, "error_ping": f"Internal server error. {e}" }
+        return {"show_modal": False, "error_ping": "Internal server error."}
 
 @view_config(route_name='logout')
 def logout_user(request):

@@ -7,10 +7,6 @@ from plantask.models.user import User
 from plantask.auth.verifysession import verify_session
 from sqlalchemy import and_, select
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from plantask.models.user import User
-from plantask.models.project import ProjectsUser
-from urllib.parse import urlencode
 
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
 @verify_session
