@@ -72,6 +72,10 @@ log_actions = (
 
     # Login Actions
     'login_several_failed_attempts',
+    'login_user_successful',
+
+    # Registration Actions
+    'registration_new_user'
 )
 
 log_actions_enum = ENUM(*log_actions, name="log_actions")

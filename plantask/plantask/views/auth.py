@@ -89,7 +89,14 @@ def login_user(request):
                     request.session.pop("pingid_ok", None)
                     request.session.pop("failed_email_attempts", None)
                     request.session.pop("current_attempt", None)
-
+                    activity_log_login = ActivityLog(
+                        user_id = user.id,
+                        timestamp = datetime.now(),
+                        action = 'login_user_successful',
+                        changes = ip_address,
+                        context = " "
+                    )
+                    request.dbsession.add(activity_log_login)
                     return HTTPFound(location=request.route_url('home'), headers=headers)
 
             except argon2.exceptions.VerifyMismatchError:
