@@ -73,6 +73,7 @@ def main(global_config, **settings):
 
         my_session_factory = SignedCookieSessionFactory(secretkey)
         config.set_session_factory(my_session_factory)
+        config.set_csrf_storage_policy(CookieCSRFStoragePolicy())
         config.include('pyramid_jinja2')
         config.include('.routes')
         config.include('.models')

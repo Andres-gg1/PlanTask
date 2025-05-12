@@ -88,6 +88,7 @@
                             </div>
                             {% if role == 'admin' and member.id != request.session.get('user_id') %}
                             <form method="POST" action="{{ request.route_url('remove_member', id=project.id) }}" class="remove-member-form" data-member-name="{{ member.first_name }} {{ member.last_name }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <input type="hidden" name="user_id" value="{{ member.id }}">
                                 <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove member">
                                     <i class="bi-person-dash"></i>

@@ -7,6 +7,7 @@ from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
 from plantask.auth.verifysession import verify_session
 
+
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
 @verify_session
 def my_projects_page(request):
