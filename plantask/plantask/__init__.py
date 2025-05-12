@@ -8,6 +8,7 @@ from pyramid.session import SignedCookieSessionFactory
 from pyramid.events import subscriber, BeforeRender
 from .models.user import User
 from pyramid.csrf import get_csrf_token
+from pyramid.csrf import CookieCSRFStoragePolicy
 
 class RootFactory:
     # Creates user privileges to separate admins from end users
