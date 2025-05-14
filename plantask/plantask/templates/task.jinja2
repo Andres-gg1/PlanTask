@@ -1,0 +1,88 @@
+{% extends "layout.jinja2" %}
+
+{% block title %}{{task.task_title}}{% endblock %}
+
+{% block styles %}
+<style>
+.project-name{
+    text-decoration: none;
+    color: black;
+    padding-left: 1rem;
+}
+.info{
+    font-family: "Proxima Nova";
+    font-size: 1.45rem;
+}
+.due-date{
+    color: #5175B9;
+    font-weight: 600;
+}
+.mybtn{
+    background-color: #767097;
+    color: white;
+    font-family: "Proxima Nova";
+    font-size: 1.45rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+.mybtn:hover{
+    background-color: #5e5880;
+    transform: scale(1.025);
+    color: white;
+    font-family: "Proxima Nova";
+    font-size: 1.45rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="mycontainer">
+    <h1>{{ task.task_title }}</h1>
+    <h2>{{task.status}}</h2>
+    <h3 ><a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a></h3>
+    <p class="info">Creation Date: {{ task.date_created.strftime('%Y-%m-%d') }}</p>
+    <p class="info due-date">Due Date: {{ task.due_date.strftime('%Y-%m-%d') }}</p>
+    {% if task.status == 'assigned' %}
+        <button class="mybtn btn" type="button" id="movestatusbutton">
+            Move to In Progress
+            <i class="bi-box-arrow-right"></i>
+            <i class="bi-pen-fill"></i>
+        </button>
+    {% elif task.status == 'in_progress' %}
+        <button class="mybtn btn" type="button" id="backtoassigned">
+            Back to Assigned
+            <i class="bi-angle-fill"></i>
+            <i class="bi-box-arrow-left"></i>
+        </button>
+        <button class="mybtn btn" type="button" id="sendforreview">
+            Send for Review
+            <i class="bi-box-arrow-right"></i>
+            <i class="bi-eye-fill"></i>
+        </button>
+    {% elif task.status == 'under_review' %}
+        <button class="mybtn btn" type="button" id="backtoinprogress">
+            Back to In Progress
+            <i class="bi-pen-fill"></i>
+            <i class="bi-box-arrow-left"></i>
+        </button>
+        <button class="mybtn btn" type="button" id="completetask">
+            Complete Task
+            <i class="bi-box-arrow-right"></i>
+            <i class="bi-check-circle-fill"></i>
+        </button>
+    {% elif task.status == 'completed' %}
+        <button class="mybtn btn" type="button" id="backtoreview">
+            Back to In Review
+            <i class="bi-eye-fill"></i>
+            <i class="bi-box-arrow-left"></i>
+        </button>
+    {% endif %}
+    <p class="info">{{ task.task_description }}</p>
+    
+
+    <a href="{{ request.route_url('edit_task', id=task.id) }}" class="btn btn-info">Edit Task</a>
+    <a href="{{ request.route_url('delete_task', id=task.id) }}" class="btn btn-danger">Delete Task</a>
+</main>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

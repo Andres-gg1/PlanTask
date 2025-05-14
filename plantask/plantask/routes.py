@@ -20,6 +20,8 @@ def includeme(config):
     config.add_route('remove_member', r'/project/{id:\d+}/remove-member')
     config.add_route('search_users', '/search-users')
     config.add_route('create_task', r'/create-task/{project_id}')
+    config.add_route('update_task_status', '/api/update_task_status')
     config.add_route('task_by_id', r'/task/{id:\d+}')
     config.add_route('edit_task', r'/task/{id:\d+}/edit')
     config.add_route('delete_task', r'/task/{id:\d+}/delete')
+    config.add_route('kanban_partial', '/project/{id}/kanban_partial')

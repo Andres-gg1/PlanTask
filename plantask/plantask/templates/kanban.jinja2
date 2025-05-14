@@ -1,0 +1,103 @@
+{% block kanban %}
+
+ <div class="kanban-board-wrapper mt-4" id="kanban-board-wrapper">
+        <div class="kanban-board">
+            <!-- Assigned Column -->
+            <div class="kanban-column text-center" data-status="assigned">
+                <h5 class="fw-bold text-dark mb-2" style="font-size: 1.5rem;">Assigned</h5>
+                <div class="bg-white border rounded shadow-sm p-3 kanban-tasks">
+                    {% for task in tasks_by_status['assigned'] %}
+                    <a href="{{ request.route_url('task_by_id', id=task.id) }}" class="text-decoration-none text-dark">
+                        <div class="card border mb-3 shadow-sm" data-task-id="{{ task.id }}" data-status="{{ task.status }}" draggable="true">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between">
+                                    <h4 class="fw-semibold mb-1">{{ task.task_title }} <i class="bi-pin-angle-fill"></i></h4>
+                                    <small class="text-primary">{{ task.due_date.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                                <p class="mb-2 text-muted">
+                                    {{ task.task_description[:100] }}{% if task.task_description|length > 100 %}...{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="text-muted small">No tasks</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="kanban-column text-center" data-status="in_progress">
+                <h5 class="fw-bold text-dark mb-2" style="font-size: 1.5rem;">In Progress</h5>
+                <div class="bg-white border rounded shadow-sm p-3 kanban-tasks">
+                    {% for task in tasks_by_status['in_progress'] %}
+                    <a href="{{ request.route_url('task_by_id', id=task.id) }}" class="text-decoration-none text-dark">
+                        <div class="card border mb-3 shadow-sm" data-task-id="{{ task.id }}" data-status="{{ task.status }}" draggable="true">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between">
+                                    <h4 class="fw-semibold mb-1">{{ task.task_title }} <i class="bi-pen-fill"></i></h4>
+                                    <small class="text-primary">{{ task.due_date.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                                <p class="mb-2 text-muted">
+                                    {{ task.task_description[:100] }}{% if task.task_description|length > 100 %}...{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="text-muted small">No tasks</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Under Review Column -->
+            <div class="kanban-column text-center" data-status="under_review">
+                <h5 class="fw-bold text-dark mb-2" style="font-size: 1.5rem;">Under Review</h5>
+                <div class="bg-white border rounded shadow-sm p-3 kanban-tasks">
+                    {% for task in tasks_by_status['under_review'] %}
+                    <a href="{{ request.route_url('task_by_id', id=task.id) }}" class="text-decoration-none text-dark">
+                        <div class="card border mb-3 shadow-sm" data-task-id="{{ task.id }}" data-status="{{ task.status }}" draggable="true">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between">
+                                    <h4 class="fw-semibold mb-1">{{ task.task_title }} <i class="bi-eye-fill"></i></h4>
+                                    <small class="text-primary">{{ task.due_date.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                                <p class="mb-2 text-muted">
+                                    {{ task.task_description[:100] }}{% if task.task_description|length > 100 %}...{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="text-muted small">No tasks</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Completed Column -->
+            <div class="kanban-column text-center" data-status="completed">
+                <h5 class="fw-bold text-dark mb-2" style="font-size: 1.5rem;">Completed</h5>
+                <div class="bg-white border rounded shadow-sm p-3 kanban-tasks">
+                    {% for task in tasks_by_status['completed'] %}
+                    <a href="{{ request.route_url('task_by_id', id=task.id) }}" class="text-decoration-none text-dark">
+                        <div class="card border mb-3 shadow-sm" data-task-id="{{ task.id }}" data-status="{{ task.status }}" draggable="true">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between">
+                                    <h4 class="fw-semibold mb-1">{{ task.task_title }} <i class="bi-check-circle-fill"></i></h4>
+                                    <small class="text-primary">{{ task.due_date.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                                <p class="mb-2 text-muted">
+                                    {{ task.task_description[:100] }}{% if task.task_description|length > 100 %}...{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="text-muted small">No tasks</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock kanban %}

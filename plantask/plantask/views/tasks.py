@@ -1,6 +1,6 @@
 from pyramid.view import view_config
 from pyramid.response import Response
-from pyramid.httpexceptions import HTTPFound
+from pyramid.httpexceptions import HTTPFound, HTTPBadRequest, HTTPNotFound
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from plantask.models.project import Project
@@ -58,3 +58,19 @@ def create_task(request):
             'project': project,
             'error_ping': 'An error occurred while creating the task. Please try again.'
         }
+
+@view_config(route_name='task_by_id', renderer='plantask:templates/task.jinja2', request_method='GET')
+@verify_session
+def task_by_id(request):
+    try:
+        task_id = int(request.matchdict.get('id'))
+        task = request.dbsession.query(Task).filter_by(id=task_id).first()
+        if not task:
+            return HTTPNotFound("Task not found")
+        project = request.dbsession.query(Project).filter_by(id=task.project_id).first()
+        return {
+            'task': task,
+            'project': project
+        }
+    except Exception:
+        return HTTPNotFound("Task not found")
