@@ -71,7 +71,7 @@ def login_user(request):
             activity_log = ActivityLog(
                 timestamp=datetime.now(),
                 action="login_several_failed_attempts",
-                changes=f"IP address: {ip_address}, Email/s used: {request.session['failed_email_attempts']}",
+                changes=f"IP address: {ip_address}, Email/s used: {request.session['failed_email_attempts']}"
             )
             request.dbsession.add(activity_log)
             return {"show_modal": False, "error_ping": "Too many failed attempts. Please try again later."}
@@ -93,8 +93,7 @@ def login_user(request):
                         user_id = user.id,
                         timestamp = datetime.now(),
                         action = 'login_user_successful',
-                        changes = ip_address,
-                        context = " "
+                        changes = ip_address
                     )
                     request.dbsession.add(activity_log_login)
                     return HTTPFound(location=request.route_url('home'), headers=headers)
@@ -109,6 +108,7 @@ def login_user(request):
         return {"show_modal": False, "error_ping": "Invalid credentials."}
 
     except Exception as e:
+        print(str(e))
         return {"show_modal": False, "error_ping": "Internal server error."}
 
 @view_config(route_name='logout')
@@ -198,6 +198,14 @@ def register_user(request):
 
     new_user = User(first_name=firstname,last_name = lastname,username=username, email=email, password=hashed_password, permission=permission)
     request.dbsession.add(new_user)
+    request.dbsession.flush()
+    activity_log_register = ActivityLog(
+                        user_id = request.session['user_id'],
+                        timestamp = datetime.now(),
+                        action = 'registration_new_user',
+                        changes = f"{new_user.__repr__()}"
+                    )
+    request.dbsession.add(activity_log_register)
     request.dbsession.flush()
     return HTTPFound(location=request.route_url('home'))
 

@@ -114,9 +114,6 @@ class ActivityLog(Base):
     # Description of the action performed (e.g., "created", "edited", "deleted")
     action = Column(log_actions_enum, nullable=False)
 
-    # Context or category of the action
-    context = Column(Text, nullable=False)
-
     # Detailed info about the changes made (optional)
     changes = Column(Text)
 
