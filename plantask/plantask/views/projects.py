@@ -16,7 +16,7 @@ import json
 def my_projects_page(request):
     projects = request.dbsession.query(Project)\
         .join(ProjectsUser, Project.id == ProjectsUser.project_id)\
-        .filter(ProjectsUser.user_id == request.session.get('user_id'))\
+        .filter(ProjectsUser.user_id == request.session.get('user_id'), Project.active == True)\
         .all()
     return {'projects': projects}
 
@@ -38,11 +38,12 @@ def create_project(request):
         request.dbsession.add(new_project)
         request.dbsession.flush()
         activity_log_new_project = ActivityLog(
-                    user_id = request.session['user_id'],
-                    timestamp = datetime.now(),
-                    action = 'project_added',
-                    changes = f"{new_project.__repr__()}",
-                )
+            user_id=request.session['user_id'],
+            project_id=new_project.id,  # Added project.id
+            timestamp=datetime.now(),
+            action='project_added',
+            changes=f"{new_project.__repr__()}",
+        )
         request.dbsession.add(activity_log_new_project)
         request.dbsession.flush()
 
@@ -65,7 +66,10 @@ def create_project(request):
 def project_page(request):
     try:
         project_id = int(request.matchdict.get('id'))
-        project = request.dbsession.query(Project).filter_by(id=project_id).first()
+        project = request.dbsession.query(Project).filter_by(id=project_id, active=True).first()
+
+        if not project:
+            return {"error_ping": "You don't have access to this project or it is inactive."}
 
         projects_user = request.dbsession.query(ProjectsUser).filter(
             and_(
@@ -74,7 +78,7 @@ def project_page(request):
             )
         ).first()
 
-        if not project or not projects_user:
+        if not projects_user:
             return {"error_ping": "You don't have access to this project."}
 
         project_members = request.dbsession.query(User, ProjectsUser.role)\
@@ -90,7 +94,7 @@ def project_page(request):
 
         # Fetch tasks grouped by status
         tasks_by_status = {
-            status: request.dbsession.query(Task).filter_by(project_id=project_id, status=status).all()
+            status: request.dbsession.query(Task).filter_by(project_id=project_id, status=status, active = True).all()
             for status in ['assigned', 'in_progress', 'under_review', 'completed']
         }
 
@@ -119,26 +123,28 @@ def edit_project(request):
         old_name = project.name
         project.name = request.POST.get('name', project.name)
         activity_log_project_name_changed = ActivityLog(
-                        user_id = request.session['user_id'],
-                        timestamp = datetime.now(),
-                        action = 'project_edited_title',
-                        changes = f"old: {old_name} --> new: {request.POST.get('name', project.name)}"
-                    )
+            user_id=request.session['user_id'],
+            project_id=project.id,  # Added project.id
+            timestamp=datetime.now(),
+            action='project_edited_title',
+            changes=f"old: {old_name} --> new: {request.POST.get('name', project.name)}"
+        )
         request.dbsession.add(activity_log_project_name_changed)
         request.dbsession.flush()
-        
+
     if project.description != request.POST.get('description', project.description):
         old_description = project.description
         project.description = request.POST.get('description', project.description)
         activity_log_project_description_changed = ActivityLog(
-                        user_id = request.session['user_id'],
-                        timestamp = datetime.now(),
-                        action = 'project_edited_description',
-                        changes = f"old: {old_description} --> new: {request.POST.get('description', project.description)}"
-                    )
+            user_id=request.session['user_id'],
+            project_id=project.id,  # Added project.id
+            timestamp=datetime.now(),
+            action='project_edited_description',
+            changes=f"old: {old_description} --> new: {request.POST.get('description', project.description)}"
+        )
         request.dbsession.add(activity_log_project_description_changed)
         request.dbsession.flush()
-    
+
     return HTTPFound(location=request.route_url('project_by_id', id=project_id))
 
 @view_config(route_name='delete_project', request_method='GET', permission="admin")
@@ -149,18 +155,18 @@ def delete_project(request):
     if not project:
         return HTTPNotFound()
 
-    
+    if project.active:
+        project.active = False
+        activity_log_removed_project = ActivityLog(
+            user_id=request.session['user_id'],
+            project_id=project.id,  # Added project.id
+            timestamp=datetime.now(),
+            action='project_removed',
+            changes=f"Project: {project.name} set to inactive"
+        )
+        request.dbsession.add(activity_log_removed_project)
+        request.dbsession.flush()
 
-    activity_log_removed_project = ActivityLog(
-                            user_id = request.session['user_id'],
-                            timestamp = datetime.now(),
-                            action = 'project_removed',
-                            changes = f"{project.name}"
-                        )
-
-    request.dbsession.delete(project)
-    request.dbsession.add(activity_log_removed_project)
-    request.dbsession.flush()
     return HTTPFound(location=request.route_url('my_projects'))
 
 @view_config(route_name='search_users', renderer='json', request_method='GET', permission="admin")
@@ -201,19 +207,9 @@ def search_users(request):
 def add_member(request):
     try:
         project_id = int(request.matchdict['id'])
-        project = request.dbsession.query(Project).filter_by(id=project_id).first()     #find project
+        project = request.dbsession.query(Project).filter_by(id=project_id).first()
         if not project:
             return HTTPNotFound()
-
-        user_relation = request.dbsession.query(ProjectsUser).filter(
-            and_(
-                ProjectsUser.project_id == project_id,
-                ProjectsUser.user_id == request.session.get('user_id'),                 #check if user is project manager and is related to project before adding others
-                ProjectsUser.role.in_(['admin', 'project_manager'])
-            )
-        ).first()
-        if not user_relation:
-            return HTTPFound(location=request.route_url('invalid_permissions'))
 
         user_ids = request.POST.getall('user_ids')
         if user_ids:
@@ -235,11 +231,12 @@ def add_member(request):
                                 role="member"
                             )
                             activity_log_added_user = ActivityLog(
-                                user_id = request.session['user_id'],
-                                object_user_id = user.id,
-                                timestamp = datetime.now(),
-                                action = 'project_added_user',
-                                changes = f"Project: {project.name}"
+                                user_id=request.session['user_id'],
+                                project_id=project.id,  # Added project.id
+                                object_user_id=user.id,
+                                timestamp=datetime.now(),
+                                action='project_added_user',
+                                changes=f"User: {user.username} added to Project: {project.name}"
                             )
                             request.dbsession.add(project_user)
                             request.dbsession.add(activity_log_added_user)
@@ -264,40 +261,23 @@ def remove_member(request):
         project_id = int(request.matchdict['id'])
         user_id = int(request.POST.get('user_id'))
 
-        # Ensure the project exists
         project = request.dbsession.query(Project).filter_by(id=project_id).first()
         if not project:
             return HTTPNotFound()
 
-        # Check if the user performing the action is related to the project and has the required role
-        user_relation = request.dbsession.query(ProjectsUser).filter(
-            and_(
-                ProjectsUser.project_id == project_id,
-                ProjectsUser.user_id == request.session.get('user_id'),
-                ProjectsUser.role.in_(['admin', 'project_manager'])
-            )
-        ).first()
-        if not user_relation:
-            return HTTPFound(location=request.route_url('invalid_permissions'))
-
-        # Prevent users from removing themselves
-        if user_id == request.session.get('user_id'):
-            return HTTPFound(location=request.route_url('project_by_id', id=project_id))
-
-        # Check if the member to be removed exists in the project
         relation = request.dbsession.query(ProjectsUser).filter_by(
             project_id=project_id, user_id=user_id
         ).first()
 
         if relation:
             request.dbsession.delete(relation)
-            # Log the removal action
             activity_log_removed_user = ActivityLog(
                 user_id=request.session['user_id'],
+                project_id=project.id,  # Added project.id
                 object_user_id=user_id,
                 timestamp=datetime.now(),
                 action='project_removed_user',
-                changes=f"Project: {project.name}"
+                changes=f"User removed from Project: {project.name}"
             )
             request.dbsession.add(activity_log_removed_user)
             request.dbsession.flush()
