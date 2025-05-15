@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import and_, select
 from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
+from plantask.models.activity_log import ActivityLog
 from plantask.models.task import Task
 from plantask.auth.verifysession import verify_session
 import json
@@ -35,6 +36,14 @@ def create_project(request):
 
         new_project = Project(name=name, description=description, creation_datetime=datetime.now())
         request.dbsession.add(new_project)
+        request.dbsession.flush()
+        activity_log_new_project = ActivityLog(
+                    user_id = request.session['user_id'],
+                    timestamp = datetime.now(),
+                    action = 'project_added',
+                    changes = f"{new_project.__repr__()}",
+                )
+        request.dbsession.add(activity_log_new_project)
         request.dbsession.flush()
 
         project_creator_relation = ProjectsUser(
@@ -106,9 +115,30 @@ def edit_project(request):
     if not project:
         return HTTPNotFound()
 
-    project.name = request.POST.get('name', project.name)
-    project.description = request.POST.get('description', project.description)
-    request.dbsession.flush()
+    if project.name != request.POST.get('name', project.name):
+        old_name = project.name
+        project.name = request.POST.get('name', project.name)
+        activity_log_project_name_changed = ActivityLog(
+                        user_id = request.session['user_id'],
+                        timestamp = datetime.now(),
+                        action = 'project_edited_title',
+                        changes = f"old: {old_name} --> new: {request.POST.get('name', project.name)}"
+                    )
+        request.dbsession.add(activity_log_project_name_changed)
+        request.dbsession.flush()
+        
+    if project.description != request.POST.get('description', project.description):
+        old_description = project.description
+        project.description = request.POST.get('description', project.description)
+        activity_log_project_description_changed = ActivityLog(
+                        user_id = request.session['user_id'],
+                        timestamp = datetime.now(),
+                        action = 'project_edited_description',
+                        changes = f"old: {old_description} --> new: {request.POST.get('description', project.description)}"
+                    )
+        request.dbsession.add(activity_log_project_description_changed)
+        request.dbsession.flush()
+    
     return HTTPFound(location=request.route_url('project_by_id', id=project_id))
 
 @view_config(route_name='delete_project', request_method='GET', permission="admin")
@@ -119,8 +149,17 @@ def delete_project(request):
     if not project:
         return HTTPNotFound()
 
-    request.dbsession.query(ProjectsUser).filter_by(project_id=project_id).delete()
+    
+
+    activity_log_removed_project = ActivityLog(
+                            user_id = request.session['user_id'],
+                            timestamp = datetime.now(),
+                            action = 'project_removed',
+                            changes = f"{project.name}"
+                        )
+
     request.dbsession.delete(project)
+    request.dbsession.add(activity_log_removed_project)
     request.dbsession.flush()
     return HTTPFound(location=request.route_url('my_projects'))
 
@@ -162,14 +201,14 @@ def search_users(request):
 def add_member(request):
     try:
         project_id = int(request.matchdict['id'])
-        project = request.dbsession.query(Project).filter_by(id=project_id).first()
+        project = request.dbsession.query(Project).filter_by(id=project_id).first()     #find project
         if not project:
             return HTTPNotFound()
 
         user_relation = request.dbsession.query(ProjectsUser).filter(
             and_(
                 ProjectsUser.project_id == project_id,
-                ProjectsUser.user_id == request.session.get('user_id'),
+                ProjectsUser.user_id == request.session.get('user_id'),                 #check if user is project manager and is related to project before adding others
                 ProjectsUser.role.in_(['admin', 'project_manager'])
             )
         ).first()
@@ -195,7 +234,16 @@ def add_member(request):
                                 user_id=user_id,
                                 role="member"
                             )
+                            activity_log_added_user = ActivityLog(
+                                user_id = request.session['user_id'],
+                                object_user_id = user.id,
+                                timestamp = datetime.now(),
+                                action = 'project_added_user',
+                                changes = f"Project: {project.name}"
+                            )
                             request.dbsession.add(project_user)
+                            request.dbsession.add(activity_log_added_user)
+                            request.dbsession.flush()
                 except ValueError:
                     continue
             request.dbsession.flush()
@@ -216,20 +264,50 @@ def remove_member(request):
         project_id = int(request.matchdict['id'])
         user_id = int(request.POST.get('user_id'))
 
+        # Ensure the project exists
+        project = request.dbsession.query(Project).filter_by(id=project_id).first()
+        if not project:
+            return HTTPNotFound()
+
+        # Check if the user performing the action is related to the project and has the required role
+        user_relation = request.dbsession.query(ProjectsUser).filter(
+            and_(
+                ProjectsUser.project_id == project_id,
+                ProjectsUser.user_id == request.session.get('user_id'),
+                ProjectsUser.role.in_(['admin', 'project_manager'])
+            )
+        ).first()
+        if not user_relation:
+            return HTTPFound(location=request.route_url('invalid_permissions'))
+
+        # Prevent users from removing themselves
         if user_id == request.session.get('user_id'):
             return HTTPFound(location=request.route_url('project_by_id', id=project_id))
 
+        # Check if the member to be removed exists in the project
         relation = request.dbsession.query(ProjectsUser).filter_by(
             project_id=project_id, user_id=user_id
         ).first()
 
         if relation:
             request.dbsession.delete(relation)
+            # Log the removal action
+            activity_log_removed_user = ActivityLog(
+                user_id=request.session['user_id'],
+                object_user_id=user_id,
+                timestamp=datetime.now(),
+                action='project_removed_user',
+                changes=f"Project: {project.name}"
+            )
+            request.dbsession.add(activity_log_removed_user)
             request.dbsession.flush()
 
         request.session.flash({'message': 'Member removed successfully.', 'style': 'warning'})
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
 
+    except SQLAlchemyError as e:
+        request.dbsession.rollback()
+        return {"error_ping": f"Error removing member from project: {str(e)}"}
     except Exception:
         request.dbsession.rollback()
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
