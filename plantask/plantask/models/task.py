@@ -5,7 +5,8 @@ from sqlalchemy import(
     Text, 
     DateTime, 
     ForeignKey, 
-    Float
+    Float,
+    Boolean
 )
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -34,6 +35,9 @@ class Task(Base):
     due_date = Column(DateTime, nullable=False)
     # Status of the task (cannot be null)
     status = Column(task_status_enum, nullable=False)
+    # Active boolean
+    active = Column(Boolean, nullable = False, default = True)
+
 
     # Relationship with the 'Project' model
     project = relationship('Project')
