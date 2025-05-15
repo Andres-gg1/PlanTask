@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from .base import Base
 from sqlalchemy.dialects.postgresql import ENUM
@@ -18,6 +18,8 @@ class Project(Base):
     description = Column(Text, nullable=False)
     # Date and time when the project was created (cannot be null)
     creation_datetime = Column(DateTime, nullable=False)
+    # Active boolean
+    active = Column(Boolean, nullable = False, default = True)
 
     # Define the relationship with the ProjectsUser model (one-to-many relationship)
 

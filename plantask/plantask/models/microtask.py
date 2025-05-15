@@ -5,7 +5,8 @@ from sqlalchemy import(
     Text, 
     DateTime, 
     ForeignKey, 
-    Float
+    Float,
+    Boolean
 )
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -34,6 +35,8 @@ class Microtask(Base):
     status = Column(microtask_status_enum, nullable=False)
     # Due date for the microtask
     due_date = Column(DateTime)
+    # Active boolean
+    active = Column(Boolean, nullable = False, default = True)
 
     # Relationship with the 'Task' model
     task = relationship('Task')
