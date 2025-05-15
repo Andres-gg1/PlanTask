@@ -1,11 +1,13 @@
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound, HTTPBadRequest, Response
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from sqlalchemy import and_, select
 from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
+from plantask.models.task import Task
 from plantask.auth.verifysession import verify_session
+import json
 
 
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
@@ -77,12 +79,19 @@ def project_page(request):
         }
         mapped_members = [(member, role_map.get(role, role)) for member, role in project_members]
 
+        # Fetch tasks grouped by status
+        tasks_by_status = {
+            status: request.dbsession.query(Task).filter_by(project_id=project_id, status=status).all()
+            for status in ['assigned', 'in_progress', 'under_review', 'completed']
+        }
+
         flashes = request.session.pop_flash()
         return {
             "project": project,
             "project_members": mapped_members,
             "show_role": projects_user.role,
-            "flashes": flashes
+            "flashes": flashes,
+            "tasks_by_status": tasks_by_status  
         }
 
     except SQLAlchemyError:
@@ -224,3 +233,42 @@ def remove_member(request):
     except Exception:
         request.dbsession.rollback()
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+    
+
+
+@view_config(route_name='update_task_status', request_method='POST', renderer='json')
+@verify_session
+def update_task_status(request):
+    try:
+        data = request.json_body
+        task_id = int(data['task_id'])
+        new_status = data['new_status']
+
+        task = request.dbsession.query(Task).filter_by(id=task_id).first()
+        if not task:
+            return Response(json.dumps({'error': 'Task not found'}), status=404, content_type='application/json')
+
+        task.status = new_status
+        request.dbsession.flush()
+
+        return {'success': True}
+    except Exception as e:
+        return Response(json.dumps({'error': str(e)}), status=500, content_type='application/json')
+    
+    
+@view_config(route_name='kanban_partial', renderer='plantask:templates/kanban.jinja2', request_method='GET')
+@verify_session
+def kanban_partial(request):
+    project_id = int(request.matchdict.get('id'))
+    project = request.dbsession.query(Project).filter_by(id=project_id).first()
+    if not project:
+        return Response('Project not found', status=404)
+    # Fetch tasks grouped by status
+    tasks_by_status = {
+        status: request.dbsession.query(Task).filter_by(project_id=project_id, status=status).all()
+        for status in ['assigned', 'in_progress', 'under_review', 'completed']
+    }
+    return {
+        "project": project,
+        "tasks_by_status": tasks_by_status
+    }
