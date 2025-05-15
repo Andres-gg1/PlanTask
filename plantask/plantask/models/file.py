@@ -20,8 +20,6 @@ class File(Base):
     route = Column(Text, nullable=False)
     # Date and time when the file was created (cannot be null)
     creation_date = Column(DateTime, nullable=False)
-    # Date and time when the file was last modified (cannot be null)
-    last_modified = Column(DateTime, nullable=False)
 
     files_tasks = relationship('TasksFile', back_populates='files')
     files_templates = relationship('TemplatesFile', back_populates='files')

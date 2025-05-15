@@ -40,4 +40,7 @@ class User(Base):
 
     def __repr__(self) -> str:
         # Custom string representation for the User class
-        return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
+        return (
+            f"<User(id={self.id}, username='{self.username}', first_name='{self.first_name}', "
+            f"last_name='{self.last_name}', email='{self.email}', 'permission='{self.permission}')>"
+        )

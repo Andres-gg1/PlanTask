@@ -72,6 +72,10 @@ log_actions = (
 
     # Login Actions
     'login_several_failed_attempts',
+    'login_user_successful',
+
+    # Registration Actions
+    'registration_new_user'
 )
 
 log_actions_enum = ENUM(*log_actions, name="log_actions")
@@ -109,9 +113,6 @@ class ActivityLog(Base):
 
     # Description of the action performed (e.g., "created", "edited", "deleted")
     action = Column(log_actions_enum, nullable=False)
-
-    # Context or category of the action
-    context = Column(Text, nullable=False)
 
     # Detailed info about the changes made (optional)
     changes = Column(Text)
