@@ -31,58 +31,197 @@
     font-family: "Proxima Nova";
     font-size: 1.45rem;
 }
+.mybtn:active{
+    background-color: #4b456b !important;
+    color: white !important;
+    transform: scale(1) !important;
+}
+.btn{
+    font-weight: 500;
+}
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+.info-row > div {
+    margin-right: 1.5rem;
+}
+.admin-actions, .status-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <main class="mycontainer">
     <h1>{{ task.task_title }}</h1>
-    <h2>{{task.status}}</h2>
-    <h3 ><a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a></h3>
-    <p class="info">Creation Date: {{ task.date_created.strftime('%Y-%m-%d') }}</p>
-    <p class="info due-date">Due Date: {{ task.due_date.strftime('%Y-%m-%d') }}</p>
-    {% if task.status == 'assigned' %}
-        <button class="mybtn btn" type="button" id="movestatusbutton">
-            Move to In Progress
-            <i class="bi-box-arrow-right"></i>
-            <i class="bi-pen-fill"></i>
-        </button>
-    {% elif task.status == 'in_progress' %}
-        <button class="mybtn btn" type="button" id="backtoassigned">
-            Back to Assigned
-            <i class="bi-angle-fill"></i>
-            <i class="bi-box-arrow-left"></i>
-        </button>
-        <button class="mybtn btn" type="button" id="sendforreview">
-            Send for Review
-            <i class="bi-box-arrow-right"></i>
-            <i class="bi-eye-fill"></i>
-        </button>
-    {% elif task.status == 'under_review' %}
-        <button class="mybtn btn" type="button" id="backtoinprogress">
-            Back to In Progress
-            <i class="bi-pen-fill"></i>
-            <i class="bi-box-arrow-left"></i>
-        </button>
-        <button class="mybtn btn" type="button" id="completetask">
-            Complete Task
-            <i class="bi-box-arrow-right"></i>
-            <i class="bi-check-circle-fill"></i>
-        </button>
-    {% elif task.status == 'completed' %}
-        <button class="mybtn btn" type="button" id="backtoreview">
-            Back to In Review
-            <i class="bi-eye-fill"></i>
-            <i class="bi-box-arrow-left"></i>
-        </button>
-    {% endif %}
+    <h3>
+        <a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a>
+    </h3>
+    <div class="info-row">
+        <div class="info">Creation Date: {{ task.date_created.strftime('%Y-%m-%d') }}</div>
+        <div class="info due-date">Due Date: {{ task.due_date.strftime('%Y-%m-%d') }}</div>
+        {% if role == 'admin' %}
+        <div class="admin-actions">
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editTaskModal">
+                Edit Task <i class="bi-pencil-square"></i>
+            </button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
+                Delete Task <i class="bi-trash3"></i>
+            </button>
+        </div>
+        {% endif %}
+        <div class="status-actions">
+            {% if task.status == 'assigned' %}
+                <button class="mybtn btn" type="button" id="movestatusbutton">
+                    Move to In Progress
+                    <i class="bi-box-arrow-right"></i>
+                    <i class="bi-pen-fill"></i>
+                </button>
+            {% elif task.status == 'in_progress' %}
+                <button class="mybtn btn" type="button" id="backtoassigned">
+                    Back to Assigned
+                    <i class="bi-pin-angle-fill"></i>
+                    <i class="bi-box-arrow-left"></i>
+                </button>
+                <button class="mybtn btn" type="button" id="sendforreview">
+                    Send for Review
+                    <i class="bi-box-arrow-right"></i>
+                    <i class="bi-eye-fill"></i>
+                </button>
+            {% elif task.status == 'under_review' %}
+                <button class="mybtn btn" type="button" id="backtoinprogress">
+                    Back to In Progress
+                    <i class="bi-pen-fill"></i>
+                    <i class="bi-box-arrow-left"></i>
+                </button>
+                <button class="mybtn btn" type="button" id="completetask">
+                    Complete Task
+                    <i class="bi-box-arrow-right"></i>
+                    <i class="bi-check-circle-fill"></i>
+                </button>
+            {% elif task.status == 'completed' %}
+                <button class="mybtn btn" type="button" id="backtoreview">
+                    Back to In Review
+                    <i class="bi-eye-fill"></i>
+                    <i class="bi-box-arrow-left"></i>
+                </button>
+            {% endif %}
+        </div>
+    </div>
     <p class="info">{{ task.task_description }}</p>
-    
-
-    <a href="{{ request.route_url('edit_task', id=task.id) }}" class="btn btn-info">Edit Task</a>
-    <a href="{{ request.route_url('delete_task', id=task.id) }}" class="btn btn-danger">Delete Task</a>
 </main>
+
+<!-- Edit Task Modal -->
+<div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ request.route_url('edit_task', id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Task Title</label>
+                        <input type="text" class="form-control" id="taskTitle" name="name" value="{{ task.task_title }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Task Description</label>
+                        <textarea class="form-control" id="taskDescription" name="description">{{ task.task_description }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDueDate" class="form-label">Due Date</label>
+                        <input type="date" class="form-control" id="taskDueDate" name="due_date" value="{{ task.due_date.strftime('%Y-%m-%d') }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-info">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Task Modal -->
+<div class="modal fade" id="deleteTaskModal" tabindex="-1" aria-labelledby="deleteTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ request.route_url('delete_task', id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteTaskModalLabel">Delete Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete the task "{{ task.task_title }}"?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updateStatus(newStatus) {
+        fetch("{{ request.route_url('update_task_status') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"
+            },
+            body: JSON.stringify({
+                task_id: {{ task.id }},
+                new_status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.error || "Failed to update status.");
+            }
+        })
+        .catch(() => alert("Failed to update status."));
+    }
+
+    {% if task.status == 'assigned' %}
+    document.getElementById('movestatusbutton').onclick = function() {
+        updateStatus('in_progress');
+    };
+    {% elif task.status == 'in_progress' %}
+    document.getElementById('backtoassigned').onclick = function() {
+        updateStatus('assigned');
+    };
+    document.getElementById('sendforreview').onclick = function() {
+        updateStatus('under_review');
+    };
+    {% elif task.status == 'under_review' %}
+    document.getElementById('backtoinprogress').onclick = function() {
+        updateStatus('in_progress');
+    };
+    document.getElementById('completetask').onclick = function() {
+        updateStatus('completed');
+    };
+    {% elif task.status == 'completed' %}
+    document.getElementById('backtoreview').onclick = function() {
+        updateStatus('under_review');
+    };
+    {% endif %}
+});
+</script>
 {% endblock %}

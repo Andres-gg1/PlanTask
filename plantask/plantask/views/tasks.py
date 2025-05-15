@@ -74,3 +74,52 @@ def task_by_id(request):
         }
     except Exception:
         return HTTPNotFound("Task not found")
+    
+
+@view_config(route_name='edit_task', request_method='POST', permission="admin")
+@verify_session
+def edit_task(request):
+    try:
+        task_id = int(request.matchdict.get('id'))
+        task = request.dbsession.query(Task).filter_by(id=task_id).first()
+        if not task:
+            return HTTPNotFound("Task not found")
+
+        # Get form data
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+        due_date = request.POST.get('due_date', '').strip()
+
+        if not name or not description or not due_date:
+            project = request.dbsession.query(Project).filter_by(id=task.project_id).first()
+            return {
+                'task': task,
+                'project': project,
+                'error_ping': 'All fields are required.'
+            }
+
+        task.task_title = name
+        task.task_description = description
+        task.due_date = datetime.strptime(due_date, '%Y-%m-%d')
+        request.dbsession.flush()
+
+        return HTTPFound(location=request.route_url('task_by_id', id=task.id))
+    except Exception as e:
+        request.dbsession.rollback()
+        return HTTPBadRequest(f"Error editing task: {str(e)}")
+
+@view_config(route_name='delete_task', request_method='POST', permission="admin")
+@verify_session
+def delete_task(request):
+    try:
+        task_id = int(request.matchdict.get('id'))
+        task = request.dbsession.query(Task).filter_by(id=task_id).first()
+        if not task:
+            return HTTPNotFound("Task not found")
+        project_id = task.project_id
+        request.dbsession.delete(task)
+        request.dbsession.flush()
+        return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+    except Exception as e:
+        request.dbsession.rollback()
+        return HTTPBadRequest(f"Error deleting task: {str(e)}")
