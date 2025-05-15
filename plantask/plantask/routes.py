@@ -25,3 +25,4 @@ def includeme(config):
     config.add_route('edit_task', r'/task/{id:\d+}/edit')
     config.add_route('delete_task', r'/task/{id:\d+}/delete')
     config.add_route('kanban_partial', '/project/{id}/kanban_partial')
+    config.add_route('create_microtask', r'/create-microtask/{task_id}')

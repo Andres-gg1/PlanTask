@@ -14,22 +14,22 @@
 
     .kanban-board {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(25rem, 1fr)); /* Columns grow equally up to 35rem */
-        gap: 1rem; /* Space between columns with a max of 2rem */
-        width: 100%; /* Ensure the board takes up the full width */
+        grid-template-columns: repeat(auto-fit, minmax(25rem, 1fr)); 
+        gap: 1rem; 
+        width: 100%; 
         font-family: 'Proxima Nova', sans-serif !important;
         font-weight: 600 !important;
         color: #465158 !important;
     }
 
     .kanban-column {
-        min-width: 25rem; /* Set a minimum width for each column */
-        max-width: 35rem; /* Set a maximum width for each column */
+        min-width: 25rem; 
+        max-width: 50rem; 
         margin-bottom: 1rem;
     }
 
     .kanban-tasks {
-        height: 37.5rem; 
+        height: calc(100vh - 33rem);
         overflow-y: auto;
     }
 

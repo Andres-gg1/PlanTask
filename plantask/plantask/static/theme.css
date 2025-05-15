@@ -1,6 +1,16 @@
 @import url(//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700);
+
+@font-face {
+  font-family: 'Proxima Nova';
+  src: url('/static/fonts/proxima-nova.woff2') format('woff2'),
+       url('/static/fonts/proxima-nova.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
-  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Proxima Nova", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 300;
   color: #ffffff;
   background: #bc2131;
@@ -11,8 +21,8 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-weight: 300;
+  font-family: "Proxima Nova", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 400;
 }
 p {
   font-weight: 300;

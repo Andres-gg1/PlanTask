@@ -81,7 +81,10 @@ def project_page(request):
 
         # Fetch tasks grouped by status
         tasks_by_status = {
-            status: request.dbsession.query(Task).filter_by(project_id=project_id, status=status).all()
+            status: request.dbsession.query(Task)
+                .filter_by(project_id=project_id, status=status)
+                .order_by(Task.due_date)
+                .all()
             for status in ['assigned', 'in_progress', 'under_review', 'completed']
         }
 
@@ -265,7 +268,10 @@ def kanban_partial(request):
         return Response('Project not found', status=404)
     # Fetch tasks grouped by status
     tasks_by_status = {
-        status: request.dbsession.query(Task).filter_by(project_id=project_id, status=status).all()
+        status: request.dbsession.query(Task)
+            .filter_by(project_id=project_id, status=status)
+            .order_by(Task.due_date)
+            .all()
         for status in ['assigned', 'in_progress', 'under_review', 'completed']
     }
     return {

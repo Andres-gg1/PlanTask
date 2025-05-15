@@ -70,12 +70,12 @@
 .navtasks .nav-link {
     padding: 0.25rem 0.5rem; 
     font-size: 0.9rem;
-    font-family: "Proxima Nova";
+    font-family: "Proxima Nova" sans-serif;
     color: black;
 }
 
 .navtasks .nav-link.active {
-    font-family: "Proxima Nova";
+   font-family: "Proxima Nova" sans-serif;
     color: #7574C7;
 }
 

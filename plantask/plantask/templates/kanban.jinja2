@@ -11,7 +11,7 @@
                         <div class="card border mb-3 shadow-sm" data-task-id="{{ task.id }}" data-status="{{ task.status }}" draggable="true">
                             <div class="card-body p-2">
                                 <div class="d-flex justify-content-between">
-                                    <h4 class="fw-semibold mb-1">{{ task.task_title }} <i class="bi-pin-angle-fill"></i></h4>
+                                    <h4 class="fw-semibold mb-1">{{ task.task_title[:24] }}{% if task.task_title|length > 24 %}...{% endif %} <i class="bi-pin-angle-fill"></i></h4>
                                     <small class="text-primary">{{ task.due_date.strftime('%Y-%m-%d') }}</small>
                                 </div>
                                 <p class="mb-2 text-muted">
@@ -35,7 +35,7 @@
                         <div class="card border mb-3 shadow-sm" data-task-id="{{ task.id }}" data-status="{{ task.status }}" draggable="true">
                             <div class="card-body p-2">
                                 <div class="d-flex justify-content-between">
-                                    <h4 class="fw-semibold mb-1">{{ task.task_title }} <i class="bi-pen-fill"></i></h4>
+                                    <h4 class="fw-semibold mb-1">{{ task.task_title[:24] }}{% if task.task_title|length > 24 %}...{% endif %} <i class="bi-pen-fill"></i></h4>
                                     <small class="text-primary">{{ task.due_date.strftime('%Y-%m-%d') }}</small>
                                 </div>
                                 <p class="mb-2 text-muted">
@@ -59,7 +59,7 @@
                         <div class="card border mb-3 shadow-sm" data-task-id="{{ task.id }}" data-status="{{ task.status }}" draggable="true">
                             <div class="card-body p-2">
                                 <div class="d-flex justify-content-between">
-                                    <h4 class="fw-semibold mb-1">{{ task.task_title }} <i class="bi-eye-fill"></i></h4>
+                                    <h4 class="fw-semibold mb-1">{{ task.task_title[:24] }}{% if task.task_title|length > 24 %}...{% endif %} <i class="bi-eye-fill"></i></h4>
                                     <small class="text-primary">{{ task.due_date.strftime('%Y-%m-%d') }}</small>
                                 </div>
                                 <p class="mb-2 text-muted">
@@ -83,7 +83,7 @@
                         <div class="card border mb-3 shadow-sm" data-task-id="{{ task.id }}" data-status="{{ task.status }}" draggable="true">
                             <div class="card-body p-2">
                                 <div class="d-flex justify-content-between">
-                                    <h4 class="fw-semibold mb-1">{{ task.task_title }} <i class="bi-check-circle-fill"></i></h4>
+                                    <h4 class="fw-semibold mb-1">{{ task.task_title[:24] }}{% if task.task_title|length > 24 %}...{% endif %} <i class="bi-check-circle-fill"></i></h4>
                                     <small class="text-primary">{{ task.due_date.strftime('%Y-%m-%d') }}</small>
                                 </div>
                                 <p class="mb-2 text-muted">

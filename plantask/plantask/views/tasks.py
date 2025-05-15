@@ -6,6 +6,7 @@ from datetime import datetime
 from plantask.models.project import Project
 from plantask.auth.verifysession import verify_session
 from plantask.models.task import Task
+from datetime import date
 
 @view_config(route_name='create_task', renderer='plantask:templates/create_task.jinja2', request_method='GET', permission="admin")
 @verify_session
@@ -15,7 +16,10 @@ def create_task_page(request):
     if not project:
         return HTTPFound(location=request.route_url('my_projects')) 
     
-    return {'project': project}
+    return {
+        'project': project,
+        'current_date': date.today().isoformat()
+    }
 
 
 @view_config(route_name='create_task', renderer='plantask:templates/create_task.jinja2', request_method='POST', permission="admin")
@@ -33,6 +37,7 @@ def create_task(request):
     if not task_name or not task_description or not due_date:
         return {
             'project': project,
+            'current_date': date.today().isoformat(),
             'error_ping': 'All fields are required.'
         }
 
@@ -56,8 +61,10 @@ def create_task(request):
         request.dbsession.rollback()
         return {
             'project': project,
+            'current_date': date.today().isoformat(),
             'error_ping': 'An error occurred while creating the task. Please try again.'
         }
+
 
 @view_config(route_name='task_by_id', renderer='plantask:templates/task.jinja2', request_method='GET')
 @verify_session
@@ -70,7 +77,8 @@ def task_by_id(request):
         project = request.dbsession.query(Project).filter_by(id=task.project_id).first()
         return {
             'task': task,
-            'project': project
+            'project': project,
+            'current_date': date.today().isoformat() 
         }
     except Exception:
         return HTTPNotFound("Task not found")

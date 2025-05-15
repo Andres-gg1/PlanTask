@@ -10,7 +10,7 @@
     padding-left: 1rem;
 }
 .info{
-    font-family: "Proxima Nova";
+    font-family: "Proxima Nova" sans-serif;
     font-size: 1.45rem;
 }
 .due-date{
@@ -20,7 +20,7 @@
 .mybtn{
     background-color: #767097;
     color: white;
-    font-family: "Proxima Nova";
+    font-family: "Proxima Nova" sans-serif;
     font-size: 1.45rem;
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
@@ -28,7 +28,7 @@
     background-color: #5e5880;
     transform: scale(1.025);
     color: white;
-    font-family: "Proxima Nova";
+    font-family: "Proxima Nova" sans-serif;
     font-size: 1.45rem;
 }
 .mybtn:active{
@@ -53,6 +53,38 @@
     display: flex;
     gap: 0.5rem;
     align-items: center;
+}
+
+.create-microtask-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem; 
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    background-color: #76c47e; 
+    color: white;
+    border-radius: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    font-size: 1.25rem; 
+    font-family: "Proxima Nova", sans-serif;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.create-microtask-button:hover {
+    background-color: #67b36e; 
+    transform: scale(1.1);
+}
+
+.create-microtask-button i {
+    margin-left: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: bolder;
 }
 </style>
 {% endblock %}
@@ -115,6 +147,11 @@
         </div>
     </div>
     <p class="info">{{ task.task_description }}</p>
+    {% if role == 'admin' %}
+        <a href="{{ request.route_url('create_microtask', task_id=task.id) }}" class="create-microtask-button">
+            Create New MicroTask <i class="bi-plus-lg"></i>
+        </a>
+    {% endif %}
 </main>
 
 <!-- Edit Task Modal -->
@@ -138,7 +175,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="taskDueDate" class="form-label">Due Date</label>
-                        <input type="date" class="form-control" id="taskDueDate" name="due_date" value="{{ task.due_date.strftime('%Y-%m-%d') }}">
+                        <input type="date" class="form-control" id="taskDueDate" name="due_date" value="{{ task.due_date.strftime('%Y-%m-%d') }}" required min="{{ current_date }}">
                     </div>
                 </div>
                 <div class="modal-footer">
