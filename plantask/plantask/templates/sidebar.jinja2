@@ -4,34 +4,34 @@
     <div class="d-flex flex-column align-items-center">
         <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
             <li class="nav-item">
-                <a href="#" class="{% if active_page == 'Home' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Home" title="Home">
+                <a href="{{ request.route_url('home') }}" class="{% if active_page == 'home' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Home" title="Home">
                     <i class="bi-house-door"></i>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="{% if active_page == 'History' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="History" title="History">
+                <a href="{{ request.route_url('history') }}" class="{% if active_page == 'history' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="History" title="History">
                     <i class="bi-clock-history"></i>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="{% if active_page == 'People' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="People" title="People">
+                <a href="{{ request.route_url('my_projects') }}" class="{% if active_page == 'my_projects' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Projects" title="Projects">
                     <i class="bi-people-fill"></i>
                 </a>
             </li>
-            {% if role == 'pm'%}
+            {% if role == 'admin'%}
             <li class="nav-item">
-                <a href="#" class="{% if active_page == 'Dashboard' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Map" title="Map">
+                <a href="{{ request.route_url('dashboard') }}" class="{% if active_page == 'dashboard' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Dashboard" title="Dashboard">
                     <i class="bi-map-fill"></i>
                 </a>
             </li>
             {% endif %}
             <li class="nav-item">
-                <a href="#" class="{% if active_page == 'Calendar' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Calendar" title="Calendar">
+                <a href="{{ request.route_url('calendar') }}" class="{% if active_page == 'calendar' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Calendar" title="Calendar">
                     <i class="bi-calendar3"></i>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="{% if active_page == 'Chat' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Chat" title="Chat">
+                <a href="{{ request.route_url('chats') }}" class="{% if active_page == 'chats' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Chat" title="Chat">
                     <i class="bi-chat-left-text-fill"></i>
                 </a>
             </li>

@@ -17,7 +17,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from plantask.models.base import Base
 
-engine = create_engine("postgresql://postgres:DRbfLrlvWYCYCULVimbRZxufXbujGHaK@trolley.proxy.rlwy.net:35649/railway", echo=True)
+engine = create_engine("postgresql://docker_user:Plantaskwawawa@3.133.125.109:5432/plantask_db", echo=True)
 
 def crear_tablas():
     """Crea las tablas definidas en los modelos directamente en la base de datos."""

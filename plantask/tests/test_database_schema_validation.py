@@ -22,7 +22,7 @@ import allure
 TESTING_DATABASE_URL = "postgresql://postgres:DRbfLrlvWYCYCULVimbRZxufXbujGHaK@trolley.proxy.rlwy.net:35649/railway"
 
 # This URL is for a PostgreSQL database hosted on Railway. Use this to run the application in production.
-DATABASE_URL = "postgresql://postgres:hqDGUoMpypystmdWLOYHdzOMrABijDKi@hopper.proxy.rlwy.net:32534/railway"
+DATABASE_URL = "postgresql://docker_user:Plantaskwawawa@3.133.125.109:5432/plantask_db"
 
 DATABASES_URL = [
     DATABASE_URL,

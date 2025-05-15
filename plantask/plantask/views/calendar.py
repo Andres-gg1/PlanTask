@@ -7,7 +7,7 @@ from plantask.models.project import Project
 from plantask.auth.verifysession import verify_session
 
 
-@view_config(route_name='home', renderer='plantask:templates/home.jinja2')
+@view_config(route_name='calendar', renderer='plantask:templates/calendar.jinja2')
 @verify_session
-def my_view(request):
+def calendar_page(request):
     return {}
