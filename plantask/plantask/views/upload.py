@@ -3,13 +3,14 @@ import json
 
 from pyramid.view import view_config
 from pyramid.response import Response
-from pyramid.httpexceptions import HTTPNotFound, HTTPBadRequest, HTTPNoContent
+from pyramid.httpexceptions import HTTPNotFound, HTTPBadRequest, HTTPNoContent, HTTPFound
 
 from plantask.utils.file_service import FileUploadService
 
 from plantask.auth.verifysession import verify_session
 
 from plantask.models.file import File
+from plantask.models.task import TasksFile
 
 def set_uploader(request, user_id):
     """
@@ -47,11 +48,25 @@ def upload_file(request):
         return HTTPBadRequest("No file sent")
 
     file_storage = request.POST['file']
+    task_id = request.POST.get('task_id')
+    if task_id:
+        try:
+            task_id = int(task_id)
+        except ValueError:
+            return HTTPBadRequest("Invalid task_id")
+
     uploader = set_uploader(request, user_id)
 
     try:
-        result = uploader.handle_upload(file_storage, context={'type': 'task', 'action': 'task_added_file'})
-        return {'message': 'Archivo subido correctamente'}
+        result = uploader.handle_upload(
+            file_storage,
+            context={'type': 'task', 'action': 'task_added_file'},
+            task_id=task_id
+        )
+        # Redirect to the task page after successful upload
+        if task_id:
+            return HTTPFound(location=request.route_url('task_by_id', id=task_id))
+        return {}
     except Exception as e:
         return {'error': str(e)}
     

@@ -1,0 +1,106 @@
+.project-name{
+    text-decoration: none;
+    color: black;
+    padding-left: 1rem;
+}
+.info{
+    font-family: "Proxima Nova" sans-serif;
+    font-size: 1.45rem;
+}
+.due-date{
+    color: #5175B9;
+    font-weight: 600;
+}
+.mybtn{
+    background-color: #767097;
+    color: white;
+    font-family: "Proxima Nova" sans-serif;
+    font-size: 1.45rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+.mybtn:hover{
+    background-color: #5e5880;
+    transform: scale(1.025);
+    color: white;
+    font-family: "Proxima Nova" sans-serif;
+    font-size: 1.45rem;
+}
+.mybtn:active{
+    background-color: #4b456b !important;
+    color: white !important;
+    transform: scale(1) !important;
+}
+.btn{
+    font-weight: 500;
+}
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+.info-row > div {
+    margin-right: 1.5rem;
+}
+.admin-actions, .status-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.create-microtask-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem; 
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    background-color: #76c47e; 
+    color: white;
+    border-radius: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    font-size: 1.25rem; 
+    font-family: "Proxima Nova", sans-serif;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.create-microtask-button:hover {
+    background-color: #67b36e; 
+    transform: scale(1.1);
+}
+
+.create-microtask-button i {
+    margin-left: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: bolder;
+}
+
+.modal-body,
+.modal-footer {
+    background-color: #f6f7f8;
+}
+
+.filebtn{
+    background-color: #5175B9;
+    border: 1px solid;
+    border-color: #2D5775;
+}
+
+.filebtn:hover{
+    background-color: #4366a7;
+    transform: scale(1.025);
+    color: white;
+    font-family: "Proxima Nova" sans-serif;
+    font-size: 1.45rem;
+}
+.filebtn:active{
+    background-color: #34548f !important;
+    color: white !important;
+    transform: scale(1) !important;
+}

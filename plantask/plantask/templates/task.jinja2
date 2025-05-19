@@ -3,224 +3,14 @@
 {% block title %}{{task.task_title}}{% endblock %}
 
 {% block styles %}
-<style>
-.project-name{
-    text-decoration: none;
-    color: black;
-    padding-left: 1rem;
-}
-.info{
-    font-family: "Proxima Nova" sans-serif;
-    font-size: 1.45rem;
-}
-.due-date{
-    color: #5175B9;
-    font-weight: 600;
-}
-.mybtn{
-    background-color: #767097;
-    color: white;
-    font-family: "Proxima Nova" sans-serif;
-    font-size: 1.45rem;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-.mybtn:hover{
-    background-color: #5e5880;
-    transform: scale(1.025);
-    color: white;
-    font-family: "Proxima Nova" sans-serif;
-    font-size: 1.45rem;
-}
-.mybtn:active{
-    background-color: #4b456b !important;
-    color: white !important;
-    transform: scale(1) !important;
-}
-.btn{
-    font-weight: 500;
-}
-.info-row {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-}
-.info-row > div {
-    margin-right: 1.5rem;
-}
-.admin-actions, .status-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.create-microtask-button {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem; 
-    width: auto;
-    height: auto;
-    padding: 0.5rem 1rem;
-    background-color: #76c47e; 
-    color: white;
-    border-radius: 1.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
-    text-decoration: none;
-    font-size: 1.25rem; 
-    font-family: "Proxima Nova", sans-serif;
-    font-weight: 600;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.create-microtask-button:hover {
-    background-color: #67b36e; 
-    transform: scale(1.1);
-}
-
-.create-microtask-button i {
-    margin-left: 0.5rem;
-    font-size: 1.5rem;
-    font-weight: bolder;
-}
-.microtask-item{
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    height: 3rem;
-    font-family: "Proxima Nova", sans-serif;
-    font-size: 1.45rem;
-    font-weight: 600;
-}
-
-/* Modal backdrop */
-.custom-modal {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: none; /* oculto por defecto */
-  align-items: center;
-  justify-content: center;
-  z-index: 1050;
-  overflow-y: auto;
-  padding: 1rem;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s cubic-bezier(0.4,0,0.2,1);
-}
-
-/* Mostrar modal */
-.custom-modal.show {
-  display: flex;
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Modal dialog */
-.custom-modal-dialog {
-  background: white;
-  max-width: 75vw;
-  width: 75vw;
-  max-height: 75vh;
-  min-height: 75vh;
-  border-radius: 0.3rem;
-  box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transform: scale(0.92);
-  opacity: 0;
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
-}
-
-.custom-modal.show .custom-modal-dialog {
-  transform: scale(1);
-  opacity: 1;
-  box-shadow: 0 1rem 2rem rgba(81,117,185,0.15), 0 0.25rem 0.375rem rgba(0,0,0,0.5);
-}
-
-.custom-modal.animating-out {
-  pointer-events: none;
-}
-
-.custom-modal.animating-out .custom-modal-dialog {
-  transform: scale(0.92);
-  opacity: 0;
-}
-
-/* Modal content */
-.custom-modal-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-/* Header */
-.custom-modal-header {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #dee2e6;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* Title */
-.custom-modal-title {
-  margin: 0;
-  font-family: "Proxima Nova", sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-/* Close button */
-.custom-modal-close {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  font-weight: 700;
-  color: #000;
-  padding: 0;
-}
-
-/* Body */
-.custom-modal-body {
-  padding: 1rem 1.5rem;
-  overflow-y: auto;
-  flex-grow: 1;
-  font-family: "Proxima Nova", sans-serif;
-  font-size: 1.25rem;
-}
-
-/* Definition list styling */
-.microtask-details dt {
-  font-weight: 600;
-  float: left;
-  clear: left;
-  width: 25%;
-  margin: 0 0 0.5rem 0;
-}
-
-.microtask-details dd {
-  margin: 0 0 0.5rem 26%;
-}
-
-.custom-modal.show .custom-modal-dialog {
-  transform: scale(1);
-  opacity: 1;
-}
-</style>
+<link href="{{ request.static_url('plantask:static/styles/microtask.css') }}" rel="stylesheet">
+<link href="{{ request.static_url('plantask:static/styles/tasks.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
 <main class="mycontainer">
     <h1>{{ task.task_title }}</h1>
-    <h3>
+    <h3> 
         <a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a>
     </h3>
     <div class="info-row">
@@ -274,6 +64,10 @@
             {% endif %}
         </div>
     </div>
+    <button class="filebtn mybtn btn" type="button" data-bs-toggle="modal" data-bs-target="#attachFileModal">
+        Attach File
+        <i class="bi-paperclip"></i>
+    </button>
     <p class="info">{{ task.task_description }}</p>
 
     <!-- Microtasks List -->
@@ -303,12 +97,50 @@
         <div class="alert alert-info">No microtasks assigned to this task.</div>
     {% endif %}
 
+    {% if files %}
+        <ul class="list-group mb-4">
+            {% for f in files %}
+                <li class="list-group-item justify-content-between align-items-center">
+                    <div class="microtask-item" style="cursor:pointer;">
+                        <strong>{{ f.filename }}</strong>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="alert alert-info">No files attached to this task.</div>
+    {% endif %}
+
     {% if role == 'admin' %}
         <a href="{{ request.route_url('create_microtask', task_id=task.id) }}" class="create-microtask-button">
             Create New MicroTask <i class="bi-plus-lg"></i>
         </a>
     {% endif %}
 </main>
+
+<!-- Attach File Modal -->
+<div class="modal fade" id="attachFileModal" tabindex="-1" aria-labelledby="attachFileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ request.route_url('file_upload_page') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="attachFileModalLabel">Attach File to Task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="file" name="file" class="form-control" required>
+          <!-- Optionally, add a hidden field for task_id if needed in your upload logic -->
+          <input type="hidden" name="task_id" value="{{ task.id }}">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-info">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <!-- Edit Task Modal -->
 <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
@@ -449,13 +281,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const microtaskItems = document.querySelectorAll('.microtask-list-item');
 
     function openModal() {
-        modal.style.display = 'flex'; // <-- Mostrarlo antes de animar
+        modal.style.display = 'flex';
         setTimeout(() => {
             modal.classList.remove('animating-out');
             modal.classList.add('show');
             modal.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden';  // Prevent background scrolling
-        }, 10); // Pequeño delay para que el display:flex no bloquee la transición
+            document.body.style.overflow = 'hidden'; 
+        }, 10);
     }
 
 

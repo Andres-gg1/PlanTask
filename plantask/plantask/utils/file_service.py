@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 from plantask.models.file import File
 from plantask.models.activity_log import ActivityLog
+from plantask.models.task import TasksFile  # <-- Add this import
 import zipfile
 import tempfile
 
@@ -86,7 +87,13 @@ class FileUploadService:
                 creation_date=str(datetime.now())
             )
             self.dbsession.add(new_file)
-            self.dbsession.flush()
+            self.dbsession.flush()  # new_file.id is now available
+
+            # Create the relationship in TasksFile if task_id is provided
+            if task_id:
+                tasks_file = TasksFile(tasks_id=task_id, files_id=new_file.id)
+                self.dbsession.add(tasks_file)
+                self.dbsession.flush()
 
             if context:
                 action_enum = f"{context.get('type')} -> {context.get('action')} : <{file_info['url']}>"

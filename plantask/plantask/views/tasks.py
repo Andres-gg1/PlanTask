@@ -6,8 +6,8 @@ from datetime import datetime
 from plantask.models.project import Project
 from plantask.models.activity_log import ActivityLog
 from plantask.auth.verifysession import verify_session
-from plantask.models.task import Task
-from plantask.models.microtask import Microtask  # Add this import
+from plantask.models.task import Task, TasksFile
+from plantask.models.microtask import Microtask
 from datetime import date
 
 @view_config(route_name='create_task', renderer='plantask:templates/create_task.jinja2', request_method='GET', permission="admin")
@@ -30,7 +30,7 @@ def create_task(request):
     project_id = request.matchdict.get('project_id')
     project = request.dbsession.query(Project).get(project_id)
     if not project:
-        return HTTPFound(location=request.route_url('my_projects')) #check if project exists
+        return HTTPFound(location=request.route_url('my_projects')) 
 
     task_name = request.params.get('name')
     task_description = request.params.get('description')
@@ -89,11 +89,15 @@ def task_by_id(request):
             return HTTPNotFound("Task not found")
         project = request.dbsession.query(Project).filter_by(id=task.project_id).first()
         microtasks = request.dbsession.query(Microtask).filter_by(task_id=task.id, active=True).all()  # Query microtasks
+        tasks_files = request.dbsession.query(TasksFile).filter_by(tasks_id=task.id).all()
+        files = [tf.files for tf in tasks_files]
+
         return {
             'task': task,
             'project': project,
-            'microtasks': microtasks,  
-            'current_date': date.today().isoformat() 
+            'microtasks': microtasks,
+            'files': files,
+            'current_date': date.today().isoformat()
         }
     except Exception:
         return HTTPNotFound("Task not found")
