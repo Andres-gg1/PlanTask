@@ -26,3 +26,18 @@ def includeme(config):
     config.add_route('delete_task', r'/task/{id:\d+}/delete')
     config.add_route('kanban_partial', '/project/{id}/kanban_partial')
     config.add_route('create_microtask', r'/create-microtask/{task_id}')
+    
+    #File services
+    #config.add_route('task_add_upload', '/upload')
+    config.add_route('file_crud', '/files')
+
+    config.add_route('file_list_page', '/test/list')
+    config.add_route('file_upload_page', '/test/upload')
+    config.add_route('delete_file_page', '/test/delete')
+
+    config.add_route('multi_upload', '/test/multi_upload')
+
+    #config.add_route('update_file_page', '/test/update')
+    
+    #config.add_view(renderer='templates/update_file.jinja2', route_name='update_file_page')
+    #config.add_view(renderer='templates/delete_file.jinja2', route_name='delete_file_page')
