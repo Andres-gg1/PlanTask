@@ -19,3 +19,25 @@ def includeme(config):
     config.add_route('add_member', r'/project/{id:\d+}/add-member')
     config.add_route('remove_member', r'/project/{id:\d+}/remove-member')
     config.add_route('search_users', '/search-users')
+    config.add_route('create_task', r'/create-task/{project_id}')
+    config.add_route('update_task_status', '/api/update_task_status')
+    config.add_route('task_by_id', r'/task/{id:\d+}')
+    config.add_route('edit_task', r'/task/{id:\d+}/edit')
+    config.add_route('delete_task', r'/task/{id:\d+}/delete')
+    config.add_route('kanban_partial', '/project/{id}/kanban_partial')
+    config.add_route('create_microtask', r'/create-microtask/{task_id}')
+    
+    #File services
+    #config.add_route('task_add_upload', '/upload')
+    config.add_route('file_crud', '/files')
+
+    config.add_route('file_list_page', '/test/list')
+    config.add_route('file_upload_page', '/test/upload')
+    config.add_route('delete_file_page', '/test/delete')
+
+    config.add_route('multi_upload', '/test/multi_upload')
+
+    #config.add_route('update_file_page', '/test/update')
+    
+    #config.add_view(renderer='templates/update_file.jinja2', route_name='update_file_page')
+    #config.add_view(renderer='templates/delete_file.jinja2', route_name='delete_file_page')

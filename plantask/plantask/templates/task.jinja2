@@ -1,0 +1,334 @@
+{% extends "layout.jinja2" %}
+
+{% block title %}{{task.task_title}}{% endblock %}
+
+{% block styles %}
+<link href="{{ request.static_url('plantask:static/styles/microtask.css') }}" rel="stylesheet">
+<link href="{{ request.static_url('plantask:static/styles/tasks.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<main class="mycontainer">
+    <h1>{{ task.task_title }}</h1>
+    <h3> 
+        <a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a>
+    </h3>
+    <div class="info-row">
+        <div class="info">Creation Date: {{ task.date_created.strftime('%Y-%m-%d') }}</div>
+        <div class="info due-date">Due Date: {{ task.due_date.strftime('%Y-%m-%d') }}</div>
+        {% if role == 'admin' %}
+        <div class="admin-actions">
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editTaskModal">
+                Edit Task <i class="bi-pencil-square"></i>
+            </button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
+                Delete Task <i class="bi-trash3"></i>
+            </button>
+        </div>
+        {% endif %}
+        <div class="status-actions">
+            {% if task.status == 'assigned' %}
+                <button class="mybtn btn" type="button" id="movestatusbutton">
+                    Move to In Progress
+                    <i class="bi-box-arrow-right"></i>
+                    <i class="bi-pen-fill"></i>
+                </button>
+            {% elif task.status == 'in_progress' %}
+                <button class="mybtn btn" type="button" id="backtoassigned">
+                    Back to Assigned
+                    <i class="bi-pin-angle-fill"></i>
+                    <i class="bi-box-arrow-left"></i>
+                </button>
+                <button class="mybtn btn" type="button" id="sendforreview">
+                    Send for Review
+                    <i class="bi-box-arrow-right"></i>
+                    <i class="bi-eye-fill"></i>
+                </button>
+            {% elif task.status == 'under_review' %}
+                <button class="mybtn btn" type="button" id="backtoinprogress">
+                    Back to In Progress
+                    <i class="bi-pen-fill"></i>
+                    <i class="bi-box-arrow-left"></i>
+                </button>
+                <button class="mybtn btn" type="button" id="completetask">
+                    Complete Task
+                    <i class="bi-box-arrow-right"></i>
+                    <i class="bi-check-circle-fill"></i>
+                </button>
+            {% elif task.status == 'completed' %}
+                <button class="mybtn btn" type="button" id="backtoreview">
+                    Back to In Review
+                    <i class="bi-eye-fill"></i>
+                    <i class="bi-box-arrow-left"></i>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+    <button class="filebtn mybtn btn" type="button" data-bs-toggle="modal" data-bs-target="#attachFileModal">
+        Attach File
+        <i class="bi-paperclip"></i>
+    </button>
+    <p class="info">{{ task.task_description }}</p>
+
+    <!-- Microtasks List -->
+    {% if microtasks %}
+        <ul class="list-group mb-4">
+            {% for mt in microtasks %}
+                <li class="list-group-item justify-content-between align-items-center microtask-list-item"
+                    data-mtid="{{ mt.id }}"
+                    data-name="{{ mt.name|e }}"
+                    data-description="{{ mt.description|e }}"
+                    data-status="{{ mt.status }}"
+                    data-due="{{ mt.due_date.strftime('%Y-%m-%d') if mt.due_date else '' }}">
+                    <div class="microtask-item" style="cursor:pointer;">
+                        {% if mt.status == 'undone' %}
+                            <i class="bi-square"></i>
+                        {% elif mt.status == 'under_review' %}
+                            <i class="bi-square-fill"></i>
+                        {% elif mt.status == 'approved' %}
+                            <i class="bi-check-square-fill"></i>
+                        {% endif %}
+                        <strong>{{ mt.name }}</strong>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="alert alert-info">No microtasks assigned to this task.</div>
+    {% endif %}
+
+    {% if files %}
+        <ul class="list-group mb-4">
+            {% for f in files %}
+                <li class="list-group-item justify-content-between align-items-center">
+                    <div class="microtask-item" style="cursor:pointer;">
+                        <strong>{{ f.filename }}</strong>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="alert alert-info">No files attached to this task.</div>
+    {% endif %}
+
+    {% if role == 'admin' %}
+        <a href="{{ request.route_url('create_microtask', task_id=task.id) }}" class="create-microtask-button">
+            Create New MicroTask <i class="bi-plus-lg"></i>
+        </a>
+    {% endif %}
+</main>
+
+<!-- Attach File Modal -->
+<div class="modal fade" id="attachFileModal" tabindex="-1" aria-labelledby="attachFileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ request.route_url('file_upload_page') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="attachFileModalLabel">Attach File to Task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="file" name="file" class="form-control" required>
+          <!-- Optionally, add a hidden field for task_id if needed in your upload logic -->
+          <input type="hidden" name="task_id" value="{{ task.id }}">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-info">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Task Modal -->
+<div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ request.route_url('edit_task', id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Task Title</label>
+                        <input type="text" class="form-control" id="taskTitle" name="name" value="{{ task.task_title }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Task Description</label>
+                        <textarea class="form-control" id="taskDescription" name="description">{{ task.task_description }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDueDate" class="form-label">Due Date</label>
+                        <input type="date" class="form-control" id="taskDueDate" name="due_date" value="{{ task.due_date.strftime('%Y-%m-%d') }}" required min="{{ current_date }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-info">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Task Modal -->
+<div class="modal fade" id="deleteTaskModal" tabindex="-1" aria-labelledby="deleteTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ request.route_url('delete_task', id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteTaskModalLabel">Delete Task</h5>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete the task "{{ task.task_title }}"?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal microtask -->
+<div id="microtaskDetailsModal" class="custom-modal" aria-hidden="true" role="dialog" aria-labelledby="microtaskDetailsModalLabel" aria-modal="true" tabindex="-1">
+  <div class="custom-modal-dialog" role="document">
+    <div class="custom-modal-content">
+      <div class="custom-modal-header">
+        <h5 id="microtaskDetailsModalLabel" class="custom-modal-title">Microtask Details</h5>
+        <button type="button" class="custom-modal-close" aria-label="Close"><i class="bi-x-lg"></i></button>
+      </div>
+      <div class="custom-modal-body">
+        <dl class="microtask-details">
+          <dt>Name</dt>
+          <dd id="microtaskName"></dd>
+
+          <dt>Description</dt>
+          <dd id="microtaskDescription"></dd>
+
+          <dt>Status</dt>
+          <dd id="microtaskStatus"></dd>
+
+          <dt>Due Date</dt>
+          <dd id="microtaskDueDate"></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Task status update functionality
+    function updateStatus(newStatus) {
+        fetch("{{ request.route_url('update_task_status') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"
+            },
+            body: JSON.stringify({
+                task_id: {{ task.id }},
+                new_status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.error || "Failed to update status.");
+            }
+        })
+        .catch(() => alert("Failed to update status."));
+    }
+
+    {% if task.status == 'assigned' %}
+    document.getElementById('movestatusbutton').onclick = function() {
+        updateStatus('in_progress');
+    };
+    {% elif task.status == 'in_progress' %}
+    document.getElementById('backtoassigned').onclick = function() {
+        updateStatus('assigned');
+    };
+    document.getElementById('sendforreview').onclick = function() {
+        updateStatus('under_review');
+    };
+    {% elif task.status == 'under_review' %}
+    document.getElementById('backtoinprogress').onclick = function() {
+        updateStatus('in_progress');
+    };
+    document.getElementById('completetask').onclick = function() {
+        updateStatus('completed');
+    };
+    {% elif task.status == 'completed' %}
+    document.getElementById('backtoreview').onclick = function() {
+        updateStatus('under_review');
+    };
+    {% endif %}
+
+    // Microtask modal functionality
+    const modal = document.getElementById('microtaskDetailsModal');
+    const closeBtn = modal.querySelector('.custom-modal-close');
+    const microtaskItems = document.querySelectorAll('.microtask-list-item');
+
+    function openModal() {
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.remove('animating-out');
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden'; 
+        }, 10);
+    }
+
+
+    function closeModal() {
+        modal.classList.add('animating-out');
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';  // Re-enable background scrolling
+
+        // Ocultar visualmente después de que termine la animación
+        setTimeout(() => {
+            modal.classList.remove('animating-out');
+            modal.style.display = 'none';
+        }, 350);
+    }
+
+    // Close modal when close button is clicked
+    closeBtn.addEventListener('click', closeModal);
+
+    // Fill and open modal when clicking on a microtask
+    microtaskItems.forEach(item => {
+        item.addEventListener('click', () => {
+            document.getElementById('microtaskName').textContent = item.dataset.name || 'N/A';
+            document.getElementById('microtaskDescription').textContent = item.dataset.description || 'N/A';
+            
+            let status = item.dataset.status || 'N/A';
+            status = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+            document.getElementById('microtaskStatus').textContent = status;
+            
+            document.getElementById('microtaskDueDate').textContent = item.dataset.due || 'No due date';
+
+            openModal();
+        });
+    });
+
+    // Optional: close modal with ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape" && modal.classList.contains('show')) {
+            closeModal();
+        }
+    });
+});
+</script>
+{% endblock %}

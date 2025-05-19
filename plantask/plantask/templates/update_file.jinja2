@@ -1,0 +1,30 @@
+<h1>Update File</h1>
+<form id="update-form">
+    <input type="number" name="file_id" placeholder="File ID" required />
+    <input type="text" name="filename" placeholder="New Filename" required />
+    <button type="submit">Update</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+document.getElementById("update-form").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const file_id = this.file_id.value;
+    const filename = this.filename.value;
+
+    fetch("/files", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({ file_id: Number(file_id), filename })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("result").textContent = JSON.stringify(data);
+    });
+});
+</script>

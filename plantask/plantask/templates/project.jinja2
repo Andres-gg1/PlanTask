@@ -6,35 +6,30 @@
 <link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/projects.css') }}">
 <link href="https://fonts.cdnfonts.com/css/proxima-nova-2" rel="stylesheet">
 <style>
-    .kanban-board,
-    .kanban-board * {
-        font-family: 'Proxima Nova', sans-serif !important;
-        font-weight: 600 !important;
-        color: #465158 !important;
-    }
-
     .kanban-board-wrapper {
-        overflow-x: hidden;
+        overflow-x: auto; /* Enable horizontal scrolling */
         overflow-y: hidden;
         width: 100%;
     }
 
     .kanban-board {
-        display: flex;
-        flex-wrap: wrap; 
-        gap: 1.4rem; 
-        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(25rem, 1fr)); 
+        gap: 1rem; 
+        width: 100%; 
+        font-family: 'Proxima Nova', sans-serif !important;
+        font-weight: 600 !important;
+        color: #465158 !important;
     }
 
     .kanban-column {
-        flex: 1 0 18.75rem;
-        min-width: 18.75rem; 
-        max-width: 26.25rem;
+        min-width: 25rem; 
+        max-width: 50rem; 
         margin-bottom: 1rem;
     }
 
     .kanban-tasks {
-        height: 37.5rem; 
+        height: calc(100vh - 33rem);
         overflow-y: auto;
     }
 
@@ -45,6 +40,37 @@
 
     body {
         overflow-x: hidden;
+    }
+    .create-task-button {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem; 
+        width: auto;
+        height: auto;
+        padding: 0.5rem 1rem;
+        background-color: #769dc4; 
+        color: white;
+        border-radius: 1.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+        text-decoration: none;
+        font-size: 1.25rem; 
+        font-family: "Proxima Nova", sans-serif;
+        font-weight: 600;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .create-task-button:hover {
+        background-color: #5882ac; 
+        transform: scale(1.1);
+    }
+
+    .create-task-button i {
+        margin-left: 0.5rem;
+        font-size: 1.5rem;
+        font-weight: bolder;
     }
 </style>
 {% endblock %}
@@ -114,44 +140,14 @@
     </div>
 
     <!-- Kanban Board -->
-    <div class="kanban-board-wrapper mt-4">
-        <div class="kanban-board">
-            {% for status, icon, date_label in [
-                ('Assigned Tasks', 'bi-pin-angle-fill', 'Final Date and Time'),
-                ('In Progress', 'bi-pen-fill', 'Final Date and Time'),
-                ('Under Review', 'bi-eye-fill', 'Submitted Date'),
-                ('Completed', 'bi-check-circle-fill', 'Completed')
-            ] %}
-            <div class="kanban-column text-center">
-                <h5 class="fw-bold text-dark mb-2" style="font-size: 1.5rem;">
-                    {{ status }}
-                </h5>
-                <div class="bg-white border rounded shadow-sm p-3 kanban-tasks">
-                    {% for task in tasks if task.status == status %}
-                    <div class="card border mb-3 shadow-sm">
-                        <div class="card-body p-2">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="fw-semibold mb-1">{{ task.title }}</h6>
-                                <small class="text-primary">{{ date_label }}</small>
-                            </div>
-                            <p class="mb-2 small text-muted">
-                                {{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}
-                            </p>
-                            <div class="d-flex flex-wrap gap-1">
-                                {% for label in task.labels %}
-                                <span class="badge" style="background-color: {{ label.color }}; color: white;">{{ label.name }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    {% else %}
-                    <p class="text-muted small">No tasks</p>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+    <div id="kanban-board-wrapper">
+        {% include "kanban.jinja2" %}
     </div>
+    {% if role == 'admin' %}
+        <a href="{{ request.route_url('create_task', project_id=project.id) }}" class="create-task-button">
+            Create New Task <i class="bi-plus-lg"></i>
+        </a>
+    {% endif %}
 </main>
 <div class="modal fade" id="confirmRemoveMemberModal" tabindex="-1" aria-labelledby="confirmRemoveMemberModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -262,28 +258,65 @@
 {% block scripts %}
 <script src="{{ request.static_url('plantask:static/scripts/project.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const announcements = document.querySelectorAll('.announcement');
-        announcements.forEach(a => {
-            setTimeout(() => {
-                a.style.display = 'none';
-            }, 5000);
+function setupKanbanDragAndDrop() {
+    const cards = document.querySelectorAll('[draggable="true"]');
+    const columns = document.querySelectorAll('.kanban-tasks');
+
+    let draggedCard = null;
+
+    cards.forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+            draggedCard = card;
+            e.dataTransfer.setData('text/plain', card.dataset.taskId);
+        });
+    });
+
+    columns.forEach(column => {
+        column.addEventListener('dragover', (e) => {
+            e.preventDefault();
         });
 
-        const description = document.getElementById('projectDescription');
-        const readMoreBtn = document.getElementById('readMoreBtn');
+        column.addEventListener('drop', async (e) => {
+            e.preventDefault();
 
-        if (readMoreBtn) {
-            readMoreBtn.addEventListener('click', function () {
-                if (description.classList.contains('expanded')) {
-                    description.classList.remove('expanded');
-                    readMoreBtn.textContent = 'Read More';
-                } else {
-                    description.classList.add('expanded');
-                    readMoreBtn.textContent = 'Show Less';
+            const newStatus = column.closest('.kanban-column').dataset.status;
+            const taskId = e.dataTransfer.getData('text/plain');
+
+            const card = document.querySelector(`[data-task-id="${taskId}"]`);
+            if (card && column !== card.parentElement) {
+                column.appendChild(card); // Move instantly
+
+                try {
+                    const response = await fetch('{{ request.route_url("update_task_status") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            task_id: taskId,
+                            new_status: newStatus
+                        })
+                    });
+
+                    // Always reload Kanban after update
+                    const kanbanResponse = await fetch('{{ request.route_url("kanban_partial", id=project.id) }}');
+                    if (kanbanResponse.ok) {
+                        const kanbanHtml = await kanbanResponse.text();
+                        document.getElementById('kanban-board-wrapper').innerHTML = kanbanHtml;
+                        setupKanbanDragAndDrop();
+                    } else {
+                        location.reload();
+                    }
+                } catch (err) {
+                    alert("Error updating task status. Reloading board...");
+                    location.reload();
                 }
-            });
-        }
+            }
+        });
     });
+}
+
+document.addEventListener('DOMContentLoaded', setupKanbanDragAndDrop);
 </script>
 {% endblock %}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Borrar archivo</title>
+</head>
+<body>
+  <h1>Subir un archivo</h1>
+
+  {% if message %}
+    <p style="color: green;">{{ message }}</p>
+  {% elif error %}
+    <p style="color: red;">{{ error }}</p>
+  {% endif %}
+
+  <form action="{{ request.route_url('delete_file_page') }}" method="post" enctype="multipart/form-data">
+
+    <label for="file_id">ID del archivo</label><br>
+    <input type="number" id="file_id" name="file_id" required><br><br>
+
+    <button type="submit">Eliminar</button>
+  </form>
+
+  <br>
+  <a href="{{ request.route_url('file_list_page') }}">Volver a la lista de archivos</a>
+</body>
+</html>

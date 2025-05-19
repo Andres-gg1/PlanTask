@@ -37,7 +37,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (selectedUsers.length === 0) {
                 console.log("No users selected, preventing form submission");
                 event.preventDefault();
-                alert("Please select at least one user to add.");
+                // Optionally, you can display an inline message instead of an alert
+                const errorContainer = document.getElementById("formErrorContainer");
+                if (errorContainer) {
+                    errorContainer.textContent = "Please select at least one user to add.";
+                    errorContainer.style.display = "block";
+                }
                 return false;
             }
             
@@ -203,4 +208,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
-  
+
+document.addEventListener('DOMContentLoaded', function () {
+    const announcements = document.querySelectorAll('.announcement');
+    announcements.forEach(a => {
+        setTimeout(() => {
+            a.style.display = 'none';
+        }, 5000);
+    });
+
+    const description = document.getElementById('projectDescription');
+    const readMoreBtn = document.getElementById('readMoreBtn');
+
+    if (readMoreBtn) {
+        readMoreBtn.addEventListener('click', function () {
+            if (description.classList.contains('expanded')) {
+                description.classList.remove('expanded');
+                readMoreBtn.textContent = 'Read More';
+            } else {
+                description.classList.add('expanded');
+                readMoreBtn.textContent = 'Show Less';
+            }
+        });
+    }
+});

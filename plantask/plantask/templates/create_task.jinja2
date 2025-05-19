@@ -1,6 +1,6 @@
 {% extends "layout.jinja2" %}
 
-{% block title %}Create Project{% endblock %}
+{% block title %}Create Task{% endblock %}
 
 {% block styles %}
     <style>
@@ -32,7 +32,7 @@
             width: 100%;
             padding: 0.625rem;
             font-size: 1rem;
-            background-color: #dc3545;
+            background-color: #769dc4;
             color: #fff;
             border: none;
             border-radius: 0.3125rem; 
@@ -40,7 +40,7 @@
             margin-top: 1rem;
         }
         .btn-primary:hover {
-            background-color: #c82333;
+            background-color: #5882ac;
         }
         .error-message {
             margin-top: 0.9375rem;
@@ -53,20 +53,24 @@
 {% block content %}
 <main class="mycontainer">
     <div class="form-container">
-        <h1 class="page-title">Create a New Project</h1>
-        <h4 class="page-title">As {{user.username}}</h4>
+        <h1 class="page-title">Create a New Task</h1>
+        <h4 class="page-title">For {{project.name}}</h4>
 
-        <form action="/create-project" method="POST">
+        <form action="{{ request.route_url('create_task', project_id=project.id) }}" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="form-group">
-                <label for="name" class="form-label">Project Name:</label>
+                <label for="name" class="form-label">Task Name:</label>
                 <input type="text" id="name" name="name" class="form-control" required>
             </div>
             <div class="form-group">
                 <label for="description" class="form-label">Description:</label>
                 <textarea id="description" name="description" class="form-control" rows="5" required></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Create Project</button>
+            <div class="form-group">
+                <label for="due_date" class="form-label">Due Date:</label>
+                <input type="date" id="due_date" name="due_date" class="form-control" required min="{{ current_date }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Create New Task</button>
         </form>
 
         {% if error_ping %}

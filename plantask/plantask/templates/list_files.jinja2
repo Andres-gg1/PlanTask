@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Archivos Subidos</title>
+</head>
+<body>
+  <h1>Lista de Archivos</h1>
+
+  {% if files %}
+    <ul>
+      {% for file in files %}
+        <li>
+          <strong>{{ file.filename }}</strong> ({{ file.extension }})<br>
+          Ruta: {{ file.route }}<br>
+          Fecha: {{ file.creation_date.strftime('%Y-%m-%d %H:%M:%S') if file.creation_date else 'Sin fecha' }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No hay archivos subidos.</p>
+  {% endif %}
+</body>
+</html>

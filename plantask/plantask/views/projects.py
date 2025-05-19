@@ -1,11 +1,14 @@
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound, HTTPBadRequest, Response
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from sqlalchemy import and_, select
 from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
+from plantask.models.activity_log import ActivityLog
+from plantask.models.task import Task
 from plantask.auth.verifysession import verify_session
+import json
 
 
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
@@ -13,7 +16,7 @@ from plantask.auth.verifysession import verify_session
 def my_projects_page(request):
     projects = request.dbsession.query(Project)\
         .join(ProjectsUser, Project.id == ProjectsUser.project_id)\
-        .filter(ProjectsUser.user_id == request.session.get('user_id'))\
+        .filter(ProjectsUser.user_id == request.session.get('user_id'), Project.active == True)\
         .all()
     return {'projects': projects}
 
@@ -33,6 +36,15 @@ def create_project(request):
 
         new_project = Project(name=name, description=description, creation_datetime=datetime.now())
         request.dbsession.add(new_project)
+        request.dbsession.flush()
+        activity_log_new_project = ActivityLog(
+            user_id=request.session['user_id'],
+            project_id=new_project.id,  # Added project.id
+            timestamp=datetime.now(),
+            action='project_added',
+            changes=f"{new_project.__repr__()}",
+        )
+        request.dbsession.add(activity_log_new_project)
         request.dbsession.flush()
 
         project_creator_relation = ProjectsUser(
@@ -54,7 +66,10 @@ def create_project(request):
 def project_page(request):
     try:
         project_id = int(request.matchdict.get('id'))
-        project = request.dbsession.query(Project).filter_by(id=project_id).first()
+        project = request.dbsession.query(Project).filter_by(id=project_id, active=True).first()
+
+        if not project:
+            return {"error_ping": "You don't have access to this project or it is inactive."}
 
         projects_user = request.dbsession.query(ProjectsUser).filter(
             and_(
@@ -63,7 +78,7 @@ def project_page(request):
             )
         ).first()
 
-        if not project or not projects_user:
+        if not projects_user:
             return {"error_ping": "You don't have access to this project."}
 
         project_members = request.dbsession.query(User, ProjectsUser.role)\
@@ -77,12 +92,22 @@ def project_page(request):
         }
         mapped_members = [(member, role_map.get(role, role)) for member, role in project_members]
 
+        # Fetch tasks grouped by status
+        tasks_by_status = {
+            status: request.dbsession.query(Task)
+                .filter_by(project_id=project_id, status=status, active = True)
+                .order_by(Task.due_date)
+                .all()
+            for status in ['assigned', 'in_progress', 'under_review', 'completed']
+        }
+
         flashes = request.session.pop_flash()
         return {
             "project": project,
             "project_members": mapped_members,
             "show_role": projects_user.role,
-            "flashes": flashes
+            "flashes": flashes,
+            "tasks_by_status": tasks_by_status  
         }
 
     except SQLAlchemyError:
@@ -97,9 +122,32 @@ def edit_project(request):
     if not project:
         return HTTPNotFound()
 
-    project.name = request.POST.get('name', project.name)
-    project.description = request.POST.get('description', project.description)
-    request.dbsession.flush()
+    if project.name != request.POST.get('name', project.name):
+        old_name = project.name
+        project.name = request.POST.get('name', project.name)
+        activity_log_project_name_changed = ActivityLog(
+            user_id=request.session['user_id'],
+            project_id=project.id,  # Added project.id
+            timestamp=datetime.now(),
+            action='project_edited_title',
+            changes=f"old: {old_name} --> new: {request.POST.get('name', project.name)}"
+        )
+        request.dbsession.add(activity_log_project_name_changed)
+        request.dbsession.flush()
+
+    if project.description != request.POST.get('description', project.description):
+        old_description = project.description
+        project.description = request.POST.get('description', project.description)
+        activity_log_project_description_changed = ActivityLog(
+            user_id=request.session['user_id'],
+            project_id=project.id,  # Added project.id
+            timestamp=datetime.now(),
+            action='project_edited_description',
+            changes=f"old: {old_description} --> new: {request.POST.get('description', project.description)}"
+        )
+        request.dbsession.add(activity_log_project_description_changed)
+        request.dbsession.flush()
+
     return HTTPFound(location=request.route_url('project_by_id', id=project_id))
 
 @view_config(route_name='delete_project', request_method='GET', permission="admin")
@@ -110,9 +158,18 @@ def delete_project(request):
     if not project:
         return HTTPNotFound()
 
-    request.dbsession.query(ProjectsUser).filter_by(project_id=project_id).delete()
-    request.dbsession.delete(project)
-    request.dbsession.flush()
+    if project.active:
+        project.active = False
+        activity_log_removed_project = ActivityLog(
+            user_id=request.session['user_id'],
+            project_id=project.id,  # Added project.id
+            timestamp=datetime.now(),
+            action='project_removed',
+            changes=f"Project: {project.name} set to inactive"
+        )
+        request.dbsession.add(activity_log_removed_project)
+        request.dbsession.flush()
+
     return HTTPFound(location=request.route_url('my_projects'))
 
 @view_config(route_name='search_users', renderer='json', request_method='GET', permission="admin")
@@ -157,16 +214,6 @@ def add_member(request):
         if not project:
             return HTTPNotFound()
 
-        user_relation = request.dbsession.query(ProjectsUser).filter(
-            and_(
-                ProjectsUser.project_id == project_id,
-                ProjectsUser.user_id == request.session.get('user_id'),
-                ProjectsUser.role.in_(['admin', 'project_manager'])
-            )
-        ).first()
-        if not user_relation:
-            return HTTPFound(location=request.route_url('invalid_permissions'))
-
         user_ids = request.POST.getall('user_ids')
         if user_ids:
             for user_id in user_ids:
@@ -186,7 +233,17 @@ def add_member(request):
                                 user_id=user_id,
                                 role="member"
                             )
+                            activity_log_added_user = ActivityLog(
+                                user_id=request.session['user_id'],
+                                project_id=project.id,  # Added project.id
+                                object_user_id=user.id,
+                                timestamp=datetime.now(),
+                                action='project_added_user',
+                                changes=f"User: {user.username} added to Project: {project.name}"
+                            )
                             request.dbsession.add(project_user)
+                            request.dbsession.add(activity_log_added_user)
+                            request.dbsession.flush()
                 except ValueError:
                     continue
             request.dbsession.flush()
@@ -207,8 +264,9 @@ def remove_member(request):
         project_id = int(request.matchdict['id'])
         user_id = int(request.POST.get('user_id'))
 
-        if user_id == request.session.get('user_id'):
-            return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+        project = request.dbsession.query(Project).filter_by(id=project_id).first()
+        if not project:
+            return HTTPNotFound()
 
         relation = request.dbsession.query(ProjectsUser).filter_by(
             project_id=project_id, user_id=user_id
@@ -216,11 +274,65 @@ def remove_member(request):
 
         if relation:
             request.dbsession.delete(relation)
+            activity_log_removed_user = ActivityLog(
+                user_id=request.session['user_id'],
+                project_id=project.id,  # Added project.id
+                object_user_id=user_id,
+                timestamp=datetime.now(),
+                action='project_removed_user',
+                changes=f"User removed from Project: {project.name}"
+            )
+            request.dbsession.add(activity_log_removed_user)
             request.dbsession.flush()
 
         request.session.flash({'message': 'Member removed successfully.', 'style': 'warning'})
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
 
+    except SQLAlchemyError as e:
+        request.dbsession.rollback()
+        return {"error_ping": f"Error removing member from project: {str(e)}"}
     except Exception:
         request.dbsession.rollback()
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+    
+
+
+@view_config(route_name='update_task_status', request_method='POST', renderer='json')
+@verify_session
+def update_task_status(request):
+    try:
+        data = request.json_body
+        task_id = int(data['task_id'])
+        new_status = data['new_status']
+
+        task = request.dbsession.query(Task).filter_by(id=task_id).first()
+        if not task:
+            return Response(json.dumps({'error': 'Task not found'}), status=404, content_type='application/json')
+
+        task.status = new_status
+        request.dbsession.flush()
+
+        return {'success': True}
+    except Exception as e:
+        return Response(json.dumps({'error': str(e)}), status=500, content_type='application/json')
+    
+    
+@view_config(route_name='kanban_partial', renderer='plantask:templates/kanban.jinja2', request_method='GET')
+@verify_session
+def kanban_partial(request):
+    project_id = int(request.matchdict.get('id'))
+    project = request.dbsession.query(Project).filter_by(id=project_id).first()
+    if not project:
+        return Response('Project not found', status=404)
+    # Fetch tasks grouped by status
+    tasks_by_status = {
+        status: request.dbsession.query(Task)
+            .filter_by(project_id=project_id, status=status)
+            .order_by(Task.due_date)
+            .all()
+        for status in ['assigned', 'in_progress', 'under_review', 'completed']
+    }
+    return {
+        "project": project,
+        "tasks_by_status": tasks_by_status
+    }
