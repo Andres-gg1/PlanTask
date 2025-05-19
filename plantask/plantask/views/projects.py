@@ -327,7 +327,7 @@ def kanban_partial(request):
     # Fetch tasks grouped by status
     tasks_by_status = {
         status: request.dbsession.query(Task)
-            .filter_by(project_id=project_id, status=status)
+            .filter_by(project_id=project_id, status=status, active = True)
             .order_by(Task.due_date)
             .all()
         for status in ['assigned', 'in_progress', 'under_review', 'completed']
