@@ -1,8 +1,11 @@
 from pyramid.events import subscriber
 from plantask.models.user import User
 from plantask.models.project import Project
+from plantask.models.notification import Notification
+from plantask.models.activity_log import ActivityLog
 from plantask.utils.smtp_email_sender import EmailSender
 from plantask.utils.event_definition import UserAddedToProjectEvent
+from datetime import datetime
 
 @subscriber(UserAddedToProjectEvent)
 def handle_user_added_to_project(event: UserAddedToProjectEvent):
@@ -47,6 +50,13 @@ def handle_user_added_to_project(event: UserAddedToProjectEvent):
     """
 
     print("[DEBUG] Enviando correo a:", user.email)
+
+    notif = Notification(user_id = user.id, project_id = project.id, message = f"You have been added to the project {project.name}", time_sent = datetime.now())
+    request.dbsession.add(notif)
+
+    log = ActivityLog()
+    request.dbsession.flush()
+
     try:
         print(f"[DEBUG] Enviando correo a: {user.email}")
         print(subject, body, user.email, html_body)
