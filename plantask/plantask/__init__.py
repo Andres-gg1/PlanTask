@@ -80,5 +80,21 @@ def main(global_config, **settings):
         config.include('.models')
         config.add_static_view(name='static', path='static')
 
+        import plantask.utils.events
+        config.scan('plantask.utils.events')
+
         config.scan()
+
+        # Email sender
+    from plantask.utils.smtp_email_sender import SMTPEmailSender
+    
+    smtp_settings = config.get_settings()
+    email_sender = SMTPEmailSender(
+        host=smtp_settings['smtp.host'],
+        port=int(smtp_settings['smtp.port']),
+        username=smtp_settings['smtp.username'],
+        password=smtp_settings['smtp.password'],
+        from_email=smtp_settings.get('smtp.from')
+    )
+    config.registry.settings['email_sender'] = email_sender
     return config.make_wsgi_app()

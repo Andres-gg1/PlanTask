@@ -8,6 +8,9 @@ from plantask.models.user import User
 from plantask.models.activity_log import ActivityLog
 from plantask.models.task import Task
 from plantask.auth.verifysession import verify_session
+
+from plantask.utils.events import UserAddedToProjectEvent
+
 import json
 
 
@@ -244,6 +247,11 @@ def add_member(request):
                             request.dbsession.add(project_user)
                             request.dbsession.add(activity_log_added_user)
                             request.dbsession.flush()
+
+                            event = UserAddedToProjectEvent(request, project_id=project_id, user_id = user_id)
+                            request.registry.notify(event)
+
+
                 except ValueError:
                     continue
             request.dbsession.flush()

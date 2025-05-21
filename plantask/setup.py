@@ -25,7 +25,11 @@ requires = [
     'pytest',
     'allure-pytest',
     'WebTest',
+    
+    'email-validator',       
+    'secure-smtplib',        
 ]
+
 
 tests_require = [
     'WebTest',
