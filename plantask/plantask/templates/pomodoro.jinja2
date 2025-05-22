@@ -1,0 +1,79 @@
+{% block pomodoro %}
+<div id="pomodoro-bar" class="pomodoro-container">
+  <div class="pomodoro-info">
+    <strong id="pomodoro-label">Pomodoro Timer</strong>
+    <span id="pomodoro-time">25:00</span>
+  </div>
+
+  <div class="pomodoro-controls">
+    <button onclick="resetPomodoro()" title="Reset">
+      ⏮️
+    </button>
+    <button onclick="togglePomodoro()" title="Play/Pause" id="pomodoro-toggle">
+      ▶️
+    </button>
+    <button onclick="endPomodoro()" title="End">
+      ⏹️
+    </button>
+  </div>
+
+  <div class="pomodoro-progress">
+    <div id="pomodoro-progress-bar"></div>
+  </div>
+</div>
+
+<script>
+  let duration = 25 * 60; // 25 minutes
+  let timeLeft = duration;
+  let timer = null;
+  let isRunning = false;
+
+  function updateDisplay() {
+    const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+    const seconds = String(timeLeft % 60).padStart(2, '0');
+    document.getElementById('pomodoro-time').textContent = `${minutes}:${seconds}`;
+    document.getElementById('pomodoro-progress-bar').style.width = `${100 - (timeLeft / duration) * 100}%`;
+  }
+
+  function togglePomodoro() {
+    if (isRunning) {
+      clearInterval(timer);
+      isRunning = false;
+      document.getElementById("pomodoro-toggle").textContent = "▶️";
+    } else {
+      timer = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+          updateDisplay();
+        } else {
+          clearInterval(timer);
+          alert("Pomodoro complete!");
+          isRunning = false;
+          document.getElementById("pomodoro-toggle").textContent = "▶️";
+        }
+      }, 1000);
+      isRunning = true;
+      document.getElementById("pomodoro-toggle").textContent = "⏸️";
+    }
+  }
+
+  function resetPomodoro() {
+    clearInterval(timer);
+    timeLeft = duration;
+    updateDisplay();
+    isRunning = false;
+    document.getElementById("pomodoro-toggle").textContent = "▶️";
+  }
+
+  function endPomodoro() {
+    clearInterval(timer);
+    timeLeft = 0;
+    updateDisplay();
+    isRunning = false;
+    document.getElementById("pomodoro-toggle").textContent = "▶️";
+  }
+
+  updateDisplay(); // Initial render
+</script>
+
+{% endblock pomodoro %}

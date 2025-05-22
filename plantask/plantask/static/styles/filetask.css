@@ -1,0 +1,77 @@
+
+.main-layout {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+}
+.mycontainer {
+    flex: 1 1 0;
+    min-width: 0;
+}
+.right-sidebar {
+    display: flex;
+    flex-direction: column;
+    margin-top: 3rem;
+    width: 22rem;
+    min-width: 13.75rem;
+    background: #ededed;
+    padding: 1.5rem 1rem;
+    margin-left: 2rem;
+    box-shadow: 0 0 0.5rem rgba(0,0,0,0.03);
+    height: calc(100vh - 3rem);
+    position: sticky;
+    top: 0;
+}
+
+.files-scroll-area {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+}
+.file-item {
+    display: flex;
+    align-items: center; 
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 1rem;
+    font-family: "Proxima Nova", sans-serif;
+    font-size: 1rem;
+    word-break: break-all;
+}
+
+.file-item > i {
+    align-self: center; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 2.5rem;
+}
+
+.file-item .btn {
+    align-self: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+@media(max-width: 87.5rem){
+    .right-sidebar {
+        height: 100vh;
+    }
+}
+
+@media (max-width: 56.25rem) { 
+    .main-layout {
+        flex-direction: column;
+    }
+    .right-sidebar {
+        margin-left: 4.5rem;
+        width: 100%;
+        margin-top: 1.5rem; 
+        height: auto;
+        max-height: 60vh;
+        position: static;
+        overflow-y: auto;
+    }
+}

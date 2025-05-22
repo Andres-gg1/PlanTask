@@ -1,0 +1,66 @@
+{% block labels_modal %}
+<!-- Add Label Modal -->
+<div class="modal fade" id="addLabelModal" tabindex="-1" aria-labelledby="addLabelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ request.route_url('add_label', project_id=project.id) }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addLabelModalLabel">Add a New Label</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="labelName" class="form-label">Label Name</label>
+                        <input type="text" class="form-control" id="labelName" name="label_name" required>
+                        <input type="hidden" name="relation" value="{{ relation_value }}">
+                        {% if task_id %}
+                            <input type="hidden" name="task_id" value="{{ task_id }}">
+                        {% endif%}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Label Color</label>
+                        <div style="display: grid; grid-template-columns: repeat(4, 2.5rem); gap: 0.5rem;">
+                            {% set colors = [
+                                '#61bd4f', '#f2d600', '#ff9f1a', '#eb5a46',
+                                '#c377e0', '#0079bf', '#00c2e0', '#b3bac5'
+                            ] %}
+                            {% for color in colors %}
+                            <label style="display: flex; align-items: center; justify-content: center;">
+                                <input type="radio" name="label_color" value="{{ color }}" style="display:none;" {% if loop.first %}checked{% endif %}>
+                                <span style="display:inline-block; width:2rem; height:2rem; border-radius:0.5rem; border:2px solid #ccc; background:{{ color }}; cursor:pointer; transition: border 0.2s;">
+                                </span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-info">Create Label</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Color picker highlight
+    document.querySelectorAll('#addLabelModal input[name="label_color"]').forEach(function(input) {
+        input.addEventListener('change', function() {
+            document.querySelectorAll('#addLabelModal input[name="label_color"]').forEach(function(i) {
+                i.nextElementSibling.style.border = '2px solid #ccc';
+            });
+            if (input.checked) {
+                input.nextElementSibling.style.border = '3px solid #333';
+            }
+        });
+        // Set initial highlight
+        if (input.checked) {
+            input.nextElementSibling.style.border = '3px solid #333';
+        }
+    });
+});
+</script>
+
+{% endblock labels_modal %}
+
+

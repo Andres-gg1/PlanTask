@@ -1,0 +1,66 @@
+.kanban-board-wrapper {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: hidden;
+    width: 100%;
+}
+
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(25rem, 1fr)); 
+    gap: 1rem; 
+    width: 100%; 
+    font-family: 'Proxima Nova', sans-serif !important;
+    font-weight: 600 !important;
+    color: #465158 !important;
+}
+
+.kanban-column {
+    min-width: 25rem; 
+    max-width: 50rem; 
+    margin-bottom: 1rem;
+}
+
+.kanban-tasks {
+    height: calc(100vh - 33rem);
+    overflow-y: auto;
+}
+
+.kanban-board-container {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    overflow-x: hidden;
+}
+.create-task-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem; 
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    background-color: #769dc4; 
+    color: white;
+    border-radius: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    font-size: 1.25rem; 
+    font-family: "Proxima Nova", sans-serif;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.create-task-button:hover {
+    background-color: #5882ac; 
+    transform: scale(1.1);
+}
+
+.create-task-button i {
+    margin-left: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: bolder;
+}
