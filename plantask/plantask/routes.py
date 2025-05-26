@@ -34,7 +34,6 @@ def includeme(config):
     config.add_route('file_list_page', '/test/list')
     config.add_route('file_upload_page', '/test/upload')
     config.add_route('delete_file_page', '/test/delete')
-
     config.add_route('multi_upload', '/test/multi_upload')
 
     #config.add_route('update_file_page', '/test/update')

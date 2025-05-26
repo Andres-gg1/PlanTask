@@ -9,7 +9,7 @@ from plantask.models.activity_log import ActivityLog
 from plantask.models.task import Task
 from plantask.auth.verifysession import verify_session
 
-from plantask.utils.events import UserAddedToProjectEvent
+from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEvent
 
 import json
 
@@ -238,7 +238,7 @@ def add_member(request):
                             )
                             activity_log_added_user = ActivityLog(
                                 user_id=request.session['user_id'],
-                                project_id=project.id,  # Added project.id
+                                project_id=project.id,
                                 object_user_id=user.id,
                                 timestamp=datetime.now(),
                                 action='project_added_user',
@@ -315,14 +315,19 @@ def update_task_status(request):
 
         task = request.dbsession.query(Task).filter_by(id=task_id).first()
         if not task:
-            return Response(json.dumps({'error': 'Task not found'}), status=404, content_type='application/json')
+            return {"error": "Task not found"}
 
+        prevous_status = task.status
+        if prevous_status == new_status:
+            return {"message": "No status change"}
         task.status = new_status
         request.dbsession.flush()
 
-        return {'success': True}
+        if new_status == 'under_review' and prevous_status != 'under_review':  
+            request.registry.notify(TaskReadyForReviewEvent(request, task_id))
+        return {"message": "Status updated"}
     except Exception as e:
-        return Response(json.dumps({'error': str(e)}), status=500, content_type='application/json')
+        return {"error": str(e)}
     
     
 @view_config(route_name='kanban_partial', renderer='plantask:templates/kanban.jinja2', request_method='GET')
@@ -332,7 +337,7 @@ def kanban_partial(request):
     project = request.dbsession.query(Project).filter_by(id=project_id).first()
     if not project:
         return Response('Project not found', status=404)
-    # Fetch tasks grouped by status
+    
     tasks_by_status = {
         status: request.dbsession.query(Task)
             .filter_by(project_id=project_id, status=status, active = True)

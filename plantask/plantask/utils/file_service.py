@@ -60,20 +60,19 @@ class FileUploadService:
         return {
             "filename": file_storage.filename,
             "path": file_path,
-            "url": f"/static/uploads/a_{unique_name}",
+            "url": f"/static/uploads/{unique_name}",  # No 'a_' prefix unless you want it
             "extension": ext,
             "unique_name": unique_name
         }
 
-    def handle_upload(self, file_storage, context: dict = None, task_id: int = None) -> dict:
+    def handle_upload(self, file_storage, context: dict = None, task_id: int = None, view_name: str = None) -> dict:
         """
         Handles the complete file upload flow: saving to disk, storing in DB, and logging the activity.
-
         Parameters:
         - file_storage: File sent by the user.
         - context (dict): Optional dictionary with context info, e.g., {'type': 'task', 'action': 'task_added_file'}.
         - task_id (int): Optional task ID the file is related to.
-
+        - view_name (str): Optional name of the view from which the upload is made.
         Returns:
         - dict: Upload result including message, file URL, and file ID in the database.
         """
@@ -95,17 +94,22 @@ class FileUploadService:
                 self.dbsession.add(tasks_file)
                 self.dbsession.flush()
 
-            if context:
-                action_enum = f"{context.get('type')} -> {context.get('action')} : <{file_info['url']}>"
-                log = ActivityLog(
-                    user_id=self.user_id,
-                    task_id=task_id,
-                    file_id=new_file.id,
-                    timestamp=datetime.now(),
-                    action=context.get('action'),
-                    changes=action_enum,
-                )
-                self.dbsession.add(log)
+            # Use enums for action (only those in activity_log.py)
+            log_action = 'task_added_file' if task_id else 'task_added_file'
+            if context and context.get('action') in ['task_added_file', 'task_removed_file']:
+                log_action = context.get('action')
+            action_enum = f"task_added_file"
+            if view_name:
+                action_enum += f" | view: {view_name}"
+            log = ActivityLog(
+                user_id=self.user_id,
+                task_id=task_id,
+                file_id=new_file.id,
+                timestamp=datetime.now(),
+                action=log_action,
+                changes=action_enum,
+            )
+            self.dbsession.add(log)
 
             return {
                 "bool": True,
@@ -116,11 +120,12 @@ class FileUploadService:
         except Exception as e:
             return {"bool": False, "msg": f"Upload failed: {str(e)}"}
 
-    def delete_file(self, file_id: int, context:dict = None ) -> dict:
+    def delete_file(self, file_id: int, context:dict = None, view_name: str = None ) -> dict:
         """
-        Deletes a file from the disk and removes its metadata from the database.
+        Soft deletes a file by setting its 'active' state to False instead of removing it from disk or database.
         Parameters:
         - file_id (int): ID of the file to be deleted.
+        - view_name (str): Optional name of the view from which the delete is made.
         Returns:
         - bool: True if deletion was successful, False otherwise.
         """
@@ -128,138 +133,31 @@ class FileUploadService:
             file_record = self.dbsession.query(File).filter(File.id == file_id).first()
             if not file_record:
                 return {"bool": False, "msg": "File not found in the database."}
+            if not file_record.active:
+                return {"bool": False, "msg": "File is already deleted (inactive)."}
+            print("HOLA")
+            print(f"[DEBUG] Deleting file: {file_record.filename} (ID: {file_id})")
+            print(file_record.active)
+            file_record.active = False
 
-            os.remove(file_record.route)
-            self.dbsession.delete(file_record)
-
-            if context:
-                action_enum = f"{context.get('type')} -> {context.get('action')} : <{file_record.route}>"
-                print(action_enum)
-                log = ActivityLog(
-                    user_id=self.user_id,
-                    task_id=None,
-                    file_id=file_id,
-                    timestamp=datetime.now(),
-                    action=context.get('action'),
-                    changes=action_enum,
-                )
-                self.dbsession.add(log)
-
-            self.dbsession.commit()
-            return {"bool": True, "msg": f"File '{file_record.filename}' deleted successfully."}
-        except Exception as e:
-            return {"bool": False, "msg": f"Error deleting file: {str(e)}"}
-
-    def update_file_metadata(self, file_id: int, new_name: str) -> dict:
-        """
-        Updates the metadata of a file in the database.
-        Parameters:
-        - file_id (int): ID of the file to be updated.
-        - new_name (str): New name for the file.
-        Returns:
-        - bool: True if update was successful, False otherwise.
-        """
-        try:
-            file_record = self.dbsession.query(File).filter(File.id == file_id).first()
-            if not file_record:
-                return {"bool": False, "msg": "File not found in the database."}
-
-            ext = os.path.splitext(file_record.route)[1]
-            new_unique_name = f"{uuid.uuid4()}{ext}"
-            new_path = os.path.join(self.upload_dir, new_unique_name)
-
-            os.rename(file_record.route, new_path)
-
-            old_filename = file_record.filename
-            old_path = file_record.route
-
-            file_record.filename = new_name
-            file_record.route = new_path
-            file_record.creation_date = str(datetime.now()) 
-
+            # Use enums for action (only those in activity_log.py)
+            log_action = 'task_removed_file'
+            if context and context.get('action') == 'task_removed_file':
+                log_action = context.get('action')
+            action_enum = f"task_removed_file"
+            if view_name:
+                action_enum += f" | view: {view_name}"
             log = ActivityLog(
                 user_id=self.user_id,
                 task_id=None,
                 file_id=file_id,
                 timestamp=datetime.now(),
-                action="file_metadata_updated",
-                changes=f"Renamed '{old_filename}' -> '{new_name}', path updated from '{old_path}'",
+                action=log_action,
+                changes=action_enum,
             )
             self.dbsession.add(log)
 
             self.dbsession.commit()
-            return {"bool": True, "msg": f"File metadata updated to '{new_name}'."}
+            return {"bool": True, "msg": f"File '{file_record.filename}' deleted (set inactive) successfully."}
         except Exception as e:
-            return {"bool": False, "msg": f"Error updating metadata: {str(e)}"}
-        
-    def handle_multiple_uploads_as_file(self, file_storages, zip_name="zip_archive.zip", context : dict = None, task_id : int = None) -> dict:
-        """
-        Handles multiple file uploads, compresses them into a zip file, and saves it to disk.
-
-        Parameters:
-        - file_storages: List of file objects from POST request.
-        - zip_name (str): Name of the zip file to be created.
-        - context (dict): Optional dictionary with context info.
-
-        Returns:
-        - dict: Upload result including message and URL of the zip file.
-        """
-        try:
-            if not file_storages:
-                return {"bool": False, "msg": "No files to zip found"}
-            
-            #CREATES A TEMP ZIP ARCHIVE
-            temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
-
-            with zipfile.ZipFile(temp_zip, 'w') as zipf:
-                for file_storage in file_storages:
-                    ext = os.path.splitext(file_storage.filename)[-1].lower().lstrip('.')
-                    if not self.allowed_files(ext):
-                        continue #skip not allowed ext files
-                    #Read archive contents
-                    file_data = file_storage.file.read()
-                    zipf.writestr(file_storage.filename, file_data)
-
-            temp_zip.close()
-
-            #Gen an unique name and route for the archive
-            unique_name = f"{uuid.uuid4()}.zip"
-            final_zip_path = os.path.join(self.upload_dir, unique_name)
-            os.rename(temp_zip.name, final_zip_path)
-
-            new_file = File(
-                filename=zip_name,
-                extension="zip",
-                route=final_zip_path,
-                creation_date=str(datetime.now())
-            )
-
-            self.dbsession.add(new_file)
-            self.dbsession.flush()
-
-            if context:
-                action_enum = f"{context.get('type')} -> {context.get('action')} : <ZIP:{zip_name}>"
-                log = ActivityLog(
-                    user_id = self.user_id,
-                    task_id=task_id,
-                    file_id=new_file.id,
-                    timestamp=datetime.now(),
-                    action = context.get('action'),
-                    changes = action_enum
-                )
-
-                self.dbsession.add(log)
-            self.dbsession.flush()
-
-
-            return { 
-                "bool": True,
-                "msg": f"{len(file_storages)} succesfully compressed archives in '{zip_name}'",
-                "url":f"/static/uploads/{unique_name}",
-                "file_id":new_file.id
-            }
-        except Exception as e:
-            return {
-                "bool":False, 
-                "msg": f"Error while compressing archives: {str(e)}"
-                }
+            return {"bool": False, "msg": f"Error deleting file: {str(e)}"}

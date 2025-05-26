@@ -15,11 +15,6 @@ class SMTPEmailSender(EmailSender):
         self.from_email = from_email
 
     def send_email(self, subject, body, to_email, html_body=None):
-        print(f"[DEBUG] Enviando correo a: {to_email}")
-        print(f"[DEBUG] subject: {subject}")
-        print(f"[DEBUG] from_email: {self.from_email}")
-        print(f"[DEBUG] username: {self.username}")
-        print(f"[DEBUG] password: {self.password}")
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = self.from_email
@@ -37,6 +32,5 @@ class SMTPEmailSender(EmailSender):
                 server.starttls()
                 server.login(self.username, self.password)
                 server.sendmail(self.from_email, to_email, msg.as_string())
-                print("[DEBUG] Correo enviado correctamente")
         except Exception as e:
-            print(f"[ERROR IN SEND_EMAIL] No se pudo enviar el correo: {e}")
+            print(f"[ERROR IN SEND_EMAIL] there was an error: {e}")
