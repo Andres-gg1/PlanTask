@@ -7,6 +7,7 @@ from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
 from plantask.models.activity_log import ActivityLog
 from plantask.models.task import Task
+from plantask.models.label import Label
 from plantask.auth.verifysession import verify_session
 
 from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEvent
@@ -103,6 +104,11 @@ def project_page(request):
                 .all()
             for status in ['assigned', 'in_progress', 'under_review', 'completed']
         }
+        
+        project_labels = (
+            request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color).
+            filter_by(project_id = project.id).order_by(Label.label_name.asc()).all()
+        )
 
         flashes = request.session.pop_flash()
         return {
@@ -110,7 +116,8 @@ def project_page(request):
             "project_members": mapped_members,
             "show_role": projects_user.role,
             "flashes": flashes,
-            "tasks_by_status": tasks_by_status  
+            "tasks_by_status": tasks_by_status,
+            'project_labels' : project_labels
         }
 
     except SQLAlchemyError:

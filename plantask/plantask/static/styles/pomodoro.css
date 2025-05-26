@@ -1,0 +1,59 @@
+.pomodoro-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1e1e1e;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  font-family: sans-serif;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width:400px;
+  max-width: 100vw;
+  z-index: 999;
+  border-top-right-radius: 10px;
+}
+
+.pomodoro-info {
+  flex: 1;
+}
+
+.pomodoro-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.pomodoro-controls button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #fff;
+  transition: transform 0.2s;
+}
+
+.pomodoro-controls button:hover {
+  transform: scale(1.1);
+}
+
+.pomodoro-progress {
+  position: relative;
+  height: 5px;
+  width: 100%;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+#pomodoro-progress-bar {
+  position: absolute;
+  height: 100%;
+  background: #1db954;
+  width: 0%;
+  transition: width 0.5s linear;
+}
+

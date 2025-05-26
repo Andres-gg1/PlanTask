@@ -7,6 +7,7 @@ from plantask.models.project import Project
 from plantask.models.activity_log import ActivityLog
 from plantask.auth.verifysession import verify_session
 from plantask.models.task import Task, TasksFile
+from plantask.models.label import Label, LabelsTask
 from plantask.models.microtask import Microtask
 from datetime import date
 
@@ -88,19 +89,43 @@ def task_by_id(request):
         if not task:
             return HTTPNotFound("Task not found")
         project = request.dbsession.query(Project).filter_by(id=task.project_id).first()
-        microtasks = request.dbsession.query(Microtask).filter_by(task_id=task.id, active=True).all()  # Query microtasks
+        microtasks = request.dbsession.query(Microtask).filter_by(task_id=task.id, active=True).all()
         tasks_files = request.dbsession.query(TasksFile).filter_by(tasks_id=task.id).all()
         files = [tf.files for tf in tasks_files]
+
+        assigned_labels = (
+            request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color)
+            .join(LabelsTask, LabelsTask.labels_id == Label.id)
+            .filter(LabelsTask.tasks_id == task.id)
+            .all()
+        )
+        assigned_label_ids = [label[0] for label in assigned_labels]
+
+        all_project_labels = (
+            request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color)
+            .filter_by(project_id=project.id)
+            .order_by(Label.label_name.asc())
+            .all()
+        )
+
+        unassigned_labels = [label for label in all_project_labels if label[0] not in assigned_label_ids]
+
+        project_labels_ordered = assigned_labels + unassigned_labels
 
         return {
             'task': task,
             'project': project,
             'microtasks': microtasks,
             'files': files,
-            'current_date': date.today().isoformat()
+            'current_date': date.today().isoformat(),
+            'labels': assigned_labels,
+            'project_labels': project_labels_ordered,
+            'assigned_label_ids': assigned_label_ids,
+            'task_id': task.id  # to pass to template if needed
         }
     except Exception:
         return HTTPNotFound("Task not found")
+
     
 
 @view_config(route_name='edit_task', request_method='POST', permission="admin")
@@ -201,3 +226,111 @@ def delete_task(request):
     except Exception as e:
         request.dbsession.rollback()
         return HTTPBadRequest(f"Error deleting task: {str(e)}")
+
+
+@view_config(route_name='add_label', request_method='POST', permission="admin", require_csrf = True)
+@verify_session
+def add_label(request):
+    try:
+        project_id = int(request.matchdict.get('project_id'))
+        hex_color = str(request.POST.get('label_color'))
+        label_name = str(request.POST.get('label_name'))
+        relation = bool(request.POST.get('relation'))
+        project = request.dbsession.query(Project).filter_by(id = project_id).first()
+        if not project:
+            return HTTPNotFound("Project not found")
+       
+        label = Label(project_id = project_id, label_name = label_name, label_hex_color = hex_color)
+        request.dbsession.add(label)
+        request.dbsession.flush()
+        if relation:
+            task_id = int(request.POST.get('task_id'))
+            labels_task = LabelsTask(
+                labels_id=label.id,
+                tasks_id=task_id
+            )
+            request.dbsession.add(labels_task)
+            request.dbsession.flush()
+            return HTTPFound(location=request.route_url('task_by_id', id = task_id))
+        return HTTPFound(location=request.route_url('project_by_id', id = project_id))
+ 
+    except Exception as e:
+        request.dbsession.rollback()
+        return HTTPBadRequest(f"Error adding label: {str(e)}")
+ 
+ 
+@view_config(route_name='assign_label_to_task', request_method='POST', permission="admin")
+@verify_session
+def assign_label(request):
+    try:
+        task_id = int(request.matchdict.get('id'))
+        task = request.dbsession.query(Task).filter_by(id=task_id).first()
+        if not task:
+            return HTTPNotFound("Task not found")
+        project_id = task.project_id
+ 
+        label_id = request.POST.get('label_id')
+        if not label_id:
+            return HTTPBadRequest("Label ID is required")
+ 
+        # Assuming you have a LabelsTask model to handle the many-to-many relationship
+        labels_task = LabelsTask(
+            labels_id=label_id,
+            tasks_id=task.id
+        )
+        request.dbsession.add(labels_task)
+        request.dbsession.flush()
+ 
+        return HTTPFound(location=request.route_url('task_by_id', id=task.id))
+    except Exception as e:
+        request.dbsession.rollback()
+        return HTTPBadRequest(f"Error adding label: {str(e)}")
+    
+    
+@view_config(route_name='toggle_label_for_task', request_method='POST', permission="admin")
+@verify_session
+def toggle_label_for_task(request):
+    try:
+        task_id = int(request.matchdict.get('id'))
+        label_id = int(request.POST.get('label_id'))
+        labels_task = request.dbsession.query(LabelsTask).filter_by(labels_id=label_id, tasks_id=task_id).first()
+        if labels_task:
+            request.dbsession.delete(labels_task)
+            request.dbsession.flush()
+            return Response('unassigned', status=200)
+        else:
+            new_labels_task = LabelsTask(labels_id=label_id, tasks_id=task_id)
+            request.dbsession.add(new_labels_task)
+            request.dbsession.flush()
+            return Response('assigned', status=200)
+    except Exception as e:
+        request.dbsession.rollback()
+        return HTTPBadRequest(f"Error toggling label: {str(e)}")
+    
+@view_config(route_name='edit_label', request_method='POST', permission="admin", require_csrf=True)
+@verify_session
+def edit_label(request):
+    try:
+        label_id = int(request.matchdict.get('label_id'))
+        label_name = str(request.POST.get('label_name'))
+        hex_color = str(request.POST.get('label_color'))
+        
+        label = request.dbsession.query(Label).filter_by(id=label_id).first()
+        if not label:
+            return HTTPNotFound("Label not found")
+
+        label.label_name = label_name
+        label.label_hex_color = hex_color
+        request.dbsession.flush()
+
+        # Redirect back to project or task page after editing
+        project_id = label.project_id
+        task_id = request.POST.get('task_id')
+        if task_id:
+            return HTTPFound(location=request.route_url('task_by_id', id=int(task_id)))
+        else:
+            return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+
+    except Exception as e:
+        request.dbsession.rollback()
+        return HTTPBadRequest(f"Error editing label: {str(e)}")

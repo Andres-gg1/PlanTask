@@ -26,7 +26,10 @@ def includeme(config):
     config.add_route('delete_task', r'/task/{id:\d+}/delete')
     config.add_route('kanban_partial', '/project/{id}/kanban_partial')
     config.add_route('create_microtask', r'/create-microtask/{task_id}')
-    
+    config.add_route('add_label', '/add-label/{project_id}/')
+    config.add_route('assign_label_to_task', '/project/{id}/')
+    config.add_route('toggle_label_for_task', '/task/{id}/toggle_label')
+    config.add_route('edit_label', '/label/edit/{label_id}')
     #File services
     #config.add_route('task_add_upload', '/upload')
     config.add_route('file_crud', '/files')
