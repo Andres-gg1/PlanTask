@@ -230,11 +230,12 @@ def add_member(request):
                     ).first()
                     if not existing_relation:
                         user = request.dbsession.query(User).filter_by(id=user_id).first()
+                        role = request.POST.get('role')
                         if user:
                             project_user = ProjectsUser(
                                 project_id=project_id,
                                 user_id=user_id,
-                                role="member"
+                                role=str(role)
                             )
                             activity_log_added_user = ActivityLog(
                                 user_id=request.session['user_id'],
