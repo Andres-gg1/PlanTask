@@ -3,6 +3,7 @@ from sqlalchemy import(
     Integer, 
     Text, 
     DateTime, 
+    Boolean
 )
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -20,6 +21,8 @@ class File(Base):
     route = Column(Text, nullable=False)
     # Date and time when the file was created (cannot be null)
     creation_date = Column(DateTime, nullable=False)
+    # Active boolean
+    active = Column(Boolean, nullable = False, default = True)
 
     files_tasks = relationship('TasksFile', back_populates='files')
     files_templates = relationship('TemplatesFile', back_populates='files')
