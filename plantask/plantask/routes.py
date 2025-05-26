@@ -17,6 +17,7 @@ def includeme(config):
     config.add_route('edit_project', r'/project/{id:\d+}/edit')
     config.add_route('delete_project', r'/project/{id:\d+}/delete')
     config.add_route('add_member', r'/project/{id:\d+}/add-member')
+    config.add_route('edit_member', r'/project/{id:\d+}/edit-member')
     config.add_route('remove_member', r'/project/{id:\d+}/remove-member')
     config.add_route('search_users', '/search-users')
     config.add_route('create_task', r'/create-task/{project_id}')

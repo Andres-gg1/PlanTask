@@ -7,7 +7,7 @@ from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
 from plantask.models.activity_log import ActivityLog
 from plantask.models.task import Task
-from plantask.models.label import Label
+from plantask.models.label import Label, LabelsProjectsUser
 from plantask.auth.verifysession import verify_session
 
 from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEvent
@@ -270,6 +270,62 @@ def add_member(request):
     except SQLAlchemyError as e:
         request.dbsession.rollback()
         return {"error_ping": f"Error adding members to project: {str(e)}"}
+    except Exception:
+        return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+    
+@view_config(route_name='edit_member', request_method='POST', permission='admin')
+@verify_session
+def edit_member(request):
+    try:
+        project_id = int(request.matchdict['id'])
+        project = request.dbsession.query(Project).filter_by(id=project_id).first()
+        if not project:
+            return HTTPNotFound()
+
+        user_id = int(request.POST.get('user_id'))
+        new_role = request.POST.get('role')
+        label_ids = request.POST.getall('labels')  # IDs from form
+
+        # Get the ProjectsUser row (relationship between user & project)
+        project_user = request.dbsession.query(ProjectsUser).filter_by(
+            project_id=project_id,
+            user_id=user_id
+        ).first()
+
+        if not project_user:
+            request.session.flash({'message': 'User not found in project.', 'style': 'danger'})
+            return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+
+        # Update role if changed
+        if project_user.role != new_role:
+            project_user.role = new_role
+            request.dbsession.flush()
+
+        # Delete all previous label associations
+        request.dbsession.query(LabelsProjectsUser).filter_by(
+            projects_users_id=project_user.id
+        ).delete()
+
+        # Add updated labels
+        for label_id in label_ids:
+            try:
+                label_id_int = int(label_id)
+                label_link = LabelsProjectsUser(
+                    labels_id=label_id_int,
+                    projects_users_id=project_user.id
+                )
+                request.dbsession.add(label_link)
+            except ValueError:
+                continue
+
+        request.dbsession.flush()
+
+        request.session.flash({'message': 'Member updated successfully.', 'style': 'success'})
+        return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+
+    except SQLAlchemyError as e:
+        request.dbsession.rollback()
+        return {"error_ping": f"Error editing member: {str(e)}"}
     except Exception:
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
 
