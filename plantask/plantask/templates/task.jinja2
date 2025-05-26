@@ -14,7 +14,7 @@
         <div style="display: flex; align-items: center; justify-content: space-between;">
             <h1 style="margin: 0;">{{ task.task_title }}</h1>
             <div class="label-list">
-                {% for label_name, label_hex_color in labels %}
+                {% for label_id, label_name, label_hex_color in labels %}
                     <div class="label" style="background-color: {{ label_hex_color }};">
                         {{ label_name }}
                     </div>

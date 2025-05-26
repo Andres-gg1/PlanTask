@@ -3,11 +3,12 @@
 <div class="modal fade" id="addLabelModal" tabindex="-1" aria-labelledby="addLabelModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="{{ request.route_url('add_label', project_id=project.id) }}" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addLabelModalLabel">Add a New Label</h5>
-                </div>
+        <form method="POST" id="labelForm" action="{{ request.route_url('add_label', project_id=project.id) }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="label_id" id="labelIdInput" value="">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addLabelModalLabel">Add a New Label</h5>
+            </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="labelName" class="form-label">Label Name</label>
@@ -19,11 +20,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Label Color</label>
-                        <div style="display: grid; grid-template-columns: repeat(4, 2.5rem); gap: 0.5rem;">
-                            {% set colors = [
-                                '#61bd4f', '#f2d600', '#ff9f1a', '#eb5a46',
-                                '#c377e0', '#0079bf', '#00c2e0', '#b3bac5'
-                            ] %}
+                        <div style="display: grid; grid-template-columns: repeat(5, 2.5rem); gap: 0.5rem;">
+                            {% set colors = [ '#0079bf', '#70b500', '#ff9f1a', '#eb5a46', '#f2d600', '#c377e0', '#ff78cb', '#00c2e0', '#51e898', '#c4c9cc' ] %}
                             {% for color in colors %}
                             <label style="display: flex; align-items: center; justify-content: center;">
                                 <input type="radio" name="label_color" value="{{ color }}" style="display:none;" {% if loop.first %}checked{% endif %}>
@@ -35,31 +33,158 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0">
-                    <button type="submit" class="btn btn-info">Create Label</button>
+                    <button type="submit" class="btn btn-info" id="submitLabelBtn">Create Label</button>
                 </div>
             </form>
+            <div class="content-row mt-3" style="background-color: #f6f7f8;">
+            {% for label_id, label_name, label_hex_color in project_labels %}
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; margin-right: 0.75rem; margin-left: 0.75rem">
+                    {% if task_id %}
+                        <button 
+                            class="checktaskbtn addlbbtn btn {% if label_id in assigned_label_ids %}assigned{% endif %}" 
+                            style="margin-right:0.5rem; {% if label_id in assigned_label_ids %}background-color: #28a745; color: #fff;{% else %}background-color: #FAFAFA;{% endif %}" 
+                            type="button" 
+                            data-label-id="{{ label_id }}" 
+                            data-task-id="{{ task_id }}"
+                            aria-label="Mark Label" 
+                            title="Mark Label"
+                        >
+                            {% if label_id in assigned_label_ids %}
+                                <i class="bi bi-check-lg"></i>
+                            {% endif %}
+                        </button>
+                    {% endif %}
+                    <div class="label" style="flex: 1; background-color: {{ label_hex_color }}; padding: 0.5rem 0.5rem; border-radius: 0.5rem; color: #fff; font-weight: 500;">
+                        {{ label_name }}
+                    </div>
+                <button type="button" class="btn btn-info edit-label-btn" data-bs-target="#editLabel" data-label-id="{{ label_id }}">
+                    <i class="bi-pencil-square"></i>
+                </button>
+                </div>
+            {% endfor %}
+            </div>
         </div>
     </div>
 </div>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Color picker highlight
-    document.querySelectorAll('#addLabelModal input[name="label_color"]').forEach(function(input) {
-        input.addEventListener('change', function() {
-            document.querySelectorAll('#addLabelModal input[name="label_color"]').forEach(function(i) {
+document.addEventListener('DOMContentLoaded', function () {
+    // === 1. Color Picker Highlight ===
+    document.querySelectorAll('#addLabelModal input[name="label_color"]').forEach(function (input) {
+        input.addEventListener('change', function () {
+            document.querySelectorAll('#addLabelModal input[name="label_color"]').forEach(function (i) {
                 i.nextElementSibling.style.border = '2px solid #ccc';
             });
             if (input.checked) {
                 input.nextElementSibling.style.border = '3px solid #333';
             }
         });
-        // Set initial highlight
+        // Initial highlight
         if (input.checked) {
             input.nextElementSibling.style.border = '3px solid #333';
         }
     });
+
+    // === 2. Toggle Label Assignment ===
+    document.querySelectorAll('.checktaskbtn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const labelId = btn.getAttribute('data-label-id');
+            const taskId = btn.getAttribute('data-task-id');
+            const url = "{{ request.route_url('toggle_label_for_task', id='__TASKID__') }}".replace('__TASKID__', taskId);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: 'label_id=' + encodeURIComponent(labelId)
+            })
+            .then(response => response.text())
+            .then(status => {
+                btn.classList.toggle('assigned');
+                if (btn.classList.contains('assigned')) {
+                    btn.style.backgroundColor = '#28a745';
+                    btn.style.color = '#fff';
+                    btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+                } else {
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
+                    btn.innerHTML = '';  // Remove the check icon
+                }
+            })
+            .catch(() => alert('Failed to update label assignment.'));
+        });
+    });
+        // === 3. Reload page when modal is closed ===
+    const modal = document.getElementById('addLabelModal');
+    if (modal) {
+        modal.addEventListener('hidden.bs.modal', function () {
+            location.reload();
+        });
+    }
+
+    document.querySelectorAll('.btn-info').forEach(function(editBtn) {
+        editBtn.addEventListener('click', function(event) {
+            // Find label data from surrounding elements
+            const labelDiv = event.target.closest('div').querySelector('.label');
+            const labelName = labelDiv.textContent.trim();
+            const labelColor = rgbToHex(labelDiv.style.backgroundColor);
+
+            // Get label ID from sibling checktaskbtn (or store label_id in data-label-id on edit button)
+            const labelId = editBtn.getAttribute('data-label-id');
+            if (!labelId) {
+                alert('Could not find label ID');
+                return;
+            }
+
+            // Fill form fields
+            document.getElementById('labelName').value = labelName;
+            document.getElementById('labelIdInput').value = labelId;
+
+            // Select the right color radio button
+            document.querySelectorAll('#addLabelModal input[name="label_color"]').forEach(function(input) {
+                input.checked = (input.value.toLowerCase() === labelColor.toLowerCase());
+                input.nextElementSibling.style.border = input.checked ? '3px solid #333' : '2px solid #ccc';
+            });
+
+            // Change modal title and button text
+            document.getElementById('addLabelModalLabel').textContent = 'Edit Label';
+            document.getElementById('submitLabelBtn').textContent = 'Save Label';
+
+            // Change form action to the edit_label route with labelId
+            const form = document.getElementById('labelForm');
+            const editUrlTemplate = "{{ request.route_url('edit_label', label_id='__LABELID__') }}";
+            form.action = editUrlTemplate.replace('__LABELID__', labelId);
+
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('addLabelModal'));
+            modal.show();
+        });
+    });
+
+    // Reset modal on close (optional)
+    const modalEl = document.getElementById('addLabelModal');
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        document.getElementById('addLabelModalLabel').textContent = 'Add a New Label';
+        document.getElementById('submitLabelBtn').textContent = 'Create Label';
+        document.getElementById('labelForm').action = "{{ request.route_url('add_label', project_id=project.id) }}";
+        document.getElementById('labelForm').reset();
+        document.getElementById('labelIdInput').value = '';
+    });
+
+    // Utility function to convert rgb() string to hex (#rrggbb)
+    function rgbToHex(rgb) {
+        if (!rgb) return '';
+        const result = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/.exec(rgb);
+        if (!result) return rgb; // If already hex, return as is
+        const r = parseInt(result[1]).toString(16).padStart(2, '0');
+        const g = parseInt(result[2]).toString(16).padStart(2, '0');
+        const b = parseInt(result[3]).toString(16).padStart(2, '0');
+        return `#${r}${g}${b}`;
+    }
 });
 </script>
+
 
 {% endblock labels_modal %}
 
