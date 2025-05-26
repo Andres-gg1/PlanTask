@@ -46,10 +46,12 @@ def handle_user_added_to_project(event: UserAddedToProjectEvent):
     </html>
     """
 
-    notif = Notification(user_id = user.id, project_id = project.id, message = f"You have been added to the project {project.name}", time_sent = datetime.now())
+    notif = Notification(user_id = user.id, 
+                        project_id = project.id, 
+                        message = f"You have been added to the project {project.name}", 
+                        time_sent = datetime.now()
+                        )
     request.dbsession.add(notif)
-
-    log = ActivityLog()
     request.dbsession.flush()
 
     try:
@@ -100,6 +102,14 @@ def handle_task_ready_for_review(event: TaskReadyForReviewEvent):
     </body>
     </html>
     """
+    for manager in project_managers:
+        notif = Notification(user_id = manager.id, 
+                            project_id = project.id, 
+                            message = f"The task {task.task_title} has been moved to Under Review in project {project.name}", 
+                            time_sent = datetime.now()
+                            )
+        request.dbsession.add(notif)
+    request.dbsession.flush()
 
     for manager in project_managers:
         try:

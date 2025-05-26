@@ -50,6 +50,7 @@
 }
 
 .create-microtask-button {
+    z-index: 1050;
     position: fixed;
     bottom: 2rem;
     right: 2rem; 
@@ -103,4 +104,17 @@
     background-color: #34548f !important;
     color: white !important;
     transform: scale(1) !important;
+}
+
+@media (min-width: 56.25rem) {
+    .create-microtask-button {
+        right: 23rem;
+    }
+}
+
+@media (max-width: 56.24rem) {
+    .create-microtask-button {
+        right: 2rem;
+        bottom: 2rem;
+    }
 }

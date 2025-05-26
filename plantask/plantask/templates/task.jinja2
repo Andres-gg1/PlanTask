@@ -5,142 +5,152 @@
 {% block styles %}
 <link href="{{ request.static_url('plantask:static/styles/microtask.css') }}" rel="stylesheet">
 <link href="{{ request.static_url('plantask:static/styles/tasks.css') }}" rel="stylesheet">
+<link href="{{ request.static_url('plantask:static/styles/filetask.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<main class="mycontainer">
-    <h1>{{ task.task_title }}</h1>
-    <h3> 
-        <a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a>
-    </h3>
-    <div class="info-row">
-        <div class="info">Creation Date: {{ task.date_created.strftime('%Y-%m-%d') }}</div>
-        <div class="info due-date">Due Date: {{ task.due_date.strftime('%Y-%m-%d') }}</div>
-        {% if role == 'admin' %}
-        <div class="admin-actions">
-            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editTaskModal">
-                Edit Task <i class="bi-pencil-square"></i>
-            </button>
-            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
-                Delete Task <i class="bi-trash3"></i>
-            </button>
-        </div>
-        {% endif %}
-        <div class="status-actions">
-            {% if task.status == 'assigned' %}
-                <button class="mybtn btn" type="button" id="movestatusbutton">
-                    Move to In Progress
-                    <i class="bi-box-arrow-right"></i>
-                    <i class="bi-pen-fill"></i>
-                </button>
-            {% elif task.status == 'in_progress' %}
-                <button class="mybtn btn" type="button" id="backtoassigned">
-                    Back to Assigned
-                    <i class="bi-pin-angle-fill"></i>
-                    <i class="bi-box-arrow-left"></i>
-                </button>
-                <button class="mybtn btn" type="button" id="sendforreview">
-                    Send for Review
-                    <i class="bi-box-arrow-right"></i>
-                    <i class="bi-eye-fill"></i>
-                </button>
-            {% elif task.status == 'under_review' %}
-                <button class="mybtn btn" type="button" id="backtoinprogress">
-                    Back to In Progress
-                    <i class="bi-pen-fill"></i>
-                    <i class="bi-box-arrow-left"></i>
-                </button>
-                <button class="mybtn btn" type="button" id="completetask">
-                    Complete Task
-                    <i class="bi-box-arrow-right"></i>
-                    <i class="bi-check-circle-fill"></i>
-                </button>
-            {% elif task.status == 'completed' %}
-                <button class="mybtn btn" type="button" id="backtoreview">
-                    Back to In Review
-                    <i class="bi-eye-fill"></i>
-                    <i class="bi-box-arrow-left"></i>
+<div class="main-layout">
+    <main class="mycontainer"> 
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h1 style="margin: 0;">{{ task.task_title }}</h1>
+            <div class="label-list">
+                {% for label_id, label_name, label_hex_color in labels %}
+                    <div class="label" style="background-color: {{ label_hex_color }};">
+                        {{ label_name }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% if role == 'admin' %}
+                <button class="addlbbtn btn" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">
+                    <i class="bi-plus-lg"></i>
                 </button>
             {% endif %}
         </div>
-    </div>
-    <button class="filebtn mybtn btn" type="button" data-bs-toggle="modal" data-bs-target="#attachFileModal">
-        Attach File
-        <i class="bi-paperclip"></i>
-    </button>
-    <p class="info">{{ task.task_description }}</p>
+        <h3>
+            <a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a>
+        </h3>
+        <div class="info-row">
+            <div class="info">Creation Date: {{ task.date_created.strftime('%Y-%m-%d') }}</div>
+            <div class="info due-date">Due Date: {{ task.due_date.strftime('%Y-%m-%d') }}</div>
+            {% if role == 'admin' %}
+            <div class="admin-actions">
+                <button type="button" class="btn btn-info btn-lg" data-bs-toggle="modal" data-bs-target="#editTaskModal">
+                    Edit Task <i class="bi-pencil-square"></i>
+                </button>
+                <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
+                    Delete Task <i class="bi-trash3"></i>
+                </button>
+            </div>
+            <button class="filebtn mybtn btn" type="button" data-bs-toggle="modal" data-bs-target="#attachFileModal">
+                Attach File
+                <i class="bi-paperclip"></i>
+            </button>
+            {% endif %}
+            <div class="status-actions">
+                {% if task.status == 'assigned' %}
+                    <button class="mybtn btn" type="button" id="movestatusbutton">
+                        Move to In Progress
+                        <i class="bi-box-arrow-right"></i>
+                        <i class="bi-pen-fill"></i>
+                    </button>
+                {% elif task.status == 'in_progress' %}
+                    <button class="mybtn btn" type="button" id="backtoassigned">
+                        Back to Assigned
+                        <i class="bi-pin-angle-fill"></i>
+                        <i class="bi-box-arrow-left"></i>
+                    </button>
+                    <button class="mybtn btn" type="button" id="sendforreview">
+                        Send for Review
+                        <i class="bi-box-arrow-right"></i>
+                        <i class="bi-eye-fill"></i>
+                    </button>
+                {% elif task.status == 'under_review' %}
+                    <button class="mybtn btn" type="button" id="backtoinprogress">
+                        Back to In Progress
+                        <i class="bi-pen-fill"></i>
+                        <i class="bi-box-arrow-left"></i>
+                    </button>
+                    <button class="mybtn btn" type="button" id="completetask">
+                        Complete Task
+                        <i class="bi-box-arrow-right"></i>
+                        <i class="bi-check-circle-fill"></i>
+                    </button>
+                {% elif task.status == 'completed' %}
+                    <button class="mybtn btn" type="button" id="backtoreview">
+                        Back to In Review
+                        <i class="bi-eye-fill"></i>
+                        <i class="bi-box-arrow-left"></i>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        <p class="info">{{ task.task_description }}</p>
 
-    <!-- Microtasks List -->
-    {% if microtasks %}
-        <ul class="list-group mb-4">
-            {% for mt in microtasks %}
-                <li class="list-group-item justify-content-between align-items-center microtask-list-item"
-                    data-mtid="{{ mt.id }}"
-                    data-name="{{ mt.name|e }}"
-                    data-description="{{ mt.description|e }}"
-                    data-status="{{ mt.status }}"
-                    data-due="{{ mt.due_date.strftime('%Y-%m-%d') if mt.due_date else '' }}">
-                    <div class="microtask-item" style="cursor:pointer;">
-                        {% if mt.status == 'undone' %}
-                            <i class="bi-square"></i>
-                        {% elif mt.status == 'under_review' %}
-                            <i class="bi-square-fill"></i>
-                        {% elif mt.status == 'approved' %}
-                            <i class="bi-check-square-fill"></i>
-                        {% endif %}
-                        <strong>{{ mt.name }}</strong>
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <div class="alert alert-info">No microtasks assigned to this task.</div>
-    {% endif %}
+        <!-- Microtasks List -->
+        {% if microtasks %}
+            <ul class="list-group mb-4">
+                {% for mt in microtasks %}
+                    <li class="list-group-item justify-content-between align-items-center microtask-list-item"
+                        data-mtid="{{ mt.id }}"
+                        data-name="{{ mt.name|e }}"
+                        data-description="{{ mt.description|e }}"
+                        data-status="{{ mt.status }}"
+                        data-due="{{ mt.due_date.strftime('%Y-%m-%d') if mt.due_date else '' }}">
+                        <div class="microtask-item" style="cursor:pointer;">
+                            {% if mt.status == 'undone' %}
+                                <i class="bi-square"></i>
+                            {% elif mt.status == 'under_review' %}
+                                <i class="bi-square-fill"></i>
+                            {% elif mt.status == 'approved' %}
+                                <i class="bi-check-square-fill"></i>
+                            {% endif %}
+                            <strong>{{ mt.name }}</strong>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="alert alert-info">No microtasks assigned to this task.</div>
+        {% endif %}
 
-    {% if files %}
-        <ul class="list-group mb-4">
-            {% for f in files %}
+        {% if role == 'admin' %}
+            <a href="{{ request.route_url('create_microtask', task_id=task.id) }}" class="create-microtask-button">
+                Create New MicroTask <i class="bi-plus-lg"></i>
+            </a>
+        {% endif %}
+    </main>
+    <aside class="right-sidebar">
+        <h3>Files</h3>
+        <div class="files-scroll-area">
+            {% if files %}
+            <ul class="list-group mb-4">
+                {% for f in files %}
                 <li class="list-group-item justify-content-between align-items-center">
-                    <div class="microtask-item" style="cursor:pointer;">
-                        <strong>{{ f.filename }}</strong>
+                    <div class="file-item" style="cursor:pointer;">
+                        <i class="bi-filetype-{{f.extension}} fs-1"></i>
+                        <div style="display:flex; flex-direction:column; flex:2; min-width:0;">
+                            <strong style="word-break: break-all; white-space: normal;">{{ f.filename }}</strong>
+                            <span style="font-size:0.95em; color:#666;">
+                            {{ f.creation_date.strftime('%Y-%m-%d %H:%M') }}
+                            </span>
+                        </div>
+                        <a href="" class="btn p-0 ms-auto download-btn" style="border:none; background:none;" title="Download">
+                            <i class="bi-download fs-1"></i>
+                        </a>
                     </div>
                 </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <div class="alert alert-info">No files attached to this task.</div>
-    {% endif %}
-
-    {% if role == 'admin' %}
-        <a href="{{ request.route_url('create_microtask', task_id=task.id) }}" class="create-microtask-button">
-            Create New MicroTask <i class="bi-plus-lg"></i>
-        </a>
-    {% endif %}
-</main>
-
-<!-- Attach File Modal -->
-<div class="modal fade" id="attachFileModal" tabindex="-1" aria-labelledby="attachFileModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form method="POST" action="{{ request.route_url('file_upload_page') }}" enctype="multipart/form-data">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <div class="modal-header">
-          <h5 class="modal-title" id="attachFileModalLabel">Attach File to Task</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                {% endfor %}
+            </ul>
+            {% else %}
+                <div class="alert alert-info">No files attached to this task.</div>
+            {% endif %}
         </div>
-        <div class="modal-body">
-          <input type="file" name="file" class="form-control" required>
-          <!-- Optionally, add a hidden field for task_id if needed in your upload logic -->
-          <input type="hidden" name="task_id" value="{{ task.id }}">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-info">Upload</button>
-        </div>
-      </form>
-    </div>
-  </div>
+    </aside>
 </div>
+
+{% set relation_value = True %}
+{% set task_id =  task.id %}
+{% include "labels_modal.jinja2" %}
 
 <!-- Edit Task Modal -->
 <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
@@ -165,7 +175,7 @@
                         <input type="date" class="form-control" id="taskDueDate" name="due_date" value="{{ task.due_date.strftime('%Y-%m-%d') }}" required min="{{ current_date }}">
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-info">Save Changes</button>
                 </div>
@@ -186,7 +196,7 @@
                 <div class="modal-body">
                     Are you sure you want to delete the task "{{ task.task_title }}"?
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </div>
@@ -222,10 +232,53 @@
   </div>
 </div>
 
+<!-- Custom Download Reason Modal -->
+<div id="downloadReasonModal" class="custom-modal" aria-hidden="true" role="dialog" aria-labelledby="downloadReasonModalLabel" aria-modal="true" tabindex="-1" style="display:none;">
+  <div class="custom-modal-dialog" role="document">
+    <div class="custom-modal-content">
+      <div class="custom-modal-header">
+        <h5 id="downloadReasonModalLabel" class="custom-modal-title">Generate Download Ticket</h5>
+        <button type="button" class="custom-modal-close" aria-label="Close"><i class="bi-x-lg"></i></button>
+      </div>
+      <form id="downloadReasonForm" class="custom-modal-body" autocomplete="off">
+        <dl class="file-details">
+          <dt>File</dt>
+          <dd id="downloadFileName"></dd>
+          <dt>User</dt>
+          <dd id="downloadUserName">{{ user.username if user else 'Unknown' }}</dd>
+        </dl>
+        <div class="mb-3">
+          <label for="downloadReason" class="form-label">Why would you like to download this file?</label>
+          <textarea class="form-control" id="downloadReason" name="reason" required rows="3" style="resize:vertical; max-height:7rem; min-height:3rem; width:100%;"></textarea>
+        </div>
+        <div style="gap:0.5rem;">
+          <button type="button" class="btn btn-secondary" id="cancelDownloadReason">Cancel</button>
+          <button type="submit" class="btn btn-info">Send & Request Download</button>
+        </div>
+        <div id="downloadReasonSuccess" style="display:none; color:green; margin-top:1rem; justify-content:center; text-align: center;">
+          Your reason was submitted! (Simulated)<br>Download will start...
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+        var fileInput = document.getElementById('fileInput');
+        var filenameInput = document.getElementById('filename');
+        if (fileInput && filenameInput) {
+                fileInput.addEventListener('change', function() {
+                        if (fileInput.files.length > 0) {
+                                filenameInput.value = fileInput.files[0].name;
+                        }
+                });
+        }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Task status update functionality
     function updateStatus(newStatus) {
@@ -327,6 +380,66 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('keydown', (e) => {
         if (e.key === "Escape" && modal.classList.contains('show')) {
             closeModal();
+        }
+    });
+
+    // Modal for download reason
+    const downloadModal = document.getElementById('downloadReasonModal');
+    const downloadForm = document.getElementById('downloadReasonForm');
+    const downloadCloseBtn = downloadModal.querySelector('.custom-modal-close');
+    const cancelDownloadBtn = document.getElementById('cancelDownloadReason');
+    const downloadFileName = document.getElementById('downloadFileName');
+    const downloadReasonSuccess = document.getElementById('downloadReasonSuccess');
+
+    // Attach click event to all download buttons
+    document.querySelectorAll('.file-item .download-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Get file info from DOM
+            const fileItem = btn.closest('.file-item');
+            const fileName = fileItem.querySelector('strong')?.textContent || 'Unknown';
+            downloadFileName.textContent = fileName;
+            downloadReasonSuccess.style.display = 'none';
+            downloadForm.style.pointerEvents = '';
+            downloadForm.reset();
+            // Show modal
+            downloadModal.style.display = 'flex';
+            setTimeout(() => {
+                downloadModal.classList.add('show');
+                downloadModal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            }, 10);
+        });
+    });
+
+    // Close modal logic
+    function closeDownloadModal() {
+        downloadModal.classList.remove('show');
+        downloadModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        setTimeout(() => {
+            downloadModal.style.display = 'none';
+        }, 350);
+    }
+    downloadCloseBtn.addEventListener('click', closeDownloadModal);
+    cancelDownloadBtn.addEventListener('click', closeDownloadModal);
+
+    // Simulate backend on submit
+    downloadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        downloadForm.style.pointerEvents = 'none';
+        downloadReasonSuccess.style.display = 'block';
+        setTimeout(() => {
+            closeDownloadModal();
+            // Simulate download (replace with real download if needed)
+            // window.location.href = btn.href;
+        }, 1500);
+    });
+
+    // Optional: close modal with ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape" && downloadModal.classList.contains('show')) {
+            closeDownloadModal();
         }
     });
 });
