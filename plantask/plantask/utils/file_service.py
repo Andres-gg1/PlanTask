@@ -3,12 +3,12 @@ import uuid
 from datetime import datetime
 from plantask.models.file import File
 from plantask.models.activity_log import ActivityLog
-from plantask.models.task import TasksFile  # <-- Add this import
+from plantask.models.task import TasksFile
 import zipfile
 import tempfile
 
 
-ALLOWED_FILES = {'pdf', 'png', 'jpg', 'jpeg'}
+ALLOWED_FILES = {'pdf', 'png', 'jpg', 'jpeg', 'jfif'}
 
 class FileUploadService:
     def __init__(self, upload_dir: str, dbsession, user_id: int):
@@ -47,9 +47,12 @@ class FileUploadService:
         Returns:
         - dict: Metadata about the saved file including original name, path, URL, and extension.
         """
+        print("ADIOS")
         ext = os.path.splitext(file_storage.filename)[-1].lower().lstrip('.')
+        print(ext)
         if not self.allowed_files(ext):
-            raise ValueError("File type not allowed.")
+            print("File type not allowed")
+            return {"msg":"File type not allowed."}
 
         unique_name = f"{uuid.uuid4()}.{ext}"
         file_path = os.path.join(self.upload_dir, unique_name)
@@ -60,7 +63,7 @@ class FileUploadService:
         return {
             "filename": file_storage.filename,
             "path": file_path,
-            "url": f"/static/uploads/{unique_name}",  # No 'a_' prefix unless you want it
+            "url": f"/static/uploads/{unique_name}",  
             "extension": ext,
             "unique_name": unique_name
         }
@@ -77,24 +80,25 @@ class FileUploadService:
         - dict: Upload result including message, file URL, and file ID in the database.
         """
         try:
+            print("HOLA")
             file_info = self.save_file_to_disk(file_storage)
 
+            print(file_info['path'])
             new_file = File(
                 filename=file_info['filename'],
                 extension=file_info['extension'],
                 route=file_info['path'],
                 creation_date=str(datetime.now())
             )
+            print(new_file.route)
             self.dbsession.add(new_file)
-            self.dbsession.flush()  # new_file.id is now available
+            self.dbsession.flush()
 
-            # Create the relationship in TasksFile if task_id is provided
             if task_id:
                 tasks_file = TasksFile(tasks_id=task_id, files_id=new_file.id)
                 self.dbsession.add(tasks_file)
                 self.dbsession.flush()
 
-            # Use enums for action (only those in activity_log.py)
             log_action = 'task_added_file' if task_id else 'task_added_file'
             if context and context.get('action') in ['task_added_file', 'task_removed_file']:
                 log_action = context.get('action')
@@ -135,12 +139,11 @@ class FileUploadService:
                 return {"bool": False, "msg": "File not found in the database."}
             if not file_record.active:
                 return {"bool": False, "msg": "File is already deleted (inactive)."}
-            print("HOLA")
             print(f"[DEBUG] Deleting file: {file_record.filename} (ID: {file_id})")
             print(file_record.active)
+
             file_record.active = False
 
-            # Use enums for action (only those in activity_log.py)
             log_action = 'task_removed_file'
             if context and context.get('action') == 'task_removed_file':
                 log_action = context.get('action')
@@ -161,3 +164,29 @@ class FileUploadService:
             return {"bool": True, "msg": f"File '{file_record.filename}' deleted (set inactive) successfully."}
         except Exception as e:
             return {"bool": False, "msg": f"Error deleting file: {str(e)}"}
+        
+    def download_file(self, file_id: int) -> dict:
+        """
+        Retrieves a file from the database and returns its path for downloading.
+
+        Parameters:
+        - file_id (int): ID of the file to download.
+
+        Returns:
+        - dict: Contains 'bool', 'file_path', 'filename', and optionally 'msg'.
+        """
+        try:
+            file_record = self.dbsession.query(File).filter(File.id == file_id, File.active == True).first()
+            if not file_record:
+                return {"bool": False, "msg": "File not found or is inactive."}
+            
+            if not os.path.exists(file_record.route):
+                return {"bool": False, "msg": "File does not exist on the server."}
+
+            return {
+                "bool": True,
+                "file_path": file_record.route,
+                "filename": file_record.filename
+            }
+        except Exception as e:
+            return {"bool": False, "msg": f"Error during download: {str(e)}"}
