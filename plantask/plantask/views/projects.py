@@ -27,6 +27,7 @@ def my_projects_page(request):
 @view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='GET', permission="admin")
 @verify_session
 def create_project_page(request):
+    request.session['init'] = True
     return {}
 
 @view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='POST', permission="admin")
@@ -154,7 +155,7 @@ def edit_project(request):
         project.name = request.POST.get('name', project.name)
         activity_log_project_name_changed = ActivityLog(
             user_id=request.session['user_id'],
-            project_id=project.id,  # Added project.id
+            project_id=project.id,
             timestamp=datetime.now(),
             action='project_edited_title',
             changes=f"old: {old_name} --> new: {request.POST.get('name', project.name)}"
@@ -167,7 +168,7 @@ def edit_project(request):
         project.description = request.POST.get('description', project.description)
         activity_log_project_description_changed = ActivityLog(
             user_id=request.session['user_id'],
-            project_id=project.id,  # Added project.id
+            project_id=project.id,
             timestamp=datetime.now(),
             action='project_edited_description',
             changes=f"old: {old_description} --> new: {request.POST.get('description', project.description)}"
