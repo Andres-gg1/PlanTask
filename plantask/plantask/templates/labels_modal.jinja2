@@ -36,6 +36,7 @@
                         </div>
                     </div>
 
+                    <button type="submit" class="btn btn-info" id="submitLabelBtn">Create Label</button>
                     <!-- Existing Labels List -->
                     <div class="content-row mt-4" style="background-color: #f6f7f8; border-radius: 0.5rem; padding: 1rem;">
                         {% for label_id, label_name, label_hex_color in project_labels %}
@@ -67,7 +68,6 @@
                 </div>
 
                 <div class="modal-footer border-0">
-                    <button type="submit" class="btn btn-info" id="submitLabelBtn">Create Label</button>
                 </div>
             </form>
         </div>
@@ -141,7 +141,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // Get label ID from sibling checktaskbtn (or store label_id in data-label-id on edit button)
             const labelId = editBtn.getAttribute('data-label-id');
             if (!labelId) {
-                alert('Could not find label ID');
                 return;
             }
 

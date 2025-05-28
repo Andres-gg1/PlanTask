@@ -54,7 +54,9 @@
                                         data-bs-target="#editMemberModal"
                                         data-user-id="{{ member.id }}"
                                         data-role="{{ member.role }}"
-                                        data-label-ids="{{ member.label_ids | join(',') }}"
+                                        data-label-ids="{{ member.label_ids | join(',') }}"    
+                                        data-first-name="{{ member.first_name }}"
+                                        data-last-name="{{ member.last_name }}"
                                     >
                                         <i class="bi-person-gear"></i>
                                     </button>
@@ -343,23 +345,26 @@ document.addEventListener('DOMContentLoaded', setupKanbanDragAndDrop);
 document.addEventListener('DOMContentLoaded', function() {
     // Handle edit member button clicks
     document.querySelectorAll('.edit-member-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            // Get the user ID from the clicked button's data attribute
+        button.addEventListener('click', function () {
             const userId = parseInt(this.dataset.userId);
             document.getElementById('editMemberUserId').value = userId;
-            
-            // Get member's current labels from backend data
+
+            // ✅ Set the modal title
+            const firstName = this.dataset.firstName;
+            const lastName = this.dataset.lastName;
+            const modalTitle = document.getElementById('editMemberModalLabel');
+            modalTitle.textContent = `Edit Member | ${firstName} ${lastName}`;
+
+            // Label handling (unchanged)
             const memberLabels = {{ member_labels | tojson }};
             const userLabelIds = memberLabels[userId] || [];
-            
-            // Update label buttons and checkboxes
+
             document.querySelectorAll('.toggle-label-btn').forEach(btn => {
                 const labelId = parseInt(btn.dataset.labelId);
                 const checkbox = btn.parentElement.querySelector('.label-checkbox');
                 const isAssigned = userLabelIds.includes(labelId);
-                
+
                 checkbox.checked = isAssigned;
-                // Update button appearance
                 if (isAssigned) {
                     btn.classList.add('assigned');
                     btn.style.backgroundColor = '#28a745';
@@ -371,10 +376,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.style.color = '';
                     btn.innerHTML = '';
                 }
-                
             });
         });
     });
+
     
     // Handle label toggle clicks
     document.querySelectorAll('.toggle-label-btn').forEach(button => {

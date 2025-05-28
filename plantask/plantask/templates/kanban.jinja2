@@ -17,6 +17,13 @@
                                 <p class="mb-2 text-muted">
                                     {{ task.task_description[:100] }}{% if task.task_description|length > 100 %}...{% endif %}
                                 </p>
+                                <div class="label-list">
+                                    {% for label_id, label_name, label_hex_color in labels %}
+                                        <div class="label" style="background-color: {{ label_hex_color }};">
+                                            {{ label_name }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </a>
