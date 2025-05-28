@@ -109,15 +109,32 @@ def project_page(request):
             request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color).
             filter_by(project_id = project.id).order_by(Label.label_name.asc()).all()
         )
+        
+        member_labels = {}
+        label_assignments = request.dbsession.query(
+            ProjectsUser.user_id, 
+            LabelsProjectsUser.labels_id
+        ).join(
+            LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id
+        ).filter(
+            ProjectsUser.project_id == project_id
+        ).all()
+
+        for user_id, label_id in label_assignments:
+            if user_id not in member_labels:
+                member_labels[user_id] = []
+            member_labels[user_id].append(label_id)
 
         flashes = request.session.pop_flash()
+        
         return {
             "project": project,
             "project_members": mapped_members,
             "show_role": projects_user.role,
             "flashes": flashes,
             "tasks_by_status": tasks_by_status,
-            'project_labels' : project_labels
+            "project_labels" : project_labels,
+            "member_labels": member_labels
         }
 
     except SQLAlchemyError:
@@ -309,9 +326,8 @@ def edit_member(request):
         # Add updated labels
         for label_id in label_ids:
             try:
-                label_id_int = int(label_id)
                 label_link = LabelsProjectsUser(
-                    labels_id=label_id_int,
+                    labels_id=label_id,
                     projects_users_id=project_user.id
                 )
                 request.dbsession.add(label_link)

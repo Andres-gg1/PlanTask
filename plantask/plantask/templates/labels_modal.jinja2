@@ -2,70 +2,78 @@
 <!-- Add Label Modal -->
 <div class="modal fade" id="addLabelModal" tabindex="-1" aria-labelledby="addLabelModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-        <form method="POST" id="labelForm" action="{{ request.route_url('add_label', project_id=project.id) }}" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <input type="hidden" name="label_id" id="labelIdInput" value="">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addLabelModalLabel">Add a New Label</h5>
-            </div>
+        <div class="modal-content" style="border-radius: 0.75rem; overflow: hidden;">
+            <form method="POST" id="labelForm" action="{{ request.route_url('add_label', project_id=project.id) }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="label_id" id="labelIdInput" value="">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addLabelModalLabel">Add a New Label</h5>
+                </div>
+
                 <div class="modal-body">
+                    <!-- Label Name Input -->
                     <div class="mb-3">
                         <label for="labelName" class="form-label">Label Name</label>
                         <input type="text" class="form-control" id="labelName" name="label_name" required>
                         <input type="hidden" name="relation" value="{{ relation_value }}">
                         {% if task_id %}
                             <input type="hidden" name="task_id" value="{{ task_id }}">
-                        {% endif%}
+                        {% endif %}
                     </div>
+
+                    <!-- Color Picker -->
                     <div class="mb-3">
                         <label class="form-label">Label Color</label>
                         <div style="display: grid; grid-template-columns: repeat(5, 2.5rem); gap: 0.5rem;">
                             {% set colors = [ '#0079bf', '#70b500', '#ff9f1a', '#eb5a46', '#f2d600', '#c377e0', '#ff78cb', '#00c2e0', '#51e898', '#c4c9cc' ] %}
                             {% for color in colors %}
-                            <label style="display: flex; align-items: center; justify-content: center;">
-                                <input type="radio" name="label_color" value="{{ color }}" style="display:none;" {% if loop.first %}checked{% endif %}>
-                                <span style="display:inline-block; width:2rem; height:2rem; border-radius:0.5rem; border:2px solid #ccc; background:{{ color }}; cursor:pointer; transition: border 0.2s;">
-                                </span>
-                            </label>
+                                <label style="display: flex; align-items: center; justify-content: center;">
+                                    <input type="radio" name="label_color" value="{{ color }}" style="display:none;" {% if loop.first %}checked{% endif %}>
+                                    <span style="display:inline-block; width:2rem; height:2rem; border-radius:0.5rem; border:2px solid #ccc; background:{{ color }}; cursor:pointer;"></span>
+                                </label>
                             {% endfor %}
                         </div>
                     </div>
+
+                    <!-- Existing Labels List -->
+                    <div class="content-row mt-4" style="background-color: #f6f7f8; border-radius: 0.5rem; padding: 1rem;">
+                        {% for label_id, label_name, label_hex_color in project_labels %}
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                {% if task_id %}
+                                    <button 
+                                        class="checktaskbtn addlbbtn btn {% if label_id in assigned_label_ids %}assigned{% endif %}" 
+                                        style="margin-right:0.5rem; {% if label_id in assigned_label_ids %}background-color: #28a745; color: #fff;{% else %}background-color: #FAFAFA;{% endif %}" 
+                                        type="button" 
+                                        data-label-id="{{ label_id }}" 
+                                        data-task-id="{{ task_id }}"
+                                        aria-label="Mark Label" 
+                                        title="Mark Label"
+                                    >
+                                        {% if label_id in assigned_label_ids %}
+                                            <i class="bi bi-check-lg"></i>
+                                        {% endif %}
+                                    </button>
+                                {% endif %}
+                                <div class="label" style="flex: 1; background-color: {{ label_hex_color }}; padding: 0.5rem 0.5rem; border-radius: 0.5rem; color: #fff; font-weight: 500;">
+                                    {{ label_name }}
+                                </div>
+                                <button type="button" class="btn btn-info edit-label-btn" data-bs-target="#editLabel" data-label-id="{{ label_id }}">
+                                    <i class="bi-pencil-square"></i>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
+
                 <div class="modal-footer border-0">
                     <button type="submit" class="btn btn-info" id="submitLabelBtn">Create Label</button>
                 </div>
             </form>
-            <div class="content-row mt-3" style="background-color: #f6f7f8;">
-            {% for label_id, label_name, label_hex_color in project_labels %}
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; margin-right: 0.75rem; margin-left: 0.75rem">
-                    {% if task_id %}
-                        <button 
-                            class="checktaskbtn addlbbtn btn {% if label_id in assigned_label_ids %}assigned{% endif %}" 
-                            style="margin-right:0.5rem; {% if label_id in assigned_label_ids %}background-color: #28a745; color: #fff;{% else %}background-color: #FAFAFA;{% endif %}" 
-                            type="button" 
-                            data-label-id="{{ label_id }}" 
-                            data-task-id="{{ task_id }}"
-                            aria-label="Mark Label" 
-                            title="Mark Label"
-                        >
-                            {% if label_id in assigned_label_ids %}
-                                <i class="bi bi-check-lg"></i>
-                            {% endif %}
-                        </button>
-                    {% endif %}
-                    <div class="label" style="flex: 1; background-color: {{ label_hex_color }}; padding: 0.5rem 0.5rem; border-radius: 0.5rem; color: #fff; font-weight: 500;">
-                        {{ label_name }}
-                    </div>
-                <button type="button" class="btn btn-info edit-label-btn" data-bs-target="#editLabel" data-label-id="{{ label_id }}">
-                    <i class="bi-pencil-square"></i>
-                </button>
-                </div>
-            {% endfor %}
-            </div>
         </div>
     </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // === 1. Color Picker Highlight ===

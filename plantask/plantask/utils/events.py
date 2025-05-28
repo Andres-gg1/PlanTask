@@ -24,7 +24,6 @@ def handle_user_added_to_project(event: UserAddedToProjectEvent):
         print("[DEBUG] Usuario o proyecto no encontrado")
         return
     
-    print(user.username)
     subject = f"You have been added to project {project.name}"
     body = f"Hello {user.username}! You have been added to project {project.name}."
 
