@@ -2,58 +2,107 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #1e1e1e;
+  background: #1b1b5e;
   color: #fff;
-  padding: 10px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  font-family: sans-serif;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
   position: fixed;
   bottom: 0;
   left: 0;
-  width:400px;
-  max-width: 100vw;
+  width: 800px;
+  max-width: 100%;
+  font-family: sans-serif;
   z-index: 999;
-  border-top-right-radius: 10px;
-}
-
-.pomodoro-info {
-  flex: 1;
+  margin: 0;
 }
 
 .pomodoro-controls {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  background: #5555a3;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-left: 10px;
 }
 
-.pomodoro-controls button {
+.pomodoro-controls button,
+.pomodoro-settings {
   background: none;
   border: none;
   font-size: 1.2rem;
+  color: white;
   cursor: pointer;
-  color: #fff;
-  transition: transform 0.2s;
 }
 
-.pomodoro-controls button:hover {
-  transform: scale(1.1);
+.pomodoro-progress-section {
+  flex-grow: 1;
+  text-align: center;
+  position: relative;
+  margin: 0 10px;
 }
 
 .pomodoro-progress {
-  position: relative;
-  height: 5px;
+  background: #ccc;
+  height: 10px;
   width: 100%;
-  background: #333;
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
-  margin-top: 10px;
+  position: relative;
 }
 
 #pomodoro-progress-bar {
-  position: absolute;
   height: 100%;
-  background: #1db954;
+  background: #bbb6ff;
   width: 0%;
-  transition: width 0.5s linear;
+  transition: width 0.4s ease;
 }
 
+#interval-marker-container .interval-marker {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(255, 99, 132, 0.75); /* o el color que quieras para los bloques de descanso */
+  opacity: 1;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.pomodoro-phase-label {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.pomodoro-time-left,
+.pomodoro-time-total {
+  font-size: 0.6rem;
+  position: absolute;
+  top: 16px;
+  color: #eee;
+}
+
+.pomodoro-time-left {
+  left: 0;
+}
+
+.pomodoro-time-total {
+  right: 0;
+}
+
+.pomodoro-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 10px;
+}
+
+.pomodoro-clock {
+  background: #7777c8;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+}

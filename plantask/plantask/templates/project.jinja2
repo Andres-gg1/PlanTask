@@ -16,7 +16,7 @@
             <div>
                 <h1>{{ project.name if project and project.name else 'My New Project' }}</h1>
                 <p class="description" id="projectDescription">{{ project.description | default('No description available') }}</p>
-                {% if project.description and project.description|length > 200 %}
+                {% if project.description and project.description|length > 75 %}
                     <span class="read-more-btn" id="readMoreBtn">Read More</span>
                 {% endif %}
             </div>
@@ -83,7 +83,7 @@
             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editProjectModal">Edit Project <i class="bi-pencil-square"></i></button>
             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteProjectModal">Delete Project <i class="bi-trash3"></i></button>
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMemberModal">Add Member <i class="bi-person-add"></i></button>
-            <button class="addlbbtn btn" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label"><i class="bi-plus-lg"></i></button>
+            <button class="addlbbtn btn" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">Labels <i class="bi-plus-lg"></i></button>
         </div>
         {% endif %}
     </div>
@@ -131,11 +131,11 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="projectName" class="form-label">Project Name</label>
-                        <input type="text" class="form-control" id="projectName" name="name" value="{{ project.name }}">
+                        <input type="text" class="form-control" id="projectName" name="name" value="{{ project.name }}" maxlength="55">
                     </div>
                     <div class="mb-3">
                         <label for="projectDescription" class="form-label">Project Description</label>
-                        <textarea class="form-control" id="projectDescription" name="description">{{ project.description }}</textarea>
+                        <textarea class="form-control" id="projectDescription" name="description" maxlength="150">{{ project.description }}</textarea>
                     </div>
                     <div class="mb-3">
                         <label for="projectImage" class="form-label">Project Image</label>

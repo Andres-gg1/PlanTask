@@ -21,9 +21,7 @@
                 {% endfor %}
             </div>
             {% if role == 'admin' %}
-                <button class="addlbbtn btn" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">
-                    <i class="bi-plus-lg"></i>
-                </button>
+                <button class="addlbbtn btn" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">Labels <i class="bi-plus-lg"></i></button>
             {% endif %}
         </div>
         <h3>
@@ -164,11 +162,11 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="taskTitle" class="form-label">Task Title</label>
-                        <input type="text" class="form-control" id="taskTitle" name="name" value="{{ task.task_title }}">
+                        <input type="text" class="form-control" id="taskTitle" name="name" value="{{ task.task_title }}" maxlength="55">
                     </div>
                     <div class="mb-3">
                         <label for="taskDescription" class="form-label">Task Description</label>
-                        <textarea class="form-control" id="taskDescription" name="description">{{ task.task_description }}</textarea>
+                        <textarea class="form-control" id="taskDescription" name="description" maxlength="150">{{ task.task_description }}</textarea>
                     </div>
                     <div class="mb-3">
                         <label for="taskDueDate" class="form-label">Due Date</label>
@@ -228,6 +226,30 @@
           <dd id="microtaskDueDate"></dd>
         </dl>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Attach File Modal -->
+<div class="modal fade" id="attachFileModal" tabindex="-1" aria-labelledby="attachFileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ request.route_url('file_upload_page') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="attachFileModalLabel">Attach File to Task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="file" name="file" class="form-control" required>
+          <!-- Optionally, add a hidden field for task_id if needed in your upload logic -->
+          <input type="hidden" name="task_id" value="{{ task.id }}">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-info">Upload</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

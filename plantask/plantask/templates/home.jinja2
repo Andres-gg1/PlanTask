@@ -3,7 +3,6 @@
 {% block title %}Home{% endblock %}
 
 {% block styles %}
-<link href="{{ request.static_url('plantask:static/styles/pomodoro.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
@@ -17,7 +16,6 @@
       <a class="nav-link" href="#">Your team's tasks</a>
     </li>
   </ul>
-  {% include "pomodoro.jinja2" %}
 </main>
 {% endblock content %}
 

@@ -20,7 +20,9 @@
       </form>
       <div class="navbar-icons">
         <a class="navbar-icon" href="#" title="Info"><i class="bi bi-question-circle"></i></a>
-        <a class="navbar-icon" href="#" title="Hourglass"><i class="bi bi-hourglass-bottom"></i></a>
+        <a id="pomodoroToggleBtn" class="navbar-icon" href="#" title="Hourglass">
+          <i class="bi bi-hourglass-bottom"></i>
+        </a>
         <a class="navbar-icon" href="#" title="Notifications"><i class="bi bi-bell"></i></a>
         <div class="navbar-icon dropdown">
           <a id="profileDropdown" aria-label="Profile" role="button"><i class="bi bi-circle-fill"></i></a>
@@ -70,6 +72,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (window.innerWidth > 992) { 
       navbarContent?.classList.remove('show');
     }
+  });
+
+  const pomodoroBtn = document.getElementById('pomodoroToggleBtn');
+  const pomodoroWrapper = document.getElementById('pomodoro-wrapper');
+
+  pomodoroBtn?.addEventListener('click', function (e) {
+    e.preventDefault();
+    pomodoroWrapper.classList.toggle('visible');
   });
 });
 </script>
