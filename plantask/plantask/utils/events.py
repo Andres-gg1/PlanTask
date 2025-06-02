@@ -24,7 +24,6 @@ def handle_user_added_to_project(event: UserAddedToProjectEvent):
         print("[DEBUG] Usuario o proyecto no encontrado")
         return
     
-    print(user.username)
     subject = f"You have been added to project {project.name}"
     body = f"Hello {user.username}! You have been added to project {project.name}."
 
@@ -65,8 +64,6 @@ def handle_task_ready_for_review(event: TaskReadyForReviewEvent):
     task_id = event.task_id
     email_sender: EmailSender = request.registry.settings['email_sender']
 
-    print(f"[DEBUG] Task ID: {task_id}")
-
     task = request.dbsession.query(Task).filter_by(id=task_id).first()
     if not task:
         print("[DEBUG] Task not found")
@@ -81,8 +78,6 @@ def handle_task_ready_for_review(event: TaskReadyForReviewEvent):
         ProjectsUser.project_id == project.id,
         ProjectsUser.role == 'project_manager'
     ).all()
-
-    print(f"[DEBUG] Project Managers: {[manager.username for manager in project_managers]}")
 
     subject = f"Task '{task.task_title}' is ready for review in project {project.name}"
     body = f"The task '{task.task_title}' has been moved to 'under_review'. Please review it."

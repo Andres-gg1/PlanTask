@@ -1,79 +1,215 @@
 {% block pomodoro %}
 <div id="pomodoro-bar" class="pomodoro-container">
-  <div class="pomodoro-info">
-    <strong id="pomodoro-label">Pomodoro Timer</strong>
-    <span id="pomodoro-time">25:00</span>
-  </div>
-
   <div class="pomodoro-controls">
-    <button onclick="resetPomodoro()" title="Reset">
-      ⏮️
-    </button>
-    <button onclick="togglePomodoro()" title="Play/Pause" id="pomodoro-toggle">
-      ▶️
-    </button>
-    <button onclick="endPomodoro()" title="End">
-      ⏹️
-    </button>
+    <button onclick="resetPomodoro()" title="Reset"><i class="bi bi-skip-backward-fill"></i></button>
+    <button onclick="togglePomodoro()" title="Play/Pause" id="pomodoro-toggle"><i class="bi bi-play-fill"></i></button>
+    <button onclick="endPomodoro()" title="Skip Phase"><i class="bi bi-stop-fill"></i></button>
+    <button title="Mute Alarms" onclick="toggleMute()"><i id="mute-icon" class="bi bi-volume-up-fill"></i></button>
   </div>
 
-  <div class="pomodoro-progress">
-    <div id="pomodoro-progress-bar"></div>
+  <div class="pomodoro-progress-section">
+    <span class="pomodoro-time-left">0:00</span>
+    <div class="pomodoro-progress">
+      <div id="pomodoro-progress-bar"></div>
+      <div id="interval-marker-container"></div>
+    </div>
+    <span class="pomodoro-time-total">0:00</span>
+    <div class="pomodoro-phase-label">pomodoro_phase</div>
+  </div>
+
+  <div class="pomodoro-right">
+    <div class="pomodoro-clock" id="pomodoro-time">25:00</div>
+    <div class="dropdown">
+      <button class="pomodoro-settings dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-gear-fill"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" onclick="configurePomodoroCycles(60)">1 hour</a></li>
+        <li><a class="dropdown-item" onclick="configurePomodoroCycles(120)">2 hours</a></li>
+        <li><a class="dropdown-item" onclick="configurePomodoroCycles(240)">4 hours</a></li>
+        <li><a class="dropdown-item" onclick="configurePomodoroCycles(360)">6 hours</a></li>
+      </ul>
+    </div>
   </div>
 </div>
+{% endblock %}
+
 
 <script>
-  let duration = 25 * 60; // 25 minutes
-  let timeLeft = duration;
-  let timer = null;
-  let isRunning = false;
+let totalMinutes = 60;
+let duration = 25 * 60;
+let breakDuration = 5 * 60;
+let timeLeft = duration;
+let timer = null;
+let isRunning = false;
+let isBreak = false;
+let mute = false;
+let cycleCount = 0;
+let maxCycles = 2;
+let alarmAudio = null;
 
-  function updateDisplay() {
-    const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-    const seconds = String(timeLeft % 60).padStart(2, '0');
-    document.getElementById('pomodoro-time').textContent = `${minutes}:${seconds}`;
-    document.getElementById('pomodoro-progress-bar').style.width = `${100 - (timeLeft / duration) * 100}%`;
+function createAlarmAudio() {
+  if (!alarmAudio) {
+    alarmAudio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
+  }
+  alarmAudio.volume = mute ? 0 : 1;
+  alarmAudio.currentTime = 0;
+}
+
+function updateDisplay() {
+  const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+  const seconds = String(timeLeft % 60).padStart(2, '0');
+  document.getElementById('pomodoro-time').textContent = `${minutes}:${seconds}`;
+  document.querySelector('.pomodoro-time-left').textContent = '0:00';
+  document.querySelector('.pomodoro-time-total').textContent = `${totalMinutes}:00`;
+
+  // Recalculate progress to match interval marker positions exactly
+  // Markers are at cycle boundaries: 30min, 60min, 90min, etc.
+  // But the issue might be that work should end AT the marker, break should end PAST the marker
+  
+  const totalDurationMinutes = maxCycles * 30;
+  let targetMinutes = 0;
+  
+  if (isBreak) {
+    // During break: we want to reach the END of the current cycle (past the marker)
+    // Current cycle position = cycleCount * 30 + 25 (work done) + break progress
+    targetMinutes = (cycleCount * 30) + 25 + ((breakDuration - timeLeft) / 60);
+  } else {
+    // During work: we want to reach exactly where the marker starts
+    // Which should be at 25min into the current cycle (not 30min)
+    targetMinutes = (cycleCount * 30) + ((duration - timeLeft) / 60);
+  }
+  
+  const progress = Math.min(100, (targetMinutes / totalDurationMinutes) * 100);
+  document.getElementById('pomodoro-progress-bar').style.width = `${progress}%`;
+  
+  // Update phase label
+  const phaseLabel = isBreak ? 'Break' : 'Work';
+  document.querySelector('.pomodoro-phase-label').textContent = phaseLabel;
+}
+
+function togglePomodoro() {
+  if (isRunning) {
+    clearInterval(timer);
+    isRunning = false;
+    document.getElementById("pomodoro-toggle").innerHTML = '<i class="bi bi-play-fill"></i>';
+  } else {
+    timer = setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        updateDisplay();
+      } else {
+        skipPhase();
+      }
+    }, 1000);
+    isRunning = true;
+    document.getElementById("pomodoro-toggle").innerHTML = '<i class="bi bi-pause-fill"></i>';
+  }
+}
+
+function resetPomodoro() {
+  clearInterval(timer);
+  timeLeft = duration;
+  isBreak = false;
+  isRunning = false;
+  cycleCount = 0;
+  updateDisplay();
+  document.getElementById("pomodoro-toggle").innerHTML = '<i class="bi bi-play-fill"></i>';
+}
+
+function endPomodoro() {
+  clearInterval(timer);
+  skipPhase();
+}
+
+function skipPhase() {
+  createAlarmAudio();
+  if (!mute) {
+    alarmAudio.play();
   }
 
-  function togglePomodoro() {
-    if (isRunning) {
+  if (!isBreak) {
+    // Going from work to break
+    isBreak = true;
+    timeLeft = breakDuration;
+  } else {
+    // Going from break to work (or end)
+    isBreak = false;
+    cycleCount++;
+    if (cycleCount < maxCycles) {
+      timeLeft = duration;
+    } else {
+      // All cycles completed
+      timeLeft = 0;
       clearInterval(timer);
       isRunning = false;
-      document.getElementById("pomodoro-toggle").textContent = "▶️";
-    } else {
-      timer = setInterval(() => {
-        if (timeLeft > 0) {
-          timeLeft--;
-          updateDisplay();
-        } else {
-          clearInterval(timer);
-          alert("Pomodoro complete!");
-          isRunning = false;
-          document.getElementById("pomodoro-toggle").textContent = "▶️";
-        }
-      }, 1000);
-      isRunning = true;
-      document.getElementById("pomodoro-toggle").textContent = "⏸️";
     }
   }
-
-  function resetPomodoro() {
+  
+  if (isRunning) {
     clearInterval(timer);
-    timeLeft = duration;
-    updateDisplay();
     isRunning = false;
-    document.getElementById("pomodoro-toggle").textContent = "▶️";
+  }
+  
+  updateDisplay();
+  document.getElementById("pomodoro-toggle").innerHTML = '<i class="bi bi-play-fill"></i>';
+}
+
+function configurePomodoroCycles(totalMinutesSelected) {
+  totalMinutes = totalMinutesSelected;
+  maxCycles = Math.floor(totalMinutes / 30);
+  duration = 25 * 60;
+  breakDuration = 5 * 60;
+
+  // 🧠 Fix: Stop the running timer (if any)
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
   }
 
-  function endPomodoro() {
-    clearInterval(timer);
-    timeLeft = 0;
-    updateDisplay();
-    isRunning = false;
-    document.getElementById("pomodoro-toggle").textContent = "▶️";
+  // ⏹️ Reset state
+  timeLeft = duration;
+  isBreak = false;
+  isRunning = false;
+  cycleCount = 0;
+
+  drawIntervalMarkers();
+  updateDisplay();
+  document.getElementById("pomodoro-toggle").innerHTML = '<i class="bi bi-play-fill"></i>';
+}
+
+function drawIntervalMarkers() {
+  const container = document.getElementById("interval-marker-container");
+  container.innerHTML = "";
+  const totalDurationMinutes = maxCycles * 30;
+  
+  // Place markers at work-break transitions (25min, 55min, 85min, etc.)
+  // This is where work ends and break begins
+  for (let i = 0; i < maxCycles; i++) {
+    const workEndMinutes = (i * 30) + 25; // when break starts
+    const leftPercent = (workEndMinutes / totalDurationMinutes) * 100;
+    const breakWidthPercent = (5 / totalDurationMinutes) * 100; // 5 = breakDuration in minutes
+
+    const marker = document.createElement("div");
+    marker.classList.add("interval-marker");
+    marker.style.left = `${leftPercent}%`;
+    marker.style.width = `${breakWidthPercent}%`;
+    container.appendChild(marker);
   }
 
-  updateDisplay(); // Initial render
+}
+
+function toggleMute() {
+  mute = !mute;
+  if (alarmAudio) {
+    alarmAudio.volume = mute ? 0 : 1;
+    if (mute) {
+      alarmAudio.pause();
+      alarmAudio.currentTime = 0;
+    }
+  }
+  document.getElementById("mute-icon").className = mute ? "bi bi-volume-mute-fill" : "bi bi-volume-up-fill";
+}
+
+configurePomodoroCycles(60);
 </script>
-
-{% endblock pomodoro %}

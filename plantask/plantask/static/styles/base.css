@@ -84,23 +84,22 @@
     min-height: 2.25rem !important;
     align-items: center;
     justify-content: center;
-    padding: 0;
     background-color: #FAFAFA;
     border: 2px solid #ACACAC;
-    color: black;
+    color: #212529;
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .addlbbtn:hover{
     background-color: #ACACAC;
     transform: scale(1.05);
-    color: black;
+    color: #212529;
 }
 .addlbbtn:active{
     border: 0;
     background-color: #9b9b9b !important;
     transform: scale(0.98);
-    color: black;
+    color: #212529;
 }
 .label{
     font-family: "Proxima Nova" sans-serif;
@@ -136,3 +135,53 @@
     border-radius: 0.25rem;
 }
 
+.label-kanban{
+    font-family: "Proxima Nova" sans-serif;
+    font-weight: 600;
+    max-height: 1.5rem;
+    border-radius: 0.5rem;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    text-overflow: ellipsis;
+    min-width: 0;
+    max-width: 100%;
+}
+.label-list-kanban {
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+    gap: 0.2rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    width: 100%; 
+    max-width: 100%;  
+    scrollbar-width: thin;
+    margin-right: 2.5rem;
+}
+.label-list::-webkit-scrollbar {
+    height: 0.5rem;
+}
+.label-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 0.25rem;
+}
+
+
+#pomodoro-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#pomodoro-wrapper.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
