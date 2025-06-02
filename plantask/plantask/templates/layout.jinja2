@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="{{ request.static_url('plantask:static/styles/navbar.css') }}" rel="stylesheet">
     <link href="{{ request.static_url('plantask:static/styles/base.css') }}" rel="stylesheet">
+    <link href="{{ request.static_url('plantask:static/styles/pomodoro.css') }}" rel="stylesheet">
     {% block styles%} 
     {% endblock %}
 </head>
@@ -17,6 +18,9 @@
     {% include "sidebar.jinja2" %}
     {% block content %}
     {% endblock %}
+    <div id="pomodoro-wrapper">
+    {% include "pomodoro.jinja2" %}
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}
     {% endblock %}

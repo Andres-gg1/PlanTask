@@ -16,6 +16,9 @@
       <a class="nav-link" href="#">Your team's tasks</a>
     </li>
   </ul>
+  {%for noti in notifications %}
+  <p>{{noti.message}} se mando {{noti.created_at}}</p>
+  {%endfor%}
 </main>
 {% endblock content %}
 
