@@ -3,7 +3,8 @@ from sqlalchemy import(
     Integer, 
     Text, 
     DateTime, 
-    Boolean
+    Boolean,
+
 )
 from sqlalchemy.orm import relationship
 from .base import Base

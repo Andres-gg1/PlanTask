@@ -75,7 +75,6 @@
 /* Header */
 .custom-modal-header {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #dee2e6;
   display: flex;
   justify-content: space-between;
   align-items: center;

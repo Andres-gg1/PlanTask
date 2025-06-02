@@ -17,6 +17,7 @@ def includeme(config):
     config.add_route('edit_project', r'/project/{id:\d+}/edit')
     config.add_route('delete_project', r'/project/{id:\d+}/delete')
     config.add_route('add_member', r'/project/{id:\d+}/add-member')
+    config.add_route('edit_member', r'/project/{id:\d+}/edit-member')
     config.add_route('remove_member', r'/project/{id:\d+}/remove-member')
     config.add_route('search_users', '/search-users')
     config.add_route('create_task', r'/create-task/{project_id}')
@@ -26,15 +27,21 @@ def includeme(config):
     config.add_route('delete_task', r'/task/{id:\d+}/delete')
     config.add_route('kanban_partial', '/project/{id}/kanban_partial')
     config.add_route('create_microtask', r'/create-microtask/{task_id}')
+    config.add_route('add_label', '/add-label/{project_id}/')
+    config.add_route('assign_label_to_task', '/project/{id}/')
+    config.add_route('toggle_label_for_task', '/task/{id}/toggle_label')
+    config.add_route('edit_label', '/label/edit/{label_id}')
     
+    # Notification routes
+    config.add_route('get_notifications', '/get-notifications')
     #File services
     #config.add_route('task_add_upload', '/upload')
     config.add_route('file_crud', '/files')
 
     config.add_route('file_list_page', '/test/list')
+    config.add_route('download_file', '/test/download')
     config.add_route('file_upload_page', '/test/upload')
     config.add_route('delete_file_page', '/test/delete')
-
     config.add_route('multi_upload', '/test/multi_upload')
 
     #config.add_route('update_file_page', '/test/update')

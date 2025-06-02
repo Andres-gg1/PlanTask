@@ -1,0 +1,107 @@
+.pomodoro-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1b1b5e;
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 800px;
+  max-width: 100%;
+  font-family: sans-serif;
+  z-index: 999;
+  margin: 0;
+}
+
+.pomodoro-controls {
+  display: flex;
+  gap: 8px;
+  background: #5555a3;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-left: 10px;
+}
+
+.pomodoro-controls button,
+.pomodoro-settings {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: white;
+  cursor: pointer;
+}
+
+.pomodoro-progress-section {
+  flex-grow: 1;
+  text-align: center;
+  position: relative;
+  margin: 0 10px;
+}
+
+.pomodoro-progress {
+  background: #ccc;
+  height: 10px;
+  width: 100%;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+#pomodoro-progress-bar {
+  height: 100%;
+  background: rgb(206, 127, 36);
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+#interval-marker-container .interval-marker {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(255, 99, 132, 0.75); /* o el color que quieras para los bloques de descanso */
+  opacity: 1;
+  pointer-events: none;
+}
+
+.pomodoro-phase-label {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.pomodoro-time-left,
+.pomodoro-time-total {
+  font-size: 0.6rem;
+  position: absolute;
+  top: 16px;
+  color: #eee;
+}
+
+.pomodoro-time-left {
+  left: 0;
+}
+
+.pomodoro-time-total {
+  right: 0;
+}
+
+.pomodoro-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 10px;
+}
+
+.pomodoro-clock {
+  background: #7777c8;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+}

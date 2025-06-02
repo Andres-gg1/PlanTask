@@ -7,7 +7,11 @@ from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
 from plantask.models.activity_log import ActivityLog
 from plantask.models.task import Task
+from plantask.models.label import Label, LabelsProjectsUser, LabelsTask
 from plantask.auth.verifysession import verify_session
+
+from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEvent
+
 import json
 
 
@@ -100,14 +104,46 @@ def project_page(request):
                 .all()
             for status in ['assigned', 'in_progress', 'under_review', 'completed']
         }
+        
+        project_labels = (
+            request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color).
+            filter_by(project_id = project.id).order_by(Label.label_name.asc()).all()
+        )
+        
+        member_labels = {}
+        label_assignments = request.dbsession.query(
+            ProjectsUser.user_id, 
+            LabelsProjectsUser.labels_id
+        ).join(
+            LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id
+        ).filter(
+            ProjectsUser.project_id == project_id
+        ).all()
+
+        for user_id, label_id in label_assignments:
+            if user_id not in member_labels:
+                member_labels[user_id] = []
+            member_labels[user_id].append(label_id)
+            
+        labels_by_task = {}
+
+        for task_list in tasks_by_status.values():
+            for task in task_list:
+                print(task)
+                labels_for_task = request.dbsession.query(LabelsTask).filter_by(tasks_id=task.id).all()
+                labels_by_task[task.id] = [label.labels_id for label in labels_for_task]
 
         flashes = request.session.pop_flash()
+        
         return {
             "project": project,
             "project_members": mapped_members,
             "show_role": projects_user.role,
             "flashes": flashes,
-            "tasks_by_status": tasks_by_status  
+            "tasks_by_status": tasks_by_status,
+            "project_labels" : project_labels,
+            "member_labels": member_labels,
+            "labels_by_task": labels_by_task
         }
 
     except SQLAlchemyError:
@@ -227,15 +263,16 @@ def add_member(request):
                     ).first()
                     if not existing_relation:
                         user = request.dbsession.query(User).filter_by(id=user_id).first()
+                        role = request.POST.get('role')
                         if user:
                             project_user = ProjectsUser(
                                 project_id=project_id,
                                 user_id=user_id,
-                                role="member"
+                                role=str(role)
                             )
                             activity_log_added_user = ActivityLog(
                                 user_id=request.session['user_id'],
-                                project_id=project.id,  # Added project.id
+                                project_id=project.id,
                                 object_user_id=user.id,
                                 timestamp=datetime.now(),
                                 action='project_added_user',
@@ -244,6 +281,11 @@ def add_member(request):
                             request.dbsession.add(project_user)
                             request.dbsession.add(activity_log_added_user)
                             request.dbsession.flush()
+
+                            event = UserAddedToProjectEvent(request, project_id=project_id, user_id = user_id)
+                            request.registry.notify(event)
+
+
                 except ValueError:
                     continue
             request.dbsession.flush()
@@ -254,6 +296,61 @@ def add_member(request):
     except SQLAlchemyError as e:
         request.dbsession.rollback()
         return {"error_ping": f"Error adding members to project: {str(e)}"}
+    except Exception:
+        return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+    
+@view_config(route_name='edit_member', request_method='POST', permission='admin')
+@verify_session
+def edit_member(request):
+    try:
+        project_id = int(request.matchdict['id'])
+        project = request.dbsession.query(Project).filter_by(id=project_id).first()
+        if not project:
+            return HTTPNotFound()
+
+        user_id = int(request.POST.get('user_id'))
+        new_role = request.POST.get('role')
+        label_ids = request.POST.getall('labels')  # IDs from form
+
+        # Get the ProjectsUser row (relationship between user & project)
+        project_user = request.dbsession.query(ProjectsUser).filter_by(
+            project_id=project_id,
+            user_id=user_id
+        ).first()
+
+        if not project_user:
+            request.session.flash({'message': 'User not found in project.', 'style': 'danger'})
+            return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+
+        # Update role if changed
+        if project_user.role != new_role:
+            project_user.role = new_role
+            request.dbsession.flush()
+
+        # Delete all previous label associations
+        request.dbsession.query(LabelsProjectsUser).filter_by(
+            projects_users_id=project_user.id
+        ).delete()
+
+        # Add updated labels
+        for label_id in label_ids:
+            try:
+                label_link = LabelsProjectsUser(
+                    labels_id=label_id,
+                    projects_users_id=project_user.id
+                )
+                request.dbsession.add(label_link)
+            except ValueError:
+                continue
+
+        request.dbsession.flush()
+
+        request.session.flash({'message': 'Member updated successfully.', 'style': 'success'})
+        return HTTPFound(location=request.route_url('project_by_id', id=project_id))
+
+    except SQLAlchemyError as e:
+        request.dbsession.rollback()
+        return {"error_ping": f"Error editing member: {str(e)}"}
     except Exception:
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
 
@@ -307,14 +404,19 @@ def update_task_status(request):
 
         task = request.dbsession.query(Task).filter_by(id=task_id).first()
         if not task:
-            return Response(json.dumps({'error': 'Task not found'}), status=404, content_type='application/json')
+            return {"error": "Task not found"}
 
+        prevous_status = task.status
+        if prevous_status == new_status:
+            return {"message": "No status change"}
         task.status = new_status
         request.dbsession.flush()
 
-        return {'success': True}
+        if new_status == 'under_review' and prevous_status != 'under_review':  
+            request.registry.notify(TaskReadyForReviewEvent(request, task_id))
+        return {"message": "Status updated"}
     except Exception as e:
-        return Response(json.dumps({'error': str(e)}), status=500, content_type='application/json')
+        return {"error": str(e)}
     
     
 @view_config(route_name='kanban_partial', renderer='plantask:templates/kanban.jinja2', request_method='GET')
@@ -324,7 +426,7 @@ def kanban_partial(request):
     project = request.dbsession.query(Project).filter_by(id=project_id).first()
     if not project:
         return Response('Project not found', status=404)
-    # Fetch tasks grouped by status
+    
     tasks_by_status = {
         status: request.dbsession.query(Task)
             .filter_by(project_id=project_id, status=status, active = True)
@@ -332,7 +434,23 @@ def kanban_partial(request):
             .all()
         for status in ['assigned', 'in_progress', 'under_review', 'completed']
     }
+    
+    # Get project labels
+    project_labels = (
+        request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color).
+        filter_by(project_id = project.id).order_by(Label.label_name.asc()).all()
+    )
+    
+    # Get labels by task
+    labels_by_task = {}
+    for task_list in tasks_by_status.values():
+        for task in task_list:
+            labels_for_task = request.dbsession.query(LabelsTask).filter_by(tasks_id=task.id).all()
+            labels_by_task[task.id] = [label.labels_id for label in labels_for_task]
+    
     return {
         "project": project,
-        "tasks_by_status": tasks_by_status
+        "tasks_by_status": tasks_by_status,
+        "project_labels": project_labels,
+        "labels_by_task": labels_by_task
     }
