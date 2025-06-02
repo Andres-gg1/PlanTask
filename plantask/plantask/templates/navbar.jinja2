@@ -23,7 +23,12 @@
         <a id="pomodoroToggleBtn" class="navbar-icon" href="#" title="Hourglass">
           <i class="bi bi-hourglass-bottom"></i>
         </a>
-        <a class="navbar-icon" href="#" title="Notifications"><i class="bi bi-bell"></i></a>
+        <a class="navbar-icon" href="#" title="Notifications"
+          data-bs-toggle="modal"
+          data-bs-target="#notificationsModal"
+          data-url="{{ request.route_url('get_notifications') }}">
+          <i class="bi bi-bell"></i>
+        </a>
         <div class="navbar-icon dropdown">
           <a id="profileDropdown" aria-label="Profile" role="button"><i class="bi bi-circle-fill"></i></a>
           <div class="dropdown-menu dropdown-profile" id="profileDropdownMenu">
@@ -41,6 +46,36 @@
   </div>
 </nav>
 {% endblock %}
+
+<div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
+  <div class="modal-dialog wider-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="notificationsModalLabel">Notifications <i class="bi bi-bell"></i></h5>
+      </div>
+      <div class="modal-body">
+        <div id="notificationsList" class="card-container">
+          <!-- Notifications will be dynamically loaded here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-dialog.wider-modal {
+    max-width: 60%;
+  }
+  .card-text.received-on {
+    display: flex;
+    justify-content: right;
+    padding-right: 0.5rem;
+    padding-bottom: 0.3rem;
+  }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -80,6 +115,78 @@ document.addEventListener('DOMContentLoaded', function () {
   pomodoroBtn?.addEventListener('click', function (e) {
     e.preventDefault();
     pomodoroWrapper.classList.toggle('visible');
+  });
+
+  const notificationsModalElement = document.getElementById('notificationsModal');
+  const notificationsModal = new bootstrap.Modal(notificationsModalElement);
+
+  notificationsModalElement.addEventListener('hidden.bs.modal', function () {
+    // Ensure the backdrop is removed when the modal is closed
+    document.body.classList.remove('modal-open');
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+      backdrop.remove();
+    }
+  });
+
+  const notificationsBtn = document.querySelector('.navbar-icon[title="Notifications"]');
+  const notificationsList = document.getElementById('notificationsList');
+
+  notificationsBtn?.addEventListener('click', async function (e) {
+    e.preventDefault();
+
+    const url = notificationsBtn.dataset.url;
+
+    notificationsList.innerHTML = '<div class="card"><div class="card-body">Loading...</div></div>';
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch notifications');
+      }
+
+      const data = await response.json();
+
+      notificationsList.innerHTML = '';
+      if (data.notifications.length > 0) {
+        data.notifications.forEach(notification => {
+          const card = document.createElement('div');
+          card.className = 'card mb-3';
+
+          const cardBody = document.createElement('div');
+          cardBody.className = 'card-body';
+
+          const cardTitle = document.createElement('h5');
+          cardTitle.className = 'card-text';
+          cardTitle.textContent = notification.message;
+
+          const cardText = document.createElement('p');
+          cardText.className = 'card-text received-on';
+          cardText.textContent = `Received on: ${notification.created_at}`;
+
+          cardBody.appendChild(cardTitle);
+          card.appendChild(cardBody);
+          card.appendChild(cardText);
+
+          notificationsList.appendChild(card);
+        });
+      } else {
+        notificationsList.innerHTML = '<div class="card"><div class="card-body">No notifications available</div></div>';
+      }
+
+      const notificationsModal = new bootstrap.Modal(document.getElementById('notificationsModal'));
+      notificationsModal.show();
+
+    } catch (error) {
+      notificationsList.innerHTML = '<div class="card"><div class="card-body text-danger">Error loading notifications</div></div>';
+      console.error(error);
+    }
   });
 });
 </script>

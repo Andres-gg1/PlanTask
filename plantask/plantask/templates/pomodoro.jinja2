@@ -160,10 +160,19 @@ function configurePomodoroCycles(totalMinutesSelected) {
   maxCycles = Math.floor(totalMinutes / 30);
   duration = 25 * 60;
   breakDuration = 5 * 60;
+
+  // 🧠 Fix: Stop the running timer (if any)
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+
+  // ⏹️ Reset state
   timeLeft = duration;
   isBreak = false;
   isRunning = false;
   cycleCount = 0;
+
   drawIntervalMarkers();
   updateDisplay();
   document.getElementById("pomodoro-toggle").innerHTML = '<i class="bi bi-play-fill"></i>';

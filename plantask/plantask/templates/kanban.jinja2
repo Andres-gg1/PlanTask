@@ -17,11 +17,13 @@
                                 <p class="mb-2 text-muted">
                                     {{ task.task_description[:100] }}{% if task.task_description|length > 100 %}...{% endif %}
                                 </p>
-                                <div class="label-list">
-                                    {% for label_id, label_name, label_hex_color in labels %}
-                                        <div class="label" style="background-color: {{ label_hex_color }};">
-                                            {{ label_name }}
-                                        </div>
+                                <div class="label-list-kanban">
+                                    {% for label_id, label_name, label_hex_color in project_labels %}
+                                        {% if label_id in labels_by_task.get(task.id, []) %}
+                                            <div class="label-kanban" style="background-color: {{ label_hex_color }};">
+                                                {{ label_name }}
+                                            </div>
+                                        {% endif %}
                                     {% endfor %}
                                 </div>
                             </div>
@@ -48,6 +50,15 @@
                                 <p class="mb-2 text-muted">
                                     {{ task.task_description[:100] }}{% if task.task_description|length > 100 %}...{% endif %}
                                 </p>
+                                <div class="label-list-kanban">
+                                    {% for label_id, label_name, label_hex_color in project_labels %}
+                                        {% if label_id in labels_by_task.get(task.id, []) %}
+                                            <div class="label-kanban" style="background-color: {{ label_hex_color }};">
+                                                {{ label_name }}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </a>
@@ -72,6 +83,15 @@
                                 <p class="mb-2 text-muted">
                                     {{ task.task_description[:100] }}{% if task.task_description|length > 100 %}...{% endif %}
                                 </p>
+                                <div class="label-list-kanban">
+                                    {% for label_id, label_name, label_hex_color in project_labels %}
+                                        {% if label_id in labels_by_task.get(task.id, []) %}
+                                            <div class="label-kanban" style="background-color: {{ label_hex_color }};">
+                                                {{ label_name }}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </a>
@@ -96,6 +116,15 @@
                                 <p class="mb-2 text-muted">
                                     {{ task.task_description[:100] }}{% if task.task_description|length > 100 %}...{% endif %}
                                 </p>
+                                <div class="label-list-kanban">
+                                    {% for label_id, label_name, label_hex_color in project_labels %}
+                                        {% if label_id in labels_by_task.get(task.id, []) %}
+                                            <div class="label-kanban" style="background-color: {{ label_hex_color }};">
+                                                {{ label_name }}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </a>

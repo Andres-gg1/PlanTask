@@ -7,7 +7,7 @@ from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
 from plantask.models.activity_log import ActivityLog
 from plantask.models.task import Task
-from plantask.models.label import Label, LabelsProjectsUser
+from plantask.models.label import Label, LabelsProjectsUser, LabelsTask
 from plantask.auth.verifysession import verify_session
 
 from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEvent
@@ -124,6 +124,14 @@ def project_page(request):
             if user_id not in member_labels:
                 member_labels[user_id] = []
             member_labels[user_id].append(label_id)
+            
+        labels_by_task = {}
+
+        for task_list in tasks_by_status.values():
+            for task in task_list:
+                print(task)
+                labels_for_task = request.dbsession.query(LabelsTask).filter_by(tasks_id=task.id).all()
+                labels_by_task[task.id] = [label.labels_id for label in labels_for_task]
 
         flashes = request.session.pop_flash()
         
@@ -134,7 +142,8 @@ def project_page(request):
             "flashes": flashes,
             "tasks_by_status": tasks_by_status,
             "project_labels" : project_labels,
-            "member_labels": member_labels
+            "member_labels": member_labels,
+            "labels_by_task": labels_by_task
         }
 
     except SQLAlchemyError:
@@ -425,7 +434,23 @@ def kanban_partial(request):
             .all()
         for status in ['assigned', 'in_progress', 'under_review', 'completed']
     }
+    
+    # Get project labels
+    project_labels = (
+        request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color).
+        filter_by(project_id = project.id).order_by(Label.label_name.asc()).all()
+    )
+    
+    # Get labels by task
+    labels_by_task = {}
+    for task_list in tasks_by_status.values():
+        for task in task_list:
+            labels_for_task = request.dbsession.query(LabelsTask).filter_by(tasks_id=task.id).all()
+            labels_by_task[task.id] = [label.labels_id for label in labels_for_task]
+    
     return {
         "project": project,
-        "tasks_by_status": tasks_by_status
+        "tasks_by_status": tasks_by_status,
+        "project_labels": project_labels,
+        "labels_by_task": labels_by_task
     }
