@@ -3,13 +3,71 @@
 {% block title %}Chats{% endblock %}
 
 {% block styles %}
-
+<link href="{{ request.static_url('plantask:static/styles/chats.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<main class="mycontainer">
-  <h1 style="margin-bottom: 1rem;">Chats</h1>
-</main>
+<div class="main-layout">
+  <main class="mycontainer" style="display: flex;">
+    <aside class="left-sidebar" style="flex: 0 0 300px; max-width: 300px;">
+      <h1 style="margin-bottom: 1rem;">My Chats</h1>
+      <div class="chats-scroll-area">
+        {% if chats %}
+        <ul class="list-group mb-4">
+          {% for f in chats %}
+          <li class="list-group-item justify-content-between align-items-center">
+            <div class="chat-item" style="cursor:pointer;">
+              <i class="bi-chattype-{{f.extension}} fs-1"></i>
+              <div style="display:flex; flex-direction:column; flex:2; min-width:0;">
+                <strong style="word-break: break-all; white-space: normal;">{{ f.chatname }}</strong>
+                <span style="font-size:0.95em; color:#666;">
+                {{ f.creation_date.strftime('%Y-%m-%d %H:%M') }}
+                </span>
+              </div>
+              <a href="" class="btn p-0 ms-auto download-btn" style="border:none; background:none;" title="Download">
+                <i class="bi-download fs-1"></i>
+              </a>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+          <div class="alert alert-info">No chats.</div>
+        {% endif %}
+      </div>
+    </aside>
+    <section class="chat-messages" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;">
+      <div class="ChatInfo">
+        <i class="bi-person-circle fs-1"></i>
+        <h4 style="margin: 0 1rem; flex: 1;">Username</h4>
+        <i class="bi-three-dots-vertical fs-1" style="margin-left: auto; margin-right:0.5rem"></i>
+      </div>
+      <div class="messages">
+        <div class="mymessage">
+          <p style="margin-bottom: 0">DateTime</p>
+          <p class="mymessagebubble">
+            Our life's work is to help people improve their lives by making and innovating products and services our customers value.
+          </p>
+          <i class="bi-check2-all"></i>
+        </div>
+        <div class="amessage">
+          <p style="margin-bottom: 0">DateTime</p>
+          <p class="amessagebubble">
+            Our life's work is to help people improve their lives by making and innovating products and services our customers value.
+          </p>
+        </div>
+      </div>
+      <div class="chat-input-bar">
+        <i class="bi-person-circle user-icon"></i>
+        <input type="text" class="chat-input" placeholder="Write a message" />
+        <i class="bi-paperclip attach-icon"></i>
+        <button class="send-button">
+          Send <i class="bi-send"></i>
+        </button>
+      </div>
+    </section>
+  </main>
+</div>
 {% endblock %}
 
 {% block scripts %}
