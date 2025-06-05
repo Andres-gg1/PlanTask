@@ -186,20 +186,19 @@
             <form id="addMemberForm" method="POST" action="{{ request.route_url('add_member', id=project.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addMemberModalLabel">Add Members</h5>
+                    <h5 class="modal-title" id="addMemberModalLabel">Add Members to {{project.name}}</h5>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="usernameSearch" class="form-label">Search for users by username</label>
+                        <input type="hidden" id="projectId" value="{{ project.id }}">
+                        <label for="usernameSearch" class="form-label">Search for users</label>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="usernameSearch" placeholder="Search..." autocomplete="off">
-                            <button class="btn btn-outline-secondary" type="button" onclick="searchUsers()">Search</button>
+                            <input type="text" id="usernameSearch" class="form-control" placeholder="Search by username or name...">
                         </div>
                         <small class="form-text text-muted">Type at least 2 characters to search</small>
                     </div>
                     
-                    <div id="userSearchResults" class="mb-3">
-                    </div>
+                    <div id="userSearchResults" class="mt-2"></div>
 
                     <div class="mb-3">
                         <h6>Selected Users</h6>
@@ -210,7 +209,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="roleSelect" class="form-label">Assign Role</label>
+                        <label for="roleSelect" class="form-label">Assign Role to all Selected Members</label>
                         <select class="form-select" id="roleSelect" name="role">
                             <option value="member" selected>Member</option>
                             <option value="project_manager">Project Manager</option>
@@ -229,62 +228,66 @@
 
 <!-- Edit Member Modal -->
 <div class="modal fade" id="editMemberModal" tabindex="-1" aria-labelledby="editMemberModal" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="editMemberForm" method="POST" action="{{ request.route_url('edit_member', id=project.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <input type="hidden" name="user_id" id="editMemberUserId" value="">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editMemberModalLabel">Edit Member</h5>
-                </div>
-                <div class="modal-body">
-                    <!-- Role Select -->
-                    <div class="mb-3">
-                        <label for="roleSelect" class="form-label">Assign Role</label>
-                        <select class="form-select" id="roleSelect" name="role">
-                            <option value="member">Member</option>
-                            <option value="project_manager">Project Manager</option>
-                            <option value="observer">Observer</option>
-                        </select>
-                    </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="editMemberForm" method="POST" action="{{ request.route_url('edit_member', id=project.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="user_id" id="editMemberUserId" value="">
 
-                <!-- Label Assignment (Styled like task label buttons) -->
-                <div class="mb-3">
-                    <label class="form-label">Assign Labels</label>
-                    <div class="content-row mt-3" style="background-color: #f6f7f8;">
-                        {% for label in project_labels %}
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; margin-right: 0.75rem; margin-left: 0.75rem;">
-                                <button 
-                                    type="button" 
-                                    class="checktaskbtn addlbbtn btn toggle-label-btn {% if label.id in member_label_ids %}assigned{% endif %}" 
-                                    style="margin-right: 0.5rem; {% if label.id in member_label_ids %}background-color: #28a745; color: #fff;{% else %}background-color: #FAFAFA;{% endif %}" 
-                                    data-label-id="{{ label.id }}"
-                                    aria-label="Assign Label" 
-                                    title="Assign Label"
-                                >
-                                    {% if label.id in member_label_ids %}
-                                        <i class="bi bi-check-lg"></i>
-                                    {% endif %}
-                                </button>
-
-                                <div class="label" style="flex: 1; background-color: {{ label.label_hex_color }}; padding: 0.5rem 0.5rem; border-radius: 0.5rem; color: #fff; font-weight: 500;">
-                                    {{ label.label_name }}
-                                </div>
-
-                                <!-- Hidden input to submit label selections -->
-                                <input type="checkbox" name="labels" value="{{ label.id }}" class="label-checkbox d-none" {% if label.id in member_label_ids %}checked{% endif %}>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
+        <div class="modal-header">
+          <h5 class="modal-title" id="editMemberModalLabel">Edit Member</h5>
         </div>
+
+        <div class="modal-body">
+          <!-- Role Select -->
+          <div class="mb-3">
+            <label for="roleSelect" class="form-label">Assign Role</label>
+            <select class="form-select" id="roleSelect" name="role">
+              <option value="member">Member</option>
+              <option value="project_manager">Project Manager</option>
+              <option value="observer">Observer</option>
+            </select>
+          </div>
+
+          <!-- Label Assignment -->
+          <div class="mb-3">
+            <label class="form-label">Assign Labels</label>
+            <div class="content-row mt-3" style="background-color: #f6f7f8;">
+              {% for label in project_labels %}
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; margin-right: 0.75rem; margin-left: 0.75rem;">
+                <button 
+                  type="button" 
+                  class="checktaskbtn addlbbtn btn toggle-label-btn {% if label.id in member_label_ids %}assigned{% endif %}" 
+                  style="margin-right: 0.5rem; {% if label.id in member_label_ids %}background-color: #28a745; color: #fff;{% else %}background-color: #FAFAFA;{% endif %}" 
+                  data-label-id="{{ label.id }}"
+                  aria-label="Assign Label" 
+                  title="Assign Label"
+                >
+                  {% if label.id in member_label_ids %}
+                    <i class="bi bi-check-lg"></i>
+                  {% endif %}
+                </button>
+
+                <div class="label" style="flex: 1; background-color: {{ label.label_hex_color }}; padding: 0.5rem 0.5rem; border-radius: 0.5rem; color: #fff; font-weight: 500;">
+                  {{ label.label_name }}
+                </div>
+
+                <input type="checkbox" name="labels" value="{{ label.id }}" class="label-checkbox d-none" {% if label.id in member_label_ids %}checked{% endif %}>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div> <!-- modal-body properly closed -->
+
         <div class="modal-footer border-0" style="border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem;">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-success">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-success">Save Changes</button>
         </div>
-    </form>
+      </form>
     </div>
+  </div>
 </div>
+
 
 {% endblock content %}
 

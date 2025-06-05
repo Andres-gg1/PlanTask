@@ -86,7 +86,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 300);
   });
 
-  // Cierra el dropdown si se hace clic fuera
   document.addEventListener('click', function (e) {
     if (!input.contains(e.target) && !results.contains(e.target)) {
       results.classList.add('d-none');
