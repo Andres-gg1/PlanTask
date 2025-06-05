@@ -8,6 +8,7 @@ from plantask.models.user import User
 from plantask.models.activity_log import ActivityLog
 from plantask.models.task import Task
 from plantask.models.label import Label, LabelsProjectsUser, LabelsTask
+from plantask.models.file import File
 from plantask.auth.verifysession import verify_session
 
 from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEvent
@@ -18,10 +19,20 @@ import json
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
 @verify_session
 def my_projects_page(request):
-    projects = request.dbsession.query(Project)\
-        .join(ProjectsUser, Project.id == ProjectsUser.project_id)\
-        .filter(ProjectsUser.user_id == request.session.get('user_id'), Project.active == True)\
-        .all()
+    projects = request.dbsession.query(
+        Project.id,
+        Project.name,
+        Project.description,
+        File.route.label('image_route')  # Fetch the route from the File model
+    ).join(
+        ProjectsUser, Project.id == ProjectsUser.project_id
+    ).outerjoin(
+        File, Project.project_image_id == File.id  # Use an outer join to handle projects without images
+    ).filter(
+        ProjectsUser.user_id == request.session.get('user_id'),
+        Project.active == True
+    ).all()
+    
     return {'projects': projects}
 
 @view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='GET', permission="admin")
@@ -129,12 +140,17 @@ def project_page(request):
 
         for task_list in tasks_by_status.values():
             for task in task_list:
-                print(task)
                 labels_for_task = request.dbsession.query(LabelsTask).filter_by(tasks_id=task.id).all()
                 labels_by_task[task.id] = [label.labels_id for label in labels_for_task]
 
         flashes = request.session.pop_flash()
-        
+
+        project_image = request.dbsession.query(File).join(
+                Project, Project.project_image_id == File.id
+            ).filter(
+                Project.id == project_id  # Replace project_id with the specific project ID
+            ).first()
+
         return {
             "project": project,
             "project_members": mapped_members,
@@ -143,7 +159,8 @@ def project_page(request):
             "tasks_by_status": tasks_by_status,
             "project_labels" : project_labels,
             "member_labels": member_labels,
-            "labels_by_task": labels_by_task
+            "labels_by_task": labels_by_task,
+            "project_image" : project_image if project_image else None
         }
 
     except SQLAlchemyError:

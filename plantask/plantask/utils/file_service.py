@@ -3,7 +3,9 @@ import uuid
 from datetime import datetime
 from plantask.models.file import File
 from plantask.models.activity_log import ActivityLog
-from plantask.models.task import TasksFile
+from plantask.models.task import TasksFile, TaskCommentsFile
+from plantask.models.microtask import MicrotasksFile, MicrotaskCommentsFile
+from plantask.models.project import Project
 import zipfile
 import tempfile
 
@@ -47,11 +49,8 @@ class FileUploadService:
         Returns:
         - dict: Metadata about the saved file including original name, path, URL, and extension.
         """
-        print("ADIOS")
         ext = os.path.splitext(file_storage.filename)[-1].lower().lstrip('.')
-        print(ext)
         if not self.allowed_files(ext):
-            print("File type not allowed")
             return {"msg":"File type not allowed."}
 
         unique_name = f"{uuid.uuid4()}.{ext}"
@@ -68,52 +67,63 @@ class FileUploadService:
             "unique_name": unique_name
         }
 
-    def handle_upload(self, file_storage, context: dict = None, task_id: int = None, view_name: str = None) -> dict:
+    def handle_upload(self, file_storage, context: dict = None, entity_type: str = None, entity_id: int = None, view_name: str = None) -> dict:
         """
         Handles the complete file upload flow: saving to disk, storing in DB, and logging the activity.
+
         Parameters:
         - file_storage: File sent by the user.
         - context (dict): Optional dictionary with context info, e.g., {'type': 'task', 'action': 'task_added_file'}.
-        - task_id (int): Optional task ID the file is related to.
+        - entity_type (str): The type of entity (e.g., 'task', 'microtask', 'project', 'profile').
+        - entity_id (int): The ID of the entity the file is related to.
         - view_name (str): Optional name of the view from which the upload is made.
+
         Returns:
         - dict: Upload result including message, file URL, and file ID in the database.
         """
         try:
-            print("HOLA")
             file_info = self.save_file_to_disk(file_storage)
 
-            print(file_info['path'])
             new_file = File(
                 filename=file_info['filename'],
                 extension=file_info['extension'],
-                route=file_info['path'],
+                route=file_info['url'],
                 creation_date=str(datetime.now())
             )
-            print(new_file.route)
             self.dbsession.add(new_file)
             self.dbsession.flush()
 
-            if task_id:
-                tasks_file = TasksFile(tasks_id=task_id, files_id=new_file.id)
+            # Dynamically associate the file with the entity
+
+            # Add other functionalities as new file uploads are added.
+            if entity_type == 'task':
+                tasks_file = TasksFile(tasks_id=entity_id, files_id=new_file.id)
+                log_action = "task_added_file"
                 self.dbsession.add(tasks_file)
+            elif entity_type == 'microtask':
+                microtasks_file = MicrotasksFile(microtasks_id=entity_id, files_id=new_file.id)
+                log_action = "microtask_added_file"
+                self.dbsession.add(microtasks_file)
+            elif entity_type == "project":
+                project = self.dbsession.query(Project).filter_by(id = entity_id).first()
+                project.project_image_id = new_file.id
+                log_action = "project_added_image"
                 self.dbsession.flush()
 
-            log_action = 'task_added_file' if task_id else 'task_added_file'
-            if context and context.get('action') in ['task_added_file', 'task_removed_file']:
-                log_action = context.get('action')
-            action_enum = f"task_added_file"
-            if view_name:
-                action_enum += f" | view: {view_name}"
+            self.dbsession.flush()
+
+            changes = f"view: {view_name}" if view_name else log_action
             log = ActivityLog(
                 user_id=self.user_id,
-                task_id=task_id,
+                task_id=entity_id if entity_type == 'task' else None,
+                microtask_id = entity_id if entity_type == 'microtask' else None,
                 file_id=new_file.id,
                 timestamp=datetime.now(),
                 action=log_action,
-                changes=action_enum,
+                changes=changes,
             )
             self.dbsession.add(log)
+            self.dbession.flush()
 
             return {
                 "bool": True,

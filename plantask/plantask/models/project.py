@@ -20,6 +20,8 @@ class Project(Base):
     creation_datetime = Column(DateTime, nullable=False)
     # Active boolean
     active = Column(Boolean, nullable = False, default = True)
+    # New field for the active project image
+    project_image_id = Column(ForeignKey('files.id'), nullable=True)
 
     # Define the relationship with the ProjectsUser model (one-to-many relationship)
 
@@ -32,6 +34,9 @@ class Project(Base):
     notifications = relationship('Notification', back_populates='project')
     activity_logs = relationship('ActivityLog', back_populates='project')
     personal_chats = relationship('PersonalChat', back_populates='project')
+
+    # Relationship to track all associated files (historical images)
+    files = relationship('File', back_populates='project')
 
 
     def __repr__(self):

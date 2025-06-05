@@ -95,7 +95,12 @@
   <div class="projects-container">
   {% for project in projects %}
   <a href="{{ request.route_url('project_by_id', id=project.id) }}" class="card" style="width: 18rem;">
+    {% if not project.image_route %}
     <img src="{{ request.static_url('plantask:static/img_example.jpg') }}" class="card-img-top" alt="...">
+    {% else %}
+    <img src="{{ project.image_route }}" class="card-img-top" alt="...">
+    {% endif %}
+
     <div class="card-body">
       <h4 class="card-title">{{ project.name }}</h4>
       <p class="card-text">{{ project.description | truncate(50, True, '...') }}</p>
