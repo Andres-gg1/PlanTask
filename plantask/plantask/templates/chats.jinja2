@@ -71,4 +71,26 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const messagesContainer = document.querySelector('.messages');
+
+    function scrollToBottom() {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Scroll to the bottom on page load
+    scrollToBottom();
+
+    // Scroll to the bottom when new messages are added
+    const observer = new MutationObserver(() => {
+      scrollToBottom();
+    });
+    observer.observe(messagesContainer, { childList: true, subtree: true });
+
+    // Optional: Scroll to the bottom when the input field is focused
+    const chatInput = document.querySelector('.chat-input');
+    chatInput.addEventListener('focus', scrollToBottom);
+  });
+</script>
 {% endblock %}

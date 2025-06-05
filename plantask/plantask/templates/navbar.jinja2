@@ -9,15 +9,20 @@
       <span class="navbar-toggle-icon"></span>
     </button>
     <div class="navbar-content" id="navbarContent">
-      <form class="navbar-search-form">
-      <div class="navbar-search-container">
-        <span class="navbar-search-icon" style="pointer-events: none; cursor: default;"><i class="bi bi-search"></i></span>
-        <input class="navbar-search-input" type="search" placeholder="Search" aria-label="Search">
-        <button class="navbar-search-button" type="submit" aria-label="Search Button">
-        <i class="bi bi-caret-down-fill"></i>
-        </button>
+      <form class="navbar-search-form" style="position: relative;">
+        <div class="navbar-search-container">
+          <span class="navbar-search-icon"><i class="bi bi-search"></i></span>
+          <input class="navbar-search-input" type="search" placeholder="Search" aria-label="Search" id="globalUserSearch">
+          <span class="navbar-search-button" type="submit"><i class="bi bi-caret-down-fill"></i></span>
+        </div>
+
+        <!-- RESULTADOS -->
+        <div id="navbarUserSearchResults"
+            class="dropdown-menu d-none show mt-1 shadow"
+            style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background-color: white;">
         </div>
       </form>
+
       <div class="navbar-icons">
         <a class="navbar-icon" href="#" title="Info"><i class="bi bi-question-circle"></i></a>
         <a id="pomodoroToggleBtn" class="navbar-icon" href="#" title="Hourglass">
@@ -64,129 +69,5 @@
     </div>
   </div>
 </div>
-
-<style>
-  .modal-dialog.wider-modal {
-    max-width: 60%;
-  }
-  .card-text.received-on {
-    display: flex;
-    justify-content: right;
-    padding-right: 0.5rem;
-    padding-bottom: 0.3rem;
-  }
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const toggleBtn = document.getElementById('navbarToggle');
-  const navbarContent = document.getElementById('navbarContent');
-  const profileBtn = document.getElementById('profileDropdown');
-  const profileMenu = document.getElementById('profileDropdownMenu');
-
-  toggleBtn?.addEventListener('click', function (e) {
-    e.preventDefault();
-    navbarContent?.classList.toggle('show');
-    
-    const expanded = navbarContent?.classList.contains('show');
-    toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-  });
-
-  profileBtn?.addEventListener('click', function (e) {
-    e.preventDefault();
-    profileMenu?.classList.toggle('show');
-
-    if (profileMenu?.classList.contains('show')) {
-      navbarContent?.classList.add('profile-open');
-    } else {
-      navbarContent?.classList.remove('profile-open');
-    }
-  });
-
-  window.addEventListener('resize', function() {
-    if (window.innerWidth > 992) { 
-      navbarContent?.classList.remove('show');
-    }
-  });
-
-  const pomodoroBtn = document.getElementById('pomodoroToggleBtn');
-  const pomodoroWrapper = document.getElementById('pomodoro-wrapper');
-
-  pomodoroBtn?.addEventListener('click', function (e) {
-    e.preventDefault();
-    pomodoroWrapper.classList.toggle('visible');
-  });
-
-  const notificationsModalElement = document.getElementById('notificationsModal');
-  const notificationsModal = new bootstrap.Modal(notificationsModalElement);
-
-  notificationsModalElement.addEventListener('hidden.bs.modal', function () {
-    // Ensure the backdrop is removed when the modal is closed
-    document.body.classList.remove('modal-open');
-    const backdrop = document.querySelector('.modal-backdrop');
-    if (backdrop) {
-      backdrop.remove();
-    }
-  });
-
-  const notificationsBtn = document.querySelector('.navbar-icon[title="Notifications"]');
-  const notificationsList = document.getElementById('notificationsList');
-
-  notificationsBtn?.addEventListener('click', async function (e) {
-    e.preventDefault();
-
-    const url = notificationsBtn.dataset.url;
-
-    notificationsList.innerHTML = '<div class="card"><div class="card-body">Loading...</div></div>';
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch notifications');
-      }
-
-      const data = await response.json();
-
-      notificationsList.innerHTML = '';
-      if (data.notifications.length > 0) {
-        data.notifications.forEach(notification => {
-          const card = document.createElement('div');
-          card.className = 'card mb-3';
-
-          const cardBody = document.createElement('div');
-          cardBody.className = 'card-body';
-
-          const cardTitle = document.createElement('h5');
-          cardTitle.className = 'card-text';
-          cardTitle.textContent = notification.message;
-
-          const cardText = document.createElement('p');
-          cardText.className = 'card-text received-on';
-          cardText.textContent = `Received on: ${notification.created_at}`;
-
-          cardBody.appendChild(cardTitle);
-          card.appendChild(cardBody);
-          card.appendChild(cardText);
-
-          notificationsList.appendChild(card);
-        });
-      } else {
-        notificationsList.innerHTML = '<div class="card"><div class="card-body">No notifications available</div></div>';
-      }
-
-      const notificationsModal = new bootstrap.Modal(document.getElementById('notificationsModal'));
-      notificationsModal.show();
-
-    } catch (error) {
-      notificationsList.innerHTML = '<div class="card"><div class="card-body text-danger">Error loading notifications</div></div>';
-      console.error(error);
-    }
-  });
-});
-</script>
+<script src="{{ request.static_url('plantask:static/scripts/notifications.js') }}"></script>
+<script src="{{ request.static_url('plantask:static/scripts/navbar.js') }}"></script>

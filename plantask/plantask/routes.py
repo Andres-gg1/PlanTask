@@ -34,6 +34,9 @@ def includeme(config):
     
     # Notification routes
     config.add_route('get_notifications', '/get-notifications')
+    
+    #SEARCH USERS IN MESSAGES/NAVBAR
+    config.add_route('search_users_global', '/search-users-global')
     #File services
     #config.add_route('task_add_upload', '/upload')
     config.add_route('file_crud', '/files')

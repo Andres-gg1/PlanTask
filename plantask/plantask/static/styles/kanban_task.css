@@ -64,3 +64,7 @@ body {
     font-size: 1.5rem;
     font-weight: bolder;
 }
+
+.bg-white{
+    min-height: 20rem;
+}
