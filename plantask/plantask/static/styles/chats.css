@@ -1,0 +1,220 @@
+
+:root {
+    --chat-info-bg-color: #f4f4f4;
+}
+
+.main-layout {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+}
+.mycontainer {
+    margin-top: 3.5rem;
+    margin-bottom: 0;
+    margin-left: 4.7rem;
+    margin-right: 0;
+    flex: 1 1 0;
+    min-width: 0;
+}
+.left-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 22rem;
+    min-width: 13.75rem;
+    background: #ededed;
+    padding: 1.5rem 1rem;
+    box-shadow: 0 0 0.5rem rgba(0,0,0,0.03);
+    height: calc(100vh - 3.5rem);
+    position: sticky;
+    top: 0;
+}
+
+.chats-scroll-area {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+}
+.chat-item {
+    display: flex;
+    align-items: center; 
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 1rem;
+    font-family: "Proxima Nova", sans-serif;
+    font-size: 1rem;
+    word-break: break-all;
+}
+
+.chat-item > i {
+    align-self: center; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 2.5rem;
+}
+
+.chat-item .btn {
+    align-self: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.ChatInfo{
+    background-color: var(--chat-info-bg-color);
+    margin-bottom: 0;
+    border: 1px solid #ACACAC;
+    padding-left: 1rem;
+    margin-bottom: 1rem; 
+    display: flex; 
+    align-items: center;
+}
+
+.messages {
+    display: flex;
+    flex-direction: column-reverse; /* Reverse the order of children */
+    flex: 1 1 0;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.mymessage {
+    align-self: flex-end;
+    color: #474747;
+    font-family: "Proxima Nova", sans-serif;
+    width: 60%;
+    font-weight: 400;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Aligns the icon to the right */
+    gap: 0.25rem;
+}
+
+.mymessagebubble {
+    background-color: #bee7f9;
+    border-radius: 0.85rem 0.85rem 0 0.85rem;
+    font-size: larger;
+    padding: 0.5rem;
+    color: #474747;
+    font-family: "Proxima Nova", sans-serif;
+    font-weight: 400;
+    margin-bottom: 0;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.amessage {
+    align-self: flex-start;
+    color: #474747;
+    font-family: "Proxima Nova", sans-serif;
+    max-width: 60%;
+    font-weight: 400;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+.amessagebubble {
+    background-color: #EAEAEA;
+    border-radius: 0.85rem 0.85rem 0.85rem 0;
+    font-size: larger;
+    padding: 0.5rem;
+    color: #474747;
+    font-family: "Proxima Nova", sans-serif;
+    font-weight: 400;
+    margin-bottom: 0;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.chat-input-bar {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+    border-top: 1px solid #ccc;
+    background-color: #fff;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+.user-icon {
+    font-size: 1.5rem;
+    color: #888;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 1.5rem;
+    font-size: 1rem;
+    outline: none;
+    font-family: "Proxima Nova", sans-serif;
+}
+
+
+.attach-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    color: #555;
+    cursor: pointer;
+    height: 2.5rem;
+    width: 2.5rem;
+    border-radius: 0.3rem;
+    border: #ACACAC 1.5px solid;
+    transition: 
+        background 0.15s,
+        color 0.15s,
+        transform 0.1s;
+}
+.attach-icon:hover {
+    background: #e0e0e0;
+    color: #333;
+    transform: scale(1.05);
+}
+.attach-icon:active {
+    background: #cacaca;
+    color: #222;
+    transform: scale(0.95);
+}
+
+.send-button {
+    display: flex;
+    align-items: center;
+    height: 2.5rem;
+    gap: 0.25rem;
+    background-color: #5175B9;
+    color: white;
+    border: #1E4998 1.5px solid;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: "Proxima Nova", sans-serif;
+    transition: 
+        background 0.15s,
+        color 0.15s,
+        transform 0.1s;
+
+}
+
+.send-button:hover {
+    background-color: #4c70b4;
+    color: #e6e6e6;
+    transform: scale(1.05);
+}
+.send-button:active {
+    background-color: rgb(76, 112, 180);
+    color: #cccccc;
+    transform: scale(0.95);
+}
+
+.send-button i {
+    font-size: 1.2rem;
+}

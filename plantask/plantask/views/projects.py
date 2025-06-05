@@ -2,7 +2,7 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound, HTTPBadRequest, Response
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, or_
 from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
 from plantask.models.activity_log import ActivityLog
@@ -224,27 +224,35 @@ def delete_project(request):
         request.dbsession.flush()
 
     return HTTPFound(location=request.route_url('my_projects'))
-
 @view_config(route_name='search_users', renderer='json', request_method='GET', permission="admin")
 @verify_session
 def search_users(request):
     try:
-        username_search = request.GET.get('username', '').strip()
-        if not username_search or len(username_search) < 2:
+        search_term = request.GET.get('q', '').strip()
+        if not search_term or len(search_term) < 2:
             return []
 
         project_id = request.GET.get('project_id')
+
+        # Build base query
+        query = request.dbsession.query(User).filter(
+            or_(
+                User.username.ilike(f"%{search_term}%"),
+                User.first_name.ilike(f"%{search_term}%"),
+                User.last_name.ilike(f"%{search_term}%"),
+            )
+        )
+
+        # Exclude users already in the project
         if project_id:
             try:
                 project_id = int(project_id)
+                member_subquery = select(ProjectsUser.user_id).where(
+                    ProjectsUser.project_id == project_id
+                ).scalar_subquery()
+                query = query.filter(~User.id.in_(member_subquery))
             except ValueError:
-                project_id = None
-
-        query = request.dbsession.query(User).filter(User.username.ilike(f"%{username_search}%"))
-
-        if project_id:
-            member_subquery = select(ProjectsUser.user_id).where(ProjectsUser.project_id == project_id)
-            query = query.filter(~User.id.in_(member_subquery))
+                pass  # Ignore invalid project_id
 
         users = query.limit(10).all()
         return [{
@@ -257,6 +265,7 @@ def search_users(request):
     except SQLAlchemyError:
         request.dbsession.rollback()
         return []
+
 
 @view_config(route_name='add_member', request_method='POST', permission="admin")
 @verify_session
