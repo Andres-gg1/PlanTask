@@ -48,7 +48,6 @@ def add_global_template_variables(event):
             ).filter(
                 User.id == request.authenticated_userid
             ).first()
-        print(user)
         if user:
             event['user'] = {
                 'id': user.id,
