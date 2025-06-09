@@ -50,7 +50,7 @@
               </div>
               <div>
                 <div class="profile-name"><strong>{{ user.first_name }} {{ user.last_name }}</strong></div>
-                <div>@{{ user.username }}</div>
+                <a href="{{ request.route_url('user', id=user.id) }}" style="text-decoration: none; color:white" class="dropdown-item">@{{ user.username }}</a>
                 <div>{{ user.email }}</div>
               </div>
             </div>

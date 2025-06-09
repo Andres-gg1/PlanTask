@@ -1,6 +1,8 @@
 def includeme(config):
     config.add_static_view('static', 'static', cache_max_age=3600)
     config.add_route('home', '/')
+    config.add_route('user', r'/user/{id:\d+}')
+    config.add_route('edit_user', r'/user/{id:\d+}/edit')
     config.add_route('history', '/history')
     config.add_route('chats', '/chats')
     config.add_route('calendar', '/calendar')
