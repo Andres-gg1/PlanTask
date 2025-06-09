@@ -10,6 +10,7 @@ from collections import defaultdict
 from plantask.models.activity_log import ActivityLog
 from plantask.models.task import Task
 from plantask.models.label import Label, LabelsProjectsUser, LabelsTask
+from plantask.models.file import File
 from plantask.auth.verifysession import verify_session
 
 from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEvent
@@ -19,10 +20,20 @@ from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEve
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
 @verify_session
 def my_projects_page(request):
-    projects = request.dbsession.query(Project)\
-        .join(ProjectsUser, Project.id == ProjectsUser.project_id)\
-        .filter(ProjectsUser.user_id == request.session.get('user_id'), Project.active == True)\
-        .all()
+    projects = request.dbsession.query(
+        Project.id,
+        Project.name,
+        Project.description,
+        File.route.label('image_route')  # Fetch the route from the File model
+    ).join(
+        ProjectsUser, Project.id == ProjectsUser.project_id
+    ).outerjoin(
+        File, Project.project_image_id == File.id  # Use an outer join to handle projects without images
+    ).filter(
+        ProjectsUser.user_id == request.session.get('user_id'),
+        Project.active == True
+    ).all()
+    
     return {'projects': projects}
 
 @view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='GET', permission="admin")

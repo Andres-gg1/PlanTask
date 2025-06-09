@@ -33,6 +33,7 @@ class File(Base):
     files_microtask_comments = relationship('MicrotaskCommentsFile', back_populates='files')
     activity_logs = relationship('ActivityLog', back_populates='file')
     group_chats = relationship('GroupChat', back_populates='image')
+    project = relationship('Project', back_populates='files')
 
 
     def __repr__(self):

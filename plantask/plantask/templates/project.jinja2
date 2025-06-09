@@ -9,7 +9,11 @@
 {% endblock %}
 
 {% block content %}
+{% if not project_image %}
 <div class="banner" style="background-image: url('{{ request.static_url('plantask:static/img_example.jpg') }}');"></div>
+{% else %}
+<div class="banner" style="background-image: url('{{ project_image.route }}');"></div>
+{% endif %}
 <main class="mycontainer" style="margin-top: 1rem;">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
         <div class="d-flex align-items-center">
@@ -132,6 +136,7 @@
 <div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
+            <!-- Form for editing project details -->
             <form method="POST" action="{{ request.route_url('edit_project', id=project.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div class="modal-header">
@@ -146,15 +151,26 @@
                         <label for="projectDescription" class="form-label">Project Description</label>
                         <textarea class="form-control" id="projectDescription" name="description" maxlength="150">{{ project.description }}</textarea>
                     </div>
-                    <div class="mb-3">
-                        <label for="projectImage" class="form-label">Project Image</label>
-                        <input type="file" name="file" class="form-control" id="projectImage">
-                        <input type="hidden" name="project_id" value="{{ project.id }}">
-                    </div>
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-info">Save Changes</button>
+                </div>
+            </form>
+
+            <!-- Separate form for uploading project image -->
+            <form method="POST" action="{{ request.route_url('file_upload_page') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="entity_type" value="project">
+                <input type="hidden" name="entity_id" value="{{ project.id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="projectImage" class="form-label">Project Image</label>
+                        <input type="file" name="file" class="form-control" id="projectImage" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-success">Upload Image</button>
                 </div>
             </form>
         </div>
