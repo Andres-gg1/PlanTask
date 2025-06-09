@@ -35,25 +35,23 @@
           <i class="bi bi-bell"></i>
         </a>
         <div class="navbar-icon dropdown" style="min-width: 40px; padding: 0;">
-          <a id="profileDropdown" aria-label="Profile" role="button" 
-             data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
-                 alt="Profile Picture" 
-                 style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
-          </a>
-          <div class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-            <div class="dropdown-header d-flex align-items-start" style="padding-left: 0.5rem; padding-right : 0.5rem;">
-              <div style="margin: 0.5rem ;">
-                <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+          <a id="profileDropdown" aria-label="Profile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {% if user.pfp %}
+              <img src="{{ user.pfp }}" 
                   alt="Profile Picture" 
-                  style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block; margin: 0.5 rem; margin-right: 1 rem">
-              </div>
+                  style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+            {% else %}
+              <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+                  alt="Default Profile Picture" 
+                  style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+            {% endif %}
+          </a>
+          <div class="dropdown-menu dropdown-profile" aria-labelledby="profileDropdown">
               <div>
                 <div class="profile-name"><strong>{{ user.first_name }} {{ user.last_name }}</strong></div>
-                <a href="{{ request.route_url('user', id=user.id) }}" style="text-decoration: none; color:white" class="dropdown-item">@{{ user.username }}</a>
+                <a href="{{ request.route_url('user', id=user.id) }}" style="text-decoration: none; color:white" class="profile-name">@{{user.username}}</a>
                 <div>{{ user.email }}</div>
               </div>
-            </div>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item logout-button" href="{{ request.route_url('logout') }}">
               Logout <i class="bi bi-box-arrow-right"></i>

@@ -6,6 +6,7 @@ from plantask.models.activity_log import ActivityLog
 from plantask.models.task import TasksFile, TaskCommentsFile
 from plantask.models.microtask import MicrotasksFile, MicrotaskCommentsFile
 from plantask.models.project import Project
+from plantask.models.user import User
 import zipfile
 import tempfile
 
@@ -109,21 +110,26 @@ class FileUploadService:
                 project.project_image_id = new_file.id
                 log_action = "project_added_image"
                 self.dbsession.flush()
+            elif entity_type == "profile_picture":
+                user = self.dbsession.query(User).filter_by(id = entity_id).first()
+                user.user_image_id = new_file.id
+                self.dbsession.flush()
 
             self.dbsession.flush()
 
             changes = f"view: {view_name}" if view_name else log_action
-            log = ActivityLog(
-                user_id=self.user_id,
-                task_id=entity_id if entity_type == 'task' else None,
-                microtask_id = entity_id if entity_type == 'microtask' else None,
-                file_id=new_file.id,
-                timestamp=datetime.now(),
-                action=log_action,
-                changes=changes,
-            )
-            self.dbsession.add(log)
-            self.dbession.flush()
+            if log_action:
+                log = ActivityLog(
+                    user_id=self.user_id,
+                    task_id=entity_id if entity_type == 'task' else None,
+                    microtask_id = entity_id if entity_type == 'microtask' else None,
+                    file_id=new_file.id,
+                    timestamp=datetime.now(),
+                    action=log_action,
+                    changes=changes,
+                )
+                self.dbsession.add(log)
+                self.dbession.flush()
 
             return {
                 "bool": True,

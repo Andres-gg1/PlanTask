@@ -46,8 +46,8 @@ def file_upload_page(request):
             return HTTPFound(location=request.route_url('microtask_by_id', id=entity_id))
         elif entity_type == 'project':
             return HTTPFound(location=request.route_url('project_by_id', id=entity_id))
-        elif entity_type == 'profile':
-            return HTTPFound(location=request.route_url('profile_page', id=entity_id))
+        elif entity_type == 'profile_picture':
+            return HTTPFound(location=request.route_url('user', id=entity_id))
         else:
             return HTTPFound(location=request.route_url('file_list_page'))  # Default fallback
     except Exception as e:

@@ -5,7 +5,7 @@
 {% block styles %}
 <style>
   .profile-avatar i {
-    font-size: 5rem;
+    size: 4rem;
     color: #6c757d;
     transition: color 0.3s;
   }
@@ -60,8 +60,16 @@
   <!-- Profile Card -->
   <div class="card shadow-sm mb-4">
     <div class="card-body d-flex align-items-center gap-4">
-      <div class="profile-avatar" id="pfp-click">
-        <i class="bi bi-person-circle"></i>
+      <div class="profile-avatar" id="pfp-click" style="width: 8rem; aspect-ratio: 1 / 1;">
+        {% if user.pfp %}
+          <img src="{{ user.pfp }}" 
+               alt="Profile Picture"
+               style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+        {% else %}
+          <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+               alt="Default Profile Picture" 
+               style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+        {% endif %}
       </div>
       <div>
         <h3 class="mb-0">{{ user_viewing.first_name }} {{ user_viewing.last_name }}</h3>
@@ -113,7 +121,20 @@
   <!-- PFP Modal -->
   <div class="modal-custom" id="pfp-modal">
     <h4>Change Profile Picture</h4>
-    <p class="mb-3">Coming soon!</p>
+    <form method="POST" action="{{ request.route_url('file_upload_page') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="entity_type" value="profile_picture">
+        <input type="hidden" name="entity_id" value="{{ user.id }}">
+        <div class="modal-body">
+            <div class="mb-3">
+                <label for="projectImage" class="form-label">Profile Picture</label>
+                <input type="file" name="file" class="form-control" id="projectImage" required>
+            </div>
+        </div>
+        <div class="modal-footer border-0">
+            <button type="submit" class="btn btn-success">Upload Image</button>
+        </div>
+    </form>
     <button class="btn btn-outline-secondary" onclick="closeModals()">Close</button>
   </div>
 </main>
