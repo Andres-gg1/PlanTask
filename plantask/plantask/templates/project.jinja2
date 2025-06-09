@@ -93,6 +93,15 @@
             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteProjectModal">Delete Project <i class="bi-trash3"></i></button>
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMemberModal">Add Member <i class="bi-person-add"></i></button>
             <button class="addlbbtn btn" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">Labels <i class="bi-plus-lg"></i></button>
+            <button class="showProjectCharts btn"
+                    type="button"
+                    onclick="window.location.href='{{ request.route_url('tasks_charts', project_id=project_id) }}';"
+                    aria-label="Show Dashboard"
+                    title="Show Dashboard">
+                Show dashboard <i class="bi-plus-lg"></i>
+            </button>
+
+
         </div>
         {% endif %}
     </div>

@@ -44,6 +44,11 @@ def includeme(config):
     config.add_route('delete_file_page', '/test/delete')
     config.add_route('multi_upload', '/test/multi_upload')
 
+    #charts for project
+    config.add_route('tasks_charts', '/project/dashboard/{project_id}')
+
+    config.add_route('tasks_completed', '/tasks-completed/{project_id}')
+
     #config.add_route('update_file_page', '/test/update')
     
     #config.add_view(renderer='templates/update_file.jinja2', route_name='update_file_page')

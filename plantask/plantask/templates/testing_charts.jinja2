@@ -1,0 +1,98 @@
+{% extends "layout.jinja2" %}
+
+{% block title %}{{ testing_charts }}{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/charts.css') }}">
+{% endblock %}
+
+
+{% block content %}
+
+<h2>Dashboard del Proyecto: {{ project.name }}</h2>
+
+{% set total_tasks = chart_data | sum %}
+
+{% if total_tasks == 0 %}
+    <div class="alert alert-info mt-4">
+        No hay tareas registradas actualmente en este proyecto.
+    </div>
+{% else %}
+    <canvas id="projectChart" width="400" height="200"></canvas>
+
+    <div id="taskListContainer" class="mt-4">
+        <h4>Selecciona un estado en la gráfica para ver sus tareas</h4>
+        <ul id="taskList" class="list-group"></ul>
+        <button onclick="resetTaskList()" class="btn btn-secondary mt-2">Mostrar todas las tareas</button>
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const tasksByStatus = {{ tasks_by_status_json | tojson }};
+    const ctx = document.getElementById('projectChart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels | tojson }},
+            datasets: [{
+                label: 'Tareas por estado',
+                data: {{ chart_data | tojson }},
+                backgroundColor: ['#36a2eb', '#ffcd56', '#ff6384', '#4bc0c0'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            },
+            onClick: function (e, elements) {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const status = chart.data.labels[index];
+                    const tasks = tasksByStatus[status];
+                    renderTaskList(tasks, status);
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    function renderTaskList(tasks, status) {
+        const taskList = document.getElementById('taskList');
+        taskList.innerHTML = '';
+        const title = document.querySelector('#taskListContainer h4');
+        title.textContent = `Tareas en estado: ${status.replace('_', ' ')}`;
+
+        if (tasks.length === 0) {
+            taskList.innerHTML = '<li class="list-group-item">No hay tareas en este estado.</li>';
+            return;
+        }
+
+        tasks.forEach(task => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.textContent = `${task.name} - Fecha límite: ${task.due_date}`;
+            taskList.appendChild(li);
+        });
+    }
+
+    function resetTaskList() {
+        const taskList = document.getElementById('taskList');
+        const title = document.querySelector('#taskListContainer h4');
+        title.textContent = "Selecciona un estado en la gráfica para ver sus tareas";
+        taskList.innerHTML = '';
+    }
+</script>
+{% endblock %}

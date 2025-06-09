@@ -109,6 +109,8 @@ def project_page(request):
             request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color).
             filter_by(project_id = project.id).order_by(Label.label_name.asc()).all()
         )
+
+        
         
         member_labels = {}
         label_assignments = request.dbsession.query(
@@ -129,21 +131,49 @@ def project_page(request):
 
         for task_list in tasks_by_status.values():
             for task in task_list:
-                print(task)
                 labels_for_task = request.dbsession.query(LabelsTask).filter_by(tasks_id=task.id).all()
                 labels_by_task[task.id] = [label.labels_id for label in labels_for_task]
 
+        label_id_to_name = {label.id: label.label_name for label in project_labels}
+        tasks_by_label_status = {}
+
+        for label in project_labels:
+            tasks_by_label_status[label.label_name] = {
+                'assigned': [],
+                'in_progress': [],
+                'under_review': [],
+                'completed': []
+            }
+
+        for status, task_list in tasks_by_status.items():
+            for task in task_list:
+                task_labels = labels_by_task.get(task.id, [])
+                for label_id in task_labels:
+                    label_name = label_id_to_name.get(label_id)
+                    if label_name:
+                        task_info = {
+                            "title": task.task_title or "Sin título",
+                            "due_date": task.due_date.strftime('%Y-%m-%d') if task.due_date else None
+                        }
+                        tasks_by_label_status[label_name][status].append(task_info)
+
+
         flashes = request.session.pop_flash()
+        print("#########################################################################")
+        print(tasks_by_label_status)
+        print("#########################################################################")
         
         return {
             "project": project,
+            "project_id": project_id,
             "project_members": mapped_members,
             "show_role": projects_user.role,
             "flashes": flashes,
             "tasks_by_status": tasks_by_status,
             "project_labels" : project_labels,
             "member_labels": member_labels,
-            "labels_by_task": labels_by_task
+            "labels_by_task": labels_by_task,
+            "tasks_by_label_status": tasks_by_label_status
         }
 
     except SQLAlchemyError:
