@@ -39,7 +39,7 @@
           <div class="dropdown-menu dropdown-profile" id="profileDropdownMenu">
             <div class="dropdown-arrow"></div>
             <div class="dropdown-item profile-name"><strong>{{ user.first_name }} {{ user.last_name }}</strong></div>
-            <div class="dropdown-item">@{{ user.username }}</div>
+            <a href="{{ request.route_url('user', id=user.id) }}" style="text-decoration: none; color:white" class="dropdown-item">@{{ user.username }}</a>
             <div class="dropdown-item">{{ user.email }}</div>
             <a class="dropdown-item logout-button" href="{{ request.route_url('logout') }}">
               Logout <i class="bi bi-box-arrow-right"></i>

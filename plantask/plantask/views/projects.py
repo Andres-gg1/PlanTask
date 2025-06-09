@@ -3,8 +3,10 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound, HTTPBadRequest, Resp
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from sqlalchemy import and_, select, or_
+from sqlalchemy.orm import joinedload
 from plantask.models.project import Project, ProjectsUser
 from plantask.models.user import User
+from collections import defaultdict
 from plantask.models.activity_log import ActivityLog
 from plantask.models.task import Task
 from plantask.models.label import Label, LabelsProjectsUser, LabelsTask
@@ -12,7 +14,6 @@ from plantask.auth.verifysession import verify_session
 
 from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEvent
 
-import json
 
 
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
@@ -69,24 +70,23 @@ def create_project(request):
 @verify_session
 def project_page(request):
     try:
+        user_id = request.session.get('user_id')
         project_id = int(request.matchdict.get('id'))
-        project = request.dbsession.query(Project).filter_by(id=project_id, active=True).first()
+
+        # Load project with members
+        project = (
+            request.dbsession.query(Project)
+            .options(joinedload(Project.users).joinedload(ProjectsUser.user))
+            .filter_by(id=project_id, active=True)
+            .first()
+        )
 
         if not project:
             return {"error_ping": "You don't have access to this project or it is inactive."}
 
-        projects_user = request.dbsession.query(ProjectsUser).filter(
-            and_(
-                ProjectsUser.project_id == project_id,
-                ProjectsUser.user_id == request.session.get('user_id')
-            )
-        ).first()
-
-        if not projects_user:
+        current_user_assoc = next((pu for pu in project.users if pu.user_id == user_id), None)
+        if not current_user_assoc:
             return {"error_ping": "You don't have access to this project."}
-
-        project_members = request.dbsession.query(User, ProjectsUser.role)\
-            .join(ProjectsUser).filter(ProjectsUser.project_id == project_id).all()
 
         role_map = {
             'admin': 'Administrator',
@@ -94,61 +94,44 @@ def project_page(request):
             'member': 'Member',
             'observer': 'Observer'
         }
-        mapped_members = [(member, role_map.get(role, role)) for member, role in project_members]
 
-        # Fetch tasks grouped by status
+        project_members = [(pu.user, role_map.get(pu.role, pu.role), pu.user_id) for pu in project.users]
+
+        statuses = ['assigned', 'in_progress', 'under_review', 'completed']
         tasks_by_status = {
-            status: request.dbsession.query(Task)
-                .filter_by(project_id=project_id, status=status, active = True)
-                .order_by(Task.due_date)
-                .all()
-            for status in ['assigned', 'in_progress', 'under_review', 'completed']
+            s: request.dbsession.query(Task).filter_by(project_id=project_id, status=s, active=True).order_by(Task.due_date).all()
+            for s in statuses
         }
-        
-        project_labels = (
-            request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color).
-            filter_by(project_id = project.id).order_by(Label.label_name.asc()).all()
-        )
-        
-        member_labels = {}
-        label_assignments = request.dbsession.query(
-            ProjectsUser.user_id, 
-            LabelsProjectsUser.labels_id
-        ).join(
-            LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id
-        ).filter(
-            ProjectsUser.project_id == project_id
-        ).all()
 
-        for user_id, label_id in label_assignments:
-            if user_id not in member_labels:
-                member_labels[user_id] = []
+        project_labels = request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color)\
+            .filter_by(project_id=project.id).order_by(Label.label_name.asc()).all()
+
+        member_labels = defaultdict(list)
+        for user_id, label_id in request.dbsession.query(ProjectsUser.user_id, LabelsProjectsUser.labels_id)\
+            .join(LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id)\
+            .filter(ProjectsUser.project_id == project_id):
             member_labels[user_id].append(label_id)
-            
-        labels_by_task = {}
 
-        for task_list in tasks_by_status.values():
-            for task in task_list:
-                print(task)
-                labels_for_task = request.dbsession.query(LabelsTask).filter_by(tasks_id=task.id).all()
-                labels_by_task[task.id] = [label.labels_id for label in labels_for_task]
+        labels_by_task = defaultdict(list)
+        for task_id, label_id in request.dbsession.query(LabelsTask.tasks_id, LabelsTask.labels_id)\
+            .join(Task).filter(Task.project_id == project_id):
+            labels_by_task[task_id].append(label_id)
 
-        flashes = request.session.pop_flash()
-        
         return {
             "project": project,
-            "project_members": mapped_members,
-            "show_role": projects_user.role,
-            "flashes": flashes,
+            "project_members": project_members,
+            "show_role": current_user_assoc.role,
+            "flashes": request.session.pop_flash(),
             "tasks_by_status": tasks_by_status,
-            "project_labels" : project_labels,
-            "member_labels": member_labels,
-            "labels_by_task": labels_by_task
+            "project_labels": project_labels,
+            "member_labels": dict(member_labels),
+            "labels_by_task": dict(labels_by_task)
         }
 
     except SQLAlchemyError:
         request.dbsession.rollback()
         return {"error_ping": "An error occurred while fetching the project. Please try again."}
+
 
 @view_config(route_name='edit_project', request_method='POST', permission="admin")
 @verify_session
