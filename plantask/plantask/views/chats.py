@@ -2,16 +2,47 @@ from pyramid.view import view_config
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from datetime import datetime
 from plantask.models.user import User
+from plantask.models.chat import PersonalChat
 from plantask.auth.verifysession import verify_session
 
+from sqlalchemy import or_
 
 @view_config(route_name='chats', renderer='plantask:templates/chats.jinja2')
 @verify_session
 def chats_page(request):
-    return {}
+    user_id = request.session.get('user_id')
+
+    # Simplified query to get the other user's details
+    personal_chats = request.dbsession.query(
+        PersonalChat.id.label('chat_id'),
+        User.username.label('username'),
+        User.first_name.label('first_name'),
+        User.last_name.label('last_name'),
+        User.user_image_id.label('user_image_id')
+    ).join(
+        User,
+        or_(
+            and_(PersonalChat.user1_id == user_id, PersonalChat.user2_id == User.id),
+            and_(PersonalChat.user2_id == user_id, PersonalChat.user1_id == User.id)
+        )
+    ).all()
+
+    # Format the data to pass to the template
+    chats = [
+        {
+            'username': chat.username,
+            'first_name': chat.first_name,
+            'last_name': chat.last_name,
+            'user_image_id': chat.user_image_id
+        }
+        for chat in personal_chats
+    ]
+
+    return {'chats': chats}
+
 
 @view_config(route_name='search_users_global', renderer='json')
 def search_users_global(request):
