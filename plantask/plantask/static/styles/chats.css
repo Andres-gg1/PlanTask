@@ -41,14 +41,36 @@ html, body {
   min-height: 0;
 }
 
+.search-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  right: 1rem; /* Position the icon inside the textbox */
+  transform: translateY(-50%);
+  color: #aaa;
+  pointer-events: none; /* Prevent the icon from blocking input clicks */
+}
+
 .chats-search {
-  flex: 1;
-  padding: 0.5rem 1rem;
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 1rem; /* Add padding to the right for the icon */
+  margin-bottom: 1rem;
   border: 1px solid #ccc;
-  border-radius: 0.5rem;
+  border-radius: 4px;
   font-size: 1rem;
+  justify-content: center;
+  display: flex;
+  align-items: start;
+}
+
+.chats-search:focus {
   outline: none;
-  font-family: "Proxima Nova", sans-serif;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
 .chat-item {

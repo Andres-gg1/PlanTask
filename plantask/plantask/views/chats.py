@@ -6,6 +6,7 @@ from sqlalchemy import or_, and_
 from datetime import datetime
 from plantask.models.user import User
 from plantask.models.chat import PersonalChat
+from plantask.models.file import File
 from plantask.auth.verifysession import verify_session
 
 from sqlalchemy import or_
@@ -21,14 +22,14 @@ def chats_page(request):
         User.username.label('username'),
         User.first_name.label('first_name'),
         User.last_name.label('last_name'),
-        User.user_image_id.label('user_image_id')
+        File.route.label('image_route')
     ).join(
         User,
         or_(
             and_(PersonalChat.user1_id == user_id, PersonalChat.user2_id == User.id),
             and_(PersonalChat.user2_id == user_id, PersonalChat.user1_id == User.id)
         )
-    ).all()
+    ).outerjoin(File, User.user_image_id == File.id).all()
 
     # Format the data to pass to the template
     chats = [
@@ -36,7 +37,7 @@ def chats_page(request):
             'username': chat.username,
             'first_name': chat.first_name,
             'last_name': chat.last_name,
-            'user_image_id': chat.user_image_id
+            'image_route': chat.image_route
         }
         for chat in personal_chats
     ]
