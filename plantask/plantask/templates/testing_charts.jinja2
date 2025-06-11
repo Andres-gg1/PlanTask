@@ -75,11 +75,11 @@
                 <div id="chartDueDates" style="width: 100%; max-width: 600px; height: 300px;"></div>
             </div>
         </div>
-        
-        <div class="card chart-draggable shadow fade-in-card mb-4" id="chartCardEchartsHeatmap" draggable="true">
-            <div class="card-body p-0" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 400px;">
+
+        <div class="card chart-draggable shadow fade-in-card mb-4" id="chartCardEchartsHeatmap" draggable="true" style="width: 100%; max-width: 700px;">
+            <div class="card-body p-0" style="display: flex; flex-direction: column; justify-content: center; align-items: center; width: 650px; height: 400px;">
                 <div class="chart-title" style="font-weight: bold; margin-bottom: 8px;">Due Dates Heatmap</div>
-                <div id="echarts-heatmap" style="width: 100%; max-width: 600px; height: 300px;"></div>
+                <div id="echarts-heatmap" style="width: 100%; max-width: 650px; height: 300px;"></div>
             </div>
         </div>
     </div>
@@ -401,8 +401,8 @@
                 }
             },
             calendar: {
-                range: [dueDatesHeatmapEcharts.length ? dueDatesHeatmapEcharts[0][0].slice(0, 7) : '2024-01', 
-                        dueDatesHeatmapEcharts.length ? dueDatesHeatmapEcharts[dueDatesHeatmapEcharts.length-1][0].slice(0, 7) : '2024-12'],
+                range: [dueDatesHeatmapEcharts.length ? dueDatesHeatmapEcharts[0][0].slice(0, 7) : '2025-01', 
+                        dueDatesHeatmapEcharts.length ? dueDatesHeatmapEcharts[dueDatesHeatmapEcharts.length-1][0].slice(0, 7) : '2025-12'],
                 cellSize: ['auto', 20],
                 splitLine: { show: false },
                 itemStyle: { borderWidth: 0.5 }
