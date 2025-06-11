@@ -46,8 +46,8 @@ def includeme(config):
 
     #charts for project
     config.add_route('tasks_charts', '/project/dashboard/{project_id}')
-
     config.add_route('tasks_completed', '/tasks-completed/{project_id}')
+    
 
     #config.add_route('update_file_page', '/test/update')
     
