@@ -56,6 +56,8 @@ class ProjectsUser(Base):
     # Role of the user in the project (cannot be null)
     role = Column(user_roles_enum, nullable=False)
 
+    active = Column(Boolean, default = True, nullable = False)
+
     # Relationships with the Project and User tables (many-to-one relationship)
     project = relationship('Project', back_populates='users')
     user = relationship('User', back_populates='projects')

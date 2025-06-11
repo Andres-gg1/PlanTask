@@ -84,18 +84,46 @@ def project_page(request):
         user_id = request.session.get('user_id')
         project_id = int(request.matchdict.get('id'))
 
-        # Load project with members
+        # Load project with members using a better query structure
         project = (
             request.dbsession.query(Project)
-            .options(joinedload(Project.users).joinedload(ProjectsUser.user))
-            .filter_by(id=project_id, active=True)
+            .filter(Project.id == project_id, Project.active == True)
             .first()
         )
 
         if not project:
-            return {"error_ping": "You don't have access to this project or it is inactive."}
+            return {"error_ping": "Project not found or is inactive."}
 
-        current_user_assoc = next((pu for pu in project.users if pu.user_id == user_id), None)
+        # Get project image if exists
+        project_image = (
+            request.dbsession.query(File.route)
+            .filter(File.id == project.project_image_id)
+            .first()
+        )
+
+        # Get project members with their roles
+        project_members_query = (
+            request.dbsession.query(
+                User,
+                ProjectsUser.role,
+                File.route.label('image_route')
+            )
+            .join(ProjectsUser, ProjectsUser.user_id == User.id)
+            .outerjoin(File, User.user_image_id == File.id)
+            .filter(ProjectsUser.project_id == project_id, ProjectsUser.active == True)
+            .all()
+        )
+
+        # Check user's access
+        current_user_assoc = (
+            request.dbsession.query(ProjectsUser)
+            .filter(
+                ProjectsUser.project_id == project_id,
+                ProjectsUser.user_id == user_id
+            )
+            .first()
+        )
+
         if not current_user_assoc:
             return {"error_ping": "You don't have access to this project."}
 
@@ -106,30 +134,51 @@ def project_page(request):
             'observer': 'Observer'
         }
 
-        project_members = [(pu.user, role_map.get(pu.role, pu.role), pu.user_id) for pu in project.users]
+        # Format project members
+        project_members = [
+            (member[0], role_map.get(member[1], member[1]), member[0].id, member.image_route)
+            for member in project_members_query
+        ]
 
         statuses = ['assigned', 'in_progress', 'under_review', 'completed']
         tasks_by_status = {
-            s: request.dbsession.query(Task).filter_by(project_id=project_id, status=s, active=True).order_by(Task.due_date).all()
+            s: request.dbsession.query(Task)
+                .filter_by(project_id=project_id, status=s, active=True)
+                .order_by(Task.due_date)
+                .all()
             for s in statuses
         }
 
-        project_labels = request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color)\
-            .filter_by(project_id=project.id).order_by(Label.label_name.asc()).all()
+        project_labels = (
+            request.dbsession.query(Label.id, Label.label_name, Label.label_hex_color)
+            .filter_by(project_id=project_id)
+            .order_by(Label.label_name.asc())
+            .all()
+        )
 
+        # Get member labels
         member_labels = defaultdict(list)
-        for user_id, label_id in request.dbsession.query(ProjectsUser.user_id, LabelsProjectsUser.labels_id)\
-            .join(LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id)\
-            .filter(ProjectsUser.project_id == project_id):
+        member_labels_query = (
+            request.dbsession.query(ProjectsUser.user_id, LabelsProjectsUser.labels_id)
+            .join(LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id)
+            .filter(ProjectsUser.project_id == project_id)
+        )
+        for user_id, label_id in member_labels_query:
             member_labels[user_id].append(label_id)
 
+        # Get task labels
         labels_by_task = defaultdict(list)
-        for task_id, label_id in request.dbsession.query(LabelsTask.tasks_id, LabelsTask.labels_id)\
-            .join(Task).filter(Task.project_id == project_id):
+        task_labels_query = (
+            request.dbsession.query(LabelsTask.tasks_id, LabelsTask.labels_id)
+            .join(Task)
+            .filter(Task.project_id == project_id)
+        )
+        for task_id, label_id in task_labels_query:
             labels_by_task[task_id].append(label_id)
 
         return {
             "project": project,
+            "project_image": project_image,
             "project_members": project_members,
             "show_role": current_user_assoc.role,
             "flashes": request.session.pop_flash(),
@@ -139,10 +188,13 @@ def project_page(request):
             "labels_by_task": dict(labels_by_task)
         }
 
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
         request.dbsession.rollback()
+        print(f"Database error: {str(e)}")  # Add logging for debugging
         return {"error_ping": "An error occurred while fetching the project. Please try again."}
-
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")  # Add logging for debugging
+        return {"error_ping": "An unexpected error occurred."}
 
 @view_config(route_name='edit_project', request_method='POST', permission="admin")
 @verify_session
@@ -225,7 +277,10 @@ def search_users(request):
             try:
                 project_id = int(project_id)
                 member_subquery = select(ProjectsUser.user_id).where(
-                    ProjectsUser.project_id == project_id
+                     and_(
+                            ProjectsUser.project_id == project_id,
+                            ProjectsUser.active == True
+                        )
                 ).scalar_subquery()
                 query = query.filter(~User.id.in_(member_subquery))
             except ValueError:
@@ -287,6 +342,9 @@ def add_member(request):
 
                             event = UserAddedToProjectEvent(request, project_id=project_id, user_id = user_id)
                             request.registry.notify(event)
+                    else:
+                        existing_relation.active = True
+                        request.dbsession.flush()
 
 
                 except ValueError:
@@ -373,7 +431,7 @@ def remove_member(request):
         ).first()
 
         if relation:
-            request.dbsession.delete(relation)
+            relation.active = False
             activity_log_removed_user = ActivityLog(
                 user_id=request.session['user_id'],
                 project_id=project.id,  # Added project.id
