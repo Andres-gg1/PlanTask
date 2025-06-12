@@ -1,6 +1,8 @@
 def includeme(config):
     config.add_static_view('static', 'static', cache_max_age=3600)
     config.add_route('home', '/')
+    config.add_route('user', r'/user/{id:\d+}')
+    config.add_route('edit_user', r'/user/{id:\d+}/edit')
     config.add_route('history', '/history')
     config.add_route('chats', '/chats')
     config.add_route('calendar', '/calendar')
@@ -34,6 +36,9 @@ def includeme(config):
     
     # Notification routes
     config.add_route('get_notifications', '/get-notifications')
+    
+    #SEARCH USERS IN MESSAGES/NAVBAR
+    config.add_route('search_users_global', '/search-users-global')
     #File services
     #config.add_route('task_add_upload', '/upload')
     config.add_route('file_crud', '/files')

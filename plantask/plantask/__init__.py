@@ -7,6 +7,7 @@ from pyramid.view import forbidden_view_config
 from pyramid.session import SignedCookieSessionFactory
 from pyramid.events import subscriber, BeforeRender
 from .models.user import User
+from .models.file import File
 from pyramid.csrf import get_csrf_token
 from pyramid.csrf import CookieCSRFStoragePolicy
 
@@ -35,14 +36,26 @@ from pyramid.events import subscriber, BeforeRender
 def add_global_template_variables(event):
     request = event['request']
     if request.authenticated_userid:
-        user = request.dbsession.query(User).get(request.authenticated_userid)
+        user = request.dbsession.query(
+                User.id,
+                User.username,
+                User.first_name,
+                User.last_name,
+                User.email,
+                File.route.label('image_route')  # Fetch the route from the File model
+            ).outerjoin(
+                File, User.user_image_id == File.id  # Use an outer join to handle users without images
+            ).filter(
+                User.id == request.authenticated_userid
+            ).first()
         if user:
             event['user'] = {
                 'id': user.id,
                 'username': user.username,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
-                'email': user.email
+                'email': user.email,
+                'pfp' : user.image_route
             }
     else:
         event['user'] = None

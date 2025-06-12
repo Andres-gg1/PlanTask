@@ -1,0 +1,233 @@
+:root {
+  --chat-info-bg-color: #f4f4f4;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.main-layout {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.mycontainer {
+    margin-top: 3.5rem;
+    margin-bottom: 0;
+    margin-left: 4.7rem;
+    margin-right: 0;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow-y: auto;
+}
+.left-sidebar {
+    flex: 1 1 1rem; 
+    width: 5%;
+    max-width: 20rem;
+    background: #ededed;
+    padding: 1.5rem 1rem;
+    box-shadow: 0 0 0.5rem rgba(0,0,0,0.03);
+    height: 100%;
+    overflow-y: auto;
+}
+
+.chats-scroll-area {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  right: 1rem; /* Position the icon inside the textbox */
+  transform: translateY(-50%);
+  color: #aaa;
+  pointer-events: none; /* Prevent the icon from blocking input clicks */
+}
+
+.chats-search {
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 1rem; /* Add padding to the right for the icon */
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  justify-content: center;
+  display: flex;
+  align-items: start;
+}
+
+.chats-search:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.chat-item {
+  display: flex;
+  align-items: center; 
+  gap: 0.5rem;
+  width: 100%;
+  word-break: break-word;
+}
+
+.chat-item > i,
+.chat-item .btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 2.5rem;
+}
+
+.ChatInfo {
+  background-color: var(--chat-info-bg-color);
+  border: 1px solid #ACACAC;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 1rem;
+}
+
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.messages {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.mymessage, .amessage {
+  font-family: "Proxima Nova", sans-serif;
+  font-weight: 400;
+  gap: 0.25rem;
+  max-width: 60%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mymessage {
+  align-self: flex-end;
+  align-items: flex-end;
+  color: #474747;
+}
+
+.amessage {
+  align-self: flex-start;
+  align-items: flex-start;
+  color: #474747;
+}
+
+.mymessagebubble, .amessagebubble {
+  padding: 0.5rem;
+  border-radius: 0.85rem;
+  font-size: larger;
+  font-family: "Proxima Nova", sans-serif;
+  max-width: 100%;
+  width: fit-content;
+  margin-bottom: 0;
+}
+
+.mymessagebubble {
+  background-color: #bee7f9;
+  border-radius: 0.85rem 0.85rem 0 0.85rem;
+}
+
+.amessagebubble {
+  background-color: #EAEAEA;
+  border-radius: 0.85rem 0.85rem 0.85rem 0;
+}
+
+.chat-input-bar {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  gap: 0.5rem;
+  border-top: 1px solid #ccc;
+  background-color: #fff;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.user-icon {
+  font-size: 1.5rem;
+  color: #888;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 1.5rem;
+  font-size: 1rem;
+  outline: none;
+  font-family: "Proxima Nova", sans-serif;
+}
+
+.attach-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  color: #555;
+  cursor: pointer;
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 0.3rem;
+  border: #ACACAC 1.5px solid;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+.attach-icon:hover {
+  background: #e0e0e0;
+  transform: scale(1.05);
+}
+.attach-icon:active {
+  background: #cacaca;
+  transform: scale(0.95);
+}
+
+.send-button {
+  display: flex;
+  align-items: center;
+  height: 2.5rem;
+  gap: 0.25rem;
+  background-color: #5175B9;
+  color: white;
+  border: #1E4998 1.5px solid;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  font-size: 1rem;
+  cursor: pointer;
+  font-family: "Proxima Nova", sans-serif;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+.send-button:hover {
+  background-color: #4c70b4;
+  transform: scale(1.05);
+}
+.send-button:active {
+  background-color: rgb(76, 112, 180);
+  transform: scale(0.95);
+}
+.send-button i {
+  font-size: 1.2rem;
+}

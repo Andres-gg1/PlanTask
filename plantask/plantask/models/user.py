@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from .base import Base
 from sqlalchemy.dialects.postgresql import ENUM
@@ -27,6 +27,8 @@ class User(Base):
     password: str = Column(String, nullable=False)
     # Permissions assigned to the user (cannot be null). either "admin" or "user", used for limiting access to admin functions. Uses enum type
     permission: str = Column(permissions_enum, nullable=False)
+
+    user_image_id = Column(ForeignKey('files.id'), nullable=True)
 
     task_comments = relationship('TaskComment', back_populates='user')
     microtask_comments = relationship('MicrotaskComment', back_populates='user')

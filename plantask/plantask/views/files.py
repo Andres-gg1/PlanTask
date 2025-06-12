@@ -11,20 +11,50 @@ def file_list_page(request):
     print(list(files))
     return {'files': files}
 
-@view_config(route_name='file_upload_page', request_method='POST', renderer='plantask:templates/test_file_service.jinja2')
+@view_config(route_name='file_upload_page', request_method='POST')
 def file_upload_page(request):
-    file_storage = request.POST.get('file')
-    view_name = request.POST.get('view_name', 'file_upload_page')
-    user_id = request.session.get('user_id') or 53  #testing
-    service = FileUploadService(
-        upload_dir=request.registry.settings['upload_dir'],
-        dbsession=request.dbsession,
-        user_id=user_id
-    )
-    result = service.handle_upload(file_storage, context={'type': 'file', 'action': 'file_uploaded'}, view_name=view_name)
+    try:
+        # Extract entity_type and entity_id from the form data
+        entity_type = request.POST.get('entity_type')  # e.g., 'task', 'microtask', 'project', 'profile'
+        entity_id = int(request.POST.get('entity_id'))  # ID of the entity to associate the file with
+        file_storage = request.POST.get('file')  # The uploaded file
+        view_name = request.POST.get('view_name', 'file_upload_page')  # Optional view name for logging
+        user_id = request.session.get('user_id') or 53  # Default user ID for testing
 
-    request.session.flash(result['msg'])
-    return HTTPFound(location=request.route_url('file_list_page'))
+        # Initialize the FileUploadService
+        service = FileUploadService(
+            upload_dir=request.registry.settings['upload_dir'],
+            dbsession=request.dbsession,
+            user_id=user_id
+        )
+
+        # Handle the file upload and associate it with the specified entity
+        result = service.handle_upload(
+            file_storage=file_storage,
+            context={'type': entity_type, 'action': f'{entity_type}_added_file'},
+            entity_type=entity_type,
+            entity_id=entity_id,
+            view_name=view_name
+        )
+
+        # Flash the result message and redirect to the appropriate page
+        request.session.flash(result['msg'])
+        # Redirect based on entity_type (you can customize this logic as needed)
+        if entity_type == 'task':
+            return HTTPFound(location=request.route_url('task_by_id', id=entity_id))
+        elif entity_type == 'microtask':
+            return HTTPFound(location=request.route_url('microtask_by_id', id=entity_id))
+        elif entity_type == 'project':
+            return HTTPFound(location=request.route_url('project_by_id', id=entity_id))
+        elif entity_type == 'profile_picture':
+            return HTTPFound(location=request.route_url('user', id=entity_id))
+        else:
+            return HTTPFound(location=request.route_url('file_list_page'))  # Default fallback
+    except Exception as e:
+        # Handle errors and rollback the session
+        request.dbsession.rollback()
+        request.session.flash(f"Error uploading file: {str(e)}")
+        return HTTPFound(location=request.route_url('file_list_page'))
 
 @view_config(route_name='multi_upload', request_method='POST', renderer='plantask:templates/test_file_service.jinja2')
 def multi_upload(request):
