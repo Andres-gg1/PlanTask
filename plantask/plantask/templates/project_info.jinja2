@@ -1,0 +1,120 @@
+{% extends "layout.jinja2" %}
+
+{% block title %} {% endblock %}
+
+{% block styles %}
+<style>
+    .title {
+        font-size: clamp(2.5rem, 5vw, 5rem);
+        margin-bottom: 0 ;
+    }
+
+    .team_name {
+        font-size: clamp(1.5rem, 3vw, 2rem);
+    }
+
+    .org_name {
+        font-size: clamp(1rem, 2vw, 1.5rem);
+    }
+
+    .team-member {
+        margin-bottom: 1rem;
+        font-size: clamp(1.5rem, 3vw, 2.5rem);
+        word-wrap: break-word;
+    }
+
+    .member-role {
+        font-size: clamp(1rem, 2vw, 1.5rem);
+    }
+
+    .project-info {
+        padding: 2rem 1rem;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .card-text {
+        font-size: clamp(1rem, 2vw, 1.5rem);
+        font-family: "Proxima Nova", sans-serif;
+        text-justify: inter-word;
+    }
+
+    .card {
+        width: 90%;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .col-12 {
+        margin-top: 3rem;
+    }
+
+    @media (max-width: 768px) {
+        .row > div[class^="col-md-"] {
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            width: 95%;
+        }
+    }
+
+    .mycontainer {
+        width: 100%;
+        padding-right: 15px;
+        padding-left: 15px;
+        margin-right: auto;
+        margin-left: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mycontainer project-info">
+    <h1 class="text-center mb-5 title">PlanTask</h1>
+    
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4 team_name">Plantask</h2>
+            <h3 class="text-center text-muted org_name">Koch IT Academy</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4  text-center">
+            <h4 class="team-member">Andres Garcia Gonzalez </h4>
+            <p class="text-muted member-role">[SCRUM Master / Back-end]</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <h4 class="team-member">Itzel Ximena Hernandez Fernandez</h4>
+            <p class="text-muted member-role">[Back-end, AWS and Docker]</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <h4 class="team-member">Angel Alejandro Reynoso Delgado</h4>
+            <p class="text-muted member-role">[Front-end / JavaScript]</p>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">About PLANTASK</h2>
+            <div class="card">
+                <div class="card-body">
+                    <p class="card-text">
+                        PlanTask is a team organizing and managing tool, designed to allow Koch's workforce to follow a Kanban system. 
+                        We focused on usability, efficiency and an intuitive UI to allow workers to focus on their job and leave PlanTask as a helper, not a burden. 
+                        Teams can organize themselves by creating a project, assigning tasks, separating tasks into microtask, and using labels to assign specific tasks to people. 
+                        To see documentation, click <a href="https://plantask.gitbook.io/plantask"><span style="color : blue;">here</span></a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+
+{% endblock %}

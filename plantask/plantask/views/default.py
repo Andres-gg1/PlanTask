@@ -63,3 +63,8 @@ def edit_user(request):
 
     request.dbsession.flush()
     return HTTPFound(location=request.route_url('user', id=user_id))
+
+@view_config(route_name='project_info', request_method=['GET'], renderer = "/templates/project_info.jinja2")
+@verify_session
+def show_project_info(request):
+    return {}

@@ -35,6 +35,7 @@ def includeme(config):
     config.add_route('assign_label_to_task', '/project/{id}/')
     config.add_route('toggle_label_for_task', '/task/{id}/toggle_label')
     config.add_route('edit_label', '/label/edit/{label_id}')
+    config.add_route('project_info', '/project-info')
     
     # Notification routes
     config.add_route('get_notifications', '/get-notifications')
