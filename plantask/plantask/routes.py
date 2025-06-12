@@ -5,6 +5,8 @@ def includeme(config):
     config.add_route('edit_user', r'/user/{id:\d+}/edit')
     config.add_route('history', '/history')
     config.add_route('chats', '/chats')
+    config.add_route('get_personal_chat_messages', r'/get-personal-chat-messages/{chat_id:\d+}')
+    config.add_route('send_message', '/send-message')
     config.add_route('calendar', '/calendar')
     config.add_route('dashboard', '/dashboard')
     config.add_route('login', '/login')
@@ -39,6 +41,7 @@ def includeme(config):
     
     #SEARCH USERS IN MESSAGES/NAVBAR
     config.add_route('search_users_global', '/search-users-global')
+
     #File services
     #config.add_route('task_add_upload', '/upload')
     config.add_route('file_crud', '/files')

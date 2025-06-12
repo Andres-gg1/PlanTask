@@ -69,8 +69,8 @@ html, body {
 
 .chats-search:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  border-color: #b1b1b1;
+  box-shadow: 0 0 5px rgba(180, 180, 180, 0.5);
 }
 
 .chat-item {
@@ -79,6 +79,12 @@ html, body {
   gap: 0.5rem;
   width: 100%;
   word-break: break-word;
+}
+
+.chat-item.active {
+  color: black;
+  background-color: #f0f0f0;
+  border: 1px solid #b1b1b1;
 }
 
 .chat-item > i,

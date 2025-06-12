@@ -19,71 +19,58 @@
         {% if chats %}
         <ul class="list-group mb-4" id="chats-list">
           {% for f in chats %}
-          <li class="list-group-item justify-content-between align-items-center chat-item" 
-              data-first-name="{{ f.first_name | lower }}" 
-              data-last-name="{{ f.last_name | lower }}" 
-              data-username="{{ f.username | lower }}">
-            <div style="cursor:pointer;">
-              {% if f.image_route %}
+            <li class="list-group-item justify-content-between align-items-center chat-item" 
+                data-chat-id="{{ f.chat_id }}" 
+                data-first-name="{{ f.first_name | lower }}" 
+                data-last-name="{{ f.last_name | lower }}" 
+                data-username="{{ f.username | lower }}">
+              <div style="cursor:pointer; display: flex; align-items: center;">
+                {% if f.image_route %}
                   <img src="{{ f.image_route }}" 
                   alt="Profile Picture" 
-                  style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; display: inline-block; margin-right :1rem;">
-              {% else %}
+                  style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; display: inline-block; margin-right: 1rem;">
+                {% else %}
                   <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
                   alt="Default Profile Picture" 
-                  style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; display: inline-block; margin-right :1rem;">
-              {% endif %}
-              <div style="display:flex; flex-direction:column; flex:2; min-width:0;">
-                <strong style="word-break: break-all; white-space: normal;">{{ f.first_name }} {{f.last_name}}</strong>
-                <small class="text-muted">@{{ f.username }}</small>
+                  style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; display: inline-block; margin-right: 1rem;">
+                {% endif %}
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-weight: bold; margin-right: 1rem;">{{ f.first_name }} {{ f.last_name }}</span>
+                  <span class="text-muted">@{{ f.username }}</span>
+                </div>
               </div>
-            </div>
-          </li>
+            </li>
           {% endfor %}
         </ul>
         {% else %}
-        <ul class="list-group mb-4">
-          <li class="list-group-item justify-content-between align-items-center">
-            <div class="chat-item" style="cursor:pointer;">
-              <i class="bi-person-circle fs-1"></i>
-              <div style="display:flex; flex-direction:column; flex:2; min-width:0;">
-                <strong style="word-break: break-all; white-space: normal;">Andres Garcia</strong>
-              </div>
-            </div>
-          </li>
-        </ul>
+          <p>No chats available</p>
         {% endif %}
       </div>
     </aside>
     <section class="chat-messages" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;">
-      <div class="ChatInfo">
+      <div class="ChatInfo" style="display: none;">
         <i class="bi-person-circle fs-1"></i>
         <h4 style="margin: 0 1rem; flex: 1;">Username</h4>
         <i class="bi-three-dots-vertical fs-1" style="margin-left: auto; margin-right:0.5rem"></i>
       </div>
+
       <div class="messages">
-        <div class="mymessage">
-          <p style="margin-bottom: 0">DateTime</p>
-          <p class="mymessagebubble">
-            Our life's work is to help people improve their lives by making and innovating products and services our customers value.
-          </p>
-          <i class="bi-check2-all"></i>
-        </div>
-        <div class="amessage">
-          <p style="margin-bottom: 0">DateTime</p>
-          <p class="amessagebubble">
-            Our life's work is to help people improve their lives by making and innovating products and services our customers value.
-          </p>
-        </div>
+        <p class="empty-message-hint" style="text-align:center; color:#aaa;">Select a chat to view messages</p>
       </div>
-      <div class="chat-input-bar">
-        <i class="bi-person-circle user-icon"></i>
-        <input type="text" class="chat-input" placeholder="Write a message" />
-        <i class="bi-paperclip attach-icon"></i>
-        <button class="send-button">
-          Send <i class="bi-send"></i>
-        </button>
-      </div>
+
+      <form id="message-form" method="post" action="/send-message" style="display: none;">
+        <div class="chat-input-bar">
+          <input type="hidden" name="chat_id" id="chat-id-field">
+          <input type="hidden" name="is_personal_chat" id="is-personal-chat-field">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <i class="bi-person-circle user-icon"></i>
+          <input type="text" id="message-input" name="message-input" class="chat-input" placeholder="Write a message" />
+          <i class="bi-paperclip attach-icon"></i>
+          <button class="send-button">
+            Send <i class="bi-send"></i>
+          </button>
+        </div>
+      </form>
     </section>
   </main>
 </div>
@@ -138,4 +125,130 @@
     });
   });
 </script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const chatItems = document.querySelectorAll('.chat-item');
+
+    chatItems.forEach(item => {
+      item.addEventListener('click', () => {
+        chatItems.forEach(chat => chat.classList.remove('active'));
+        item.classList.add('active');
+      });
+    });
+  });
+</script><script>
+  const userId = {{ request.session.user_id }};
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const chatItems = document.querySelectorAll('.chat-item');
+    const messagesContainer = document.querySelector('.messages');
+    const chatInfo = document.querySelector('.ChatInfo h4');
+    const chatIdField = document.getElementById('chat-id-field');
+    const isPersonalField = document.getElementById('is-personal-chat-field');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+
+    let currentChatId = null;
+
+    function renderMessages(messages) {
+      const chatInfoBlock = document.querySelector('.ChatInfo');
+      const inputForm = document.getElementById('message-form');
+      const emptyHint = document.querySelector('.empty-message-hint');
+
+      // Show chat info and input
+      chatInfoBlock.style.display = 'flex';
+      inputForm.style.display = 'block';
+
+      messagesContainer.innerHTML = '';
+
+      if (messages.length === 0) {
+        messagesContainer.innerHTML = '<p style="text-align:center; color:#aaa;">No messages yet</p>';
+        return;
+      }
+
+      messages.forEach(msg => {
+        const isMine = msg.sender_id === userId;
+        const messageDiv = document.createElement('div');
+        messageDiv.className = isMine ? 'mymessage' : 'amessage';
+
+        messageDiv.innerHTML = `
+          <p style="margin-bottom: 0">${new Date(msg.date_sent).toLocaleString()}</p>
+          <p class="${isMine ? 'mymessagebubble' : 'amessagebubble'}">
+            ${msg.message_cont}
+          </p>
+          ${isMine ? '<i class="bi-check2-all"></i>' : ''}
+        `;
+        messagesContainer.appendChild(messageDiv);
+      });
+
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function fetchAndRenderMessages(chatId) {
+      try {
+        const response = await fetch(`/get-personal-chat-messages/${chatId}`);
+        const data = await response.json();
+        const messages = data.messages || [];
+
+        renderMessages(messages);
+      } catch (error) {
+        console.error('Auto-refresh error:', error);
+      }
+    }
+
+    // Manual chat click
+    chatItems.forEach(item => {
+      item.addEventListener('click', async () => {
+        const chatId = item.getAttribute('data-chat-id');
+        const username = item.querySelector('.text-muted').textContent;
+
+        chatInfo.textContent = username;
+        currentChatId = chatId;
+
+        // Update form hidden fields
+        chatIdField.value = chatId;
+        isPersonalField.value = 'true';
+
+        await fetchAndRenderMessages(chatId); // Initial load
+      });
+    });
+
+    // Auto-refresh every 3 seconds if a chat is selected
+    setInterval(() => {
+      if (currentChatId) {
+        fetchAndRenderMessages(currentChatId);
+      }
+    }, 3000);
+
+    // ✨ Handle message form submission
+    messageForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const chatId = chatIdField.value;
+      const messageContent = messageInput.value.trim();
+
+      if (!messageContent) return;
+
+      try {
+        const formData = new FormData(messageForm);
+        const response = await fetch('/send-message', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          messageInput.value = '';
+          await fetchAndRenderMessages(chatId);
+        } else {
+          console.error('Send error:', result.error_ping || 'Unknown error');
+        }
+      } catch (err) {
+        console.error('Send failed:', err);
+      }
+    });
+  });
+</script>
+
 {% endblock %}
