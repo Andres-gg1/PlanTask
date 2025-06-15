@@ -38,11 +38,9 @@
           <a id="profileDropdown" aria-label="Profile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             {% if user.pfp %}
               <img src="{{ user.pfp }}" 
-                  alt="Profile Picture" 
                   style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
             {% else %}
               <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
-                  alt="Default Profile Picture" 
                   style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
             {% endif %}
           </a>
