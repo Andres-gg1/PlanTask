@@ -14,7 +14,9 @@
     color: #7d4ec4;
   }
 
-
+  .text{
+    font-family: "Proxima Nova", sans-serif;
+  }
   .modal-custom {
     position: fixed;
     top: 50%;
@@ -32,6 +34,11 @@
     transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
   }
 
+  .btn{
+    cursor: pointer;
+    font-family: "Proxima Nova", sans-serif;
+    font-weight: 600;
+  }
   .modal-custom.active {
     opacity: 1;
     visibility: visible;
@@ -77,8 +84,8 @@
         {% endif %}
       </div>
       <div>
-        <h3 class="mb-0">{{ user_viewing.first_name }} {{ user_viewing.last_name }}</h3>
-        <p class="text-muted">@{{ user_viewing.username }}</p>
+        <h3 class="text mb-0">{{ user_viewing.first_name }} {{ user_viewing.last_name }}</h3>
+        <p class="text text-muted">@{{ user_viewing.username }}</p>
       </div>
       {% if user_viewing.id != user.id %}
       <form id="message-profile-form" action="{{ request.route_url('create_message_relation') }}" method="POST">

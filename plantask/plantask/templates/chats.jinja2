@@ -8,84 +8,76 @@
 
 {% block content %}
 <div class="main-layout">
-  <main class="mycontainer" style="display: flex;">
+  <main class="mycontainer d-flex">
     <aside class="left-sidebar">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-        <h1 style="margin: 0;">My Chats</h1>
-        <button class="groupchatbtn btn btn-primary" id="new-chat-btn">
-        <i class="bi-plus-lg"></i>
-        </button>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="mb-0">My Chats</h1>
+        <button class="groupchatbtn btn btn-primary" id="new-chat-btn"><i class="bi-plus-lg"></i></button>
       </div>
+
       <div class="search-container">
         <input type="text" id="chats-search" class="chats-search" placeholder="Filter by name">
         <i class="bi-search search-icon"></i>
       </div>
+
       <div class="chats-scroll-area">
         {% if chats %}
         <ul class="list-group mb-4" id="chats-list">
           {% for f in chats %}
-            <li class="list-group-item justify-content-between align-items-center chat-item" 
-                data-chat-id="{{ f.chat_id }}" 
-                data-first-name="{{ f.first_name | lower }}" 
-                data-last-name="{{ f.last_name | lower }}" 
-                data-username="{{ f.username | lower }}"
-                data-image-route="{{ f.image_route if f.image_route else '' }}">
-              <div style="cursor:pointer; display: flex; align-items: center;">
-                {% if f.image_route %}
-                  <img src="{{ f.image_route }}" 
-                  style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; display: inline-block; margin-right: 1rem;">
-                {% else %}
-                  <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
-                  style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; display: inline-block; margin-right: 1rem;">
-                {% endif %}
-                <div style="display: flex; flex-direction: column;">
-                  <span style="font-weight: bold; margin-right: 1rem;">{{ f.first_name }} {{ f.last_name }}</span>
-                  <span class="text-muted">@{{ f.username }}</span>
-                </div>
-              </div>
-            </li>
+          <li class="list-group-item chat-item d-flex align-items-center"
+              data-chat-id="{{ f.chat_id }}"
+              data-other-user-id="{{ f.other_user_id }}"
+              data-first-name="{{ f.first_name | lower }}"
+              data-last-name="{{ f.last_name | lower }}"
+              data-username="{{ f.username | lower }}"
+              data-image-route="{{ f.image_route or '' }}">
+            <img src="{{ f.image_route or request.static_url('plantask:static/default_pfp.svg') }}"
+                 class="rounded-circle me-3" style="width: 2.5rem; height: 2.5rem; object-fit: cover;">
+            <div>
+              <span class="fw-bold">{{ f.first_name }} {{ f.last_name }}</span><br>
+              <span class="text-muted">@{{ f.username }}</span>
+            </div>
+          </li>
           {% endfor %}
         </ul>
         {% else %}
-          <p>No chats available</p>
+        <p>No chats available</p>
         {% endif %}
       </div>
     </aside>
-    <section class="chat-messages" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;">
-      <div class="ChatInfo" style="display: none; align-items: center;">
-      <img class="chatinfo-pfp" 
-          src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
-          alt="Profile Picture" 
-          style="width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; margin-right: 1rem; cursor: pointer;">
-      <div style="display: flex; flex-direction: column; cursor: pointer;">
-        <h4 style="margin: 0; font-weight: bold;">Full Name</h4>
-        <a class="text-muted">@username</a>
+
+    <section class="chat-messages flex-grow-1 d-flex flex-column" style="min-width: 0;">
+      <div class="ChatInfo d-none align-items-center">
+        <img class="chatinfo-pfp rounded-circle me-3"
+             src="{{ request.static_url('plantask:static/default_pfp.svg') }}"
+             style="width: 3rem; height: 3rem; object-fit: cover; cursor: pointer;">
+        <div class="cursor-pointer">
+          <h4 class="mb-0 fw-bold">Full Name</h4>
+          <a class="text-muted">@username</a>
+        </div>
+        {% if group_chat %}
+        <i class="bi-three-dots-vertical fs-1 ms-auto me-2"></i>
+        {% endif %}
       </div>
-      <i class="bi-three-dots-vertical fs-1" style="margin-left: auto; margin-right: 0.5rem;"></i>
-    </div>
-      <div class="messages">
-        <p class="empty-message-hint" style="text-align:center; color:#aaa;">Select a chat to view messages</p>
+
+      <div class="messages text-center text-muted">
+        <p class="empty-message-hint">Select a chat to view messages</p>
       </div>
+
       <button id="scroll-to-bottom-btn" class="scroll-to-bottom-btn">
         Scroll to bottom <i class="bi-arrow-down"></i>
       </button>
-      <form id="message-form" method="post" action="/send-message" style="display: none;">
+
+      <form id="message-form" method="post" action="/send-message" class="d-none">
         <div class="chat-input-bar">
           <input type="hidden" name="chat_id" id="chat-id-field">
           <input type="hidden" name="is_personal_chat" id="is-personal-chat-field">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          {% if user.pfp %}
-            <img src="{{ user.pfp }}" 
-                style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
-          {% else %}
-            <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
-                style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
-          {% endif %}
-          <input type="text" id="message-input" name="message-input" class="chat-input" placeholder="Write a message" />
+          <img src="{{ user.pfp or request.static_url('plantask:static/default_pfp.svg') }}"
+               class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+          <input type="text" id="message-input" name="message-input" class="chat-input" placeholder="Write a message">
           <i class="bi-paperclip attach-icon"></i>
-          <button class="send-button">
-            Send <i class="bi-send"></i>
-          </button>
+          <button class="send-button">Send <i class="bi-send"></i></button>
         </div>
       </form>
     </section>
@@ -96,168 +88,123 @@
 {% block scripts %}
 <script src="{{ request.static_url('plantask:static/scripts/chats.js') }}"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const initialChatId = urlParams.get('currentChatId');
-    const userId = {{ request.session.user_id }};
-    const chatItems = document.querySelectorAll('.chat-item');
-    const messagesContainer = document.querySelector('.messages');
-    const chatInfo = document.querySelector('.ChatInfo h4');
-    const chatIdField = document.getElementById('chat-id-field');
-    const isPersonalField = document.getElementById('is-personal-chat-field');
-    const messageForm = document.getElementById('message-form');
-    const messageInput = document.getElementById('message-input');
-    const scrollBtn = document.getElementById('scroll-to-bottom-btn');
-    let currentChatId = null;
+document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialChatId = urlParams.get('currentChatId');
+  const userId = {{ request.session.user_id }};
+  const chatItems = document.querySelectorAll('.chat-item');
+  const messagesContainer = document.querySelector('.messages');
+  const chatInfo = document.querySelector('.ChatInfo');
+  const chatIdField = document.getElementById('chat-id-field');
+  const isPersonalField = document.getElementById('is-personal-chat-field');
+  const messageForm = document.getElementById('message-form');
+  const messageInput = document.getElementById('message-input');
+  const scrollBtn = document.getElementById('scroll-to-bottom-btn');
+  let currentChatId = null;
 
-    function scrollToBottom() {
-        messagesContainer.scrollTo({
-            top: messagesContainer.scrollHeight,
-            behavior: 'smooth'
-        });
-    }
+  const scrollToBottom = () => {
+    messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
+  };
 
-    function handleScrollButtonVisibility() {
-      const threshold = 100;
-      const atBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < threshold;
-      scrollBtn.style.display = atBottom ? 'none' : 'block';
-    }
+  const handleScrollButtonVisibility = () => {
+    const threshold = 100;
+    const atBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < threshold;
+    scrollBtn.style.display = atBottom ? 'none' : 'block';
+  };
 
-    scrollBtn.addEventListener('click', scrollToBottom);
-    messagesContainer.addEventListener('scroll', handleScrollButtonVisibility);
+  scrollBtn.addEventListener('click', scrollToBottom);
+  messagesContainer.addEventListener('scroll', handleScrollButtonVisibility);
 
-    function renderMessages(messages) {
-      const chatInfoBlock = document.querySelector('.ChatInfo');
-      const inputForm = document.getElementById('message-form');
-
-      chatInfoBlock.style.display = 'flex';
-      inputForm.style.display = 'block';
-      messagesContainer.innerHTML = '';
-
-      if (messages.length === 0) {
-        messagesContainer.innerHTML = '<p style="text-align:center; color:#aaa;">No messages yet</p>';
-        return;
-      }
-
-      messages.forEach(msg => {
-        const isMine = msg.sender_id === userId;
-        const messageDiv = document.createElement('div');
-        messageDiv.className = isMine ? 'mymessage' : 'amessage';
-
-        messageDiv.innerHTML = `
+  const renderMessages = (messages) => {
+    chatInfo.classList.remove('d-none');
+    messageForm.classList.remove('d-none');
+    messagesContainer.innerHTML = messages.length
+      ? messages.map(msg => `
+        <div class="${msg.sender_id === userId ? 'mymessage' : 'amessage'}">
           <p class="message-info">${new Date(msg.date_sent).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-          <p class="${isMine ? 'mymessagebubble' : 'amessagebubble'}">
-            ${msg.message_cont}
-          </p>
-          ${isMine ? `<i class="bi ${msg.state === 'read' ? 'bi-check2-all' : 'bi-check2'}"></i>` : ''}
-        `;
-        messagesContainer.appendChild(messageDiv);
+          <p class="${msg.sender_id === userId ? 'mymessagebubble' : 'amessagebubble'}">${msg.message_cont}</p>
+          ${msg.sender_id === userId ? `<i class="bi ${msg.state === 'read' ? 'bi-check2-all' : 'bi-check2'}"></i>` : ''}
+        </div>
+      `).join('')
+      : '<p style="text-align:center; color:#aaa;">No messages yet</p>';
+
+    if (messagesContainer.scrollTop >= messagesContainer.scrollHeight - messagesContainer.clientHeight - 100) {
+      scrollToBottom();
+    }
+    handleScrollButtonVisibility();
+  };
+
+  const fetchAndRenderMessages = async (chatId) => {
+    try {
+      const res = await fetch(`/get-personal-chat-messages/${chatId}`);
+      const data = await res.json();
+      renderMessages(data.messages || []);
+    } catch (err) {
+      console.error('Fetch error:', err);
+    }
+  };
+
+  chatItems.forEach(item => {
+    item.addEventListener('click', async () => {
+      chatItems.forEach(el => el.classList.remove('active'));
+      item.classList.add('active');
+
+      const { chatId, firstName, lastName, username, imageRoute, otherUserId } = item.dataset;
+      const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+      chatIdField.value = chatId;
+      isPersonalField.value = 'true';
+      currentChatId = chatId;
+
+      chatInfo.querySelector('.chatinfo-pfp').src = imageRoute || "{{ request.static_url('plantask:static/default_pfp.svg') }}";
+      chatInfo.querySelector('h4').textContent = `${cap(firstName)} ${cap(lastName)}`;
+      chatInfo.querySelector('a').textContent = `@${username}`;
+
+      ['.chatinfo-pfp', 'h4', 'a'].forEach(selector => {
+        chatInfo.querySelector(selector).onclick = () => window.location.href = `/user/${otherUserId}`;
       });
 
-      // Auto-scroll if near bottom
-      const nearBottom = messagesContainer.scrollTop >= messagesContainer.scrollHeight - messagesContainer.clientHeight - 100;
-      if (nearBottom) {
-        scrollToBottom();
-      }
-      handleScrollButtonVisibility();
-    }
-
-    async function fetchAndRenderMessages(chatId) {
-      try {
-        const response = await fetch(`/get-personal-chat-messages/${chatId}`);
-        const data = await response.json();
-        renderMessages(data.messages || []);
-      } catch (error) {
-        console.error('Fetch error:', error);
-      }
-    }
-
-    chatItems.forEach(item => {
-      item.addEventListener('click', async () => {
-        chatItems.forEach(chat => chat.classList.remove('active'));
-        item.classList.add('active');
-
-        const chatId = item.dataset.chatId;
-        const firstName = item.dataset.firstName;
-        const lastName = item.dataset.lastName;
-        const username = item.dataset.username;
-        const imageRoute = item.dataset.imageRoute;
-
-        const chatInfo = document.querySelector('.ChatInfo');
-        const pfpImg = chatInfo.querySelector('.chatinfo-pfp');
-        const fullNameElem = chatInfo.querySelector('h4');
-        const usernameElem = chatInfo.querySelector('a'); // Changed from 'small' to 'a'
-
-        pfpImg.src = imageRoute || "{{ request.static_url('plantask:static/default_pfp.svg') }}";
-        const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-        fullNameElem.textContent = `${cap(firstName)} ${cap(lastName)}`;
-        usernameElem.textContent = `@${username}`;
-        
-        // Store user_id in data attribute for the click handler
-        chatInfo.dataset.userId = chatId;
-        
-        // Add click handlers for profile navigation
-        pfpImg.onclick = () => window.location.href = `/user/${chatId}`;
-        fullNameElem.onclick = () => window.location.href = `/user/${chatId}`;
-        usernameElem.onclick = () => window.location.href = `/user/${chatId}`;
-
-        currentChatId = chatId;
-        chatIdField.value = chatId;
-        isPersonalField.value = 'true';
-
-        await fetchAndRenderMessages(chatId);
-      });
-    });
-        // Activar chat automáticamente si viene en la URL
-    if (initialChatId) {
-      const targetItem = Array.from(chatItems).find(item => item.dataset.chatId === initialChatId);
-      if (targetItem) {
-        targetItem.click(); // Simula click para cargar el chat
-      }
-    } else {
-      // Mostrar texto por defecto si no se seleccionó ningún chat
-      chatInfo.style.display = 'none';
-      messageForm.style.display = 'none';
-      messagesContainer.innerHTML = `
-        <p style="text-align:center; color:#aaa; margin-top: 2rem;">
-          Select a chat to view messages
-        </p>`;
-    }
-
-    setInterval(() => {
-      if (!currentChatId) return;
-      const distanceFromBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight;
-      const isNearBottom = distanceFromBottom < 100;
-      if (isNearBottom) {
-        fetchAndRenderMessages(currentChatId);
-      }
-    }, 3000);
-
-    messageForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const chatId = chatIdField.value;
-      const messageContent = messageInput.value.trim();
-      if (!messageContent) return;
-
-      try {
-        const formData = new FormData(messageForm);
-        const response = await fetch('/send-message', {
-          method: 'POST',
-          body: formData
-        });
-
-        const result = await response.json();
-        if (result.success) {
-          messageInput.value = '';
-          await fetchAndRenderMessages(chatId);
-        } else {
-          console.error('Send error:', result.error_ping || 'Unknown error');
-        }
-      } catch (err) {
-        console.error('Send failed:', err);
-      }
+      await fetchAndRenderMessages(chatId);
     });
   });
+
+  if (initialChatId) {
+    const target = [...chatItems].find(i => i.dataset.chatId === initialChatId);
+    if (target) target.click();
+  } else {
+    chatInfo.classList.add('d-none');
+    messageForm.classList.add('d-none');
+    messagesContainer.innerHTML = '<p class="text-center text-muted mt-4">Select a chat to view messages</p>';
+  }
+
+  setInterval(() => {
+    if (!currentChatId) return;
+    const distanceFromBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight;
+    if (distanceFromBottom < 100) {
+      fetchAndRenderMessages(currentChatId);
+    }
+  }, 3000);
+
+  messageForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const message = messageInput.value.trim();
+    if (!message) return;
+
+    try {
+      const formData = new FormData(messageForm);
+      const res = await fetch('/send-message', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.success) {
+        messageInput.value = '';
+        await fetchAndRenderMessages(currentChatId);
+      } else {
+        console.error('Send error:', data.error_ping || 'Unknown error');
+      }
+    } catch (err) {
+      console.error('Send failed:', err);
+    }
+  });
+});
 </script>
 {% endblock %}

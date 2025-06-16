@@ -21,6 +21,7 @@ def chats_page(request):
     # Simplified query to get the other user's details
     personal_chats = request.dbsession.query(
         PersonalChat.id.label('chat_id'),
+        User.id.label('other_user_id'),
         User.username.label('username'),
         User.first_name.label('first_name'),
         User.last_name.label('last_name'),
@@ -38,6 +39,7 @@ def chats_page(request):
         {
             'chat_id': chat.chat_id,
             'username': chat.username,
+            'other_user_id': chat.other_user_id,
             'first_name': chat.first_name,
             'last_name': chat.last_name,
             'image_route': chat.image_route
