@@ -85,6 +85,8 @@ html, body {
   color: black;
   background-color: #f0f0f0;
   border: 1px solid #b1b1b1;
+  border-radius: 0.5rem; /* redondear todos los bordes */
+  margin-bottom: 0.25rem; /* para separar y no se pegue con el siguiente */
 }
 
 .chat-item > i,
@@ -117,11 +119,24 @@ html, body {
 .messages {
   flex: 1 1 auto;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column; /* <- fix this line */
   overflow-y: auto;
   padding: 1rem;
 }
 
+.scroll-to-bottom-btn{
+  position: absolute;
+  bottom: 5rem;
+  right: 2rem;
+  display: none;
+  background-color: #7d4ec4;
+  color: white;
+  border: none;
+  border-radius: 2rem;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  z-index: 10;
+}
 .mymessage, .amessage {
   font-family: "Proxima Nova", sans-serif;
   font-weight: 400;
@@ -129,6 +144,12 @@ html, body {
   max-width: 60%;
   display: flex;
   flex-direction: column;
+}
+
+.message-info{
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 0;
 }
 
 .mymessage {

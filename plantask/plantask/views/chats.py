@@ -54,15 +54,28 @@ import json
 def get_personal_messages(request):
     try:
         chat_id = request.matchdict.get('chat_id')
-
+        
         messages = request.dbsession.query(ChatLog).filter(
             ChatLog.perschat_id == chat_id
-        ).order_by(ChatLog.date_sent.desc()).all()
+        ).order_by(ChatLog.date_sent.asc()).all()
+        
+        user_id = request.session.get("user_id")
+        unread_messages = request.dbsession.query(ChatLog).filter(
+            ChatLog.perschat_id == chat_id,
+            ChatLog.sender_id != user_id,
+            ChatLog.state != 'read'
+        ).all()
 
+        for msg in unread_messages:
+            msg.state = 'read'
+
+        request.dbsession.flush()
+        
         messages_data = [{
             "sender_id": msg.sender_id,
             "date_sent": msg.date_sent.isoformat(),
-            "message_cont": msg.message_cont
+            "message_cont": msg.message_cont,
+            "state": msg.state
         } for msg in messages]
 
         return Response(
@@ -145,5 +158,3 @@ def search_users_global(request):
         }
         for u in results
     ]
-
-
