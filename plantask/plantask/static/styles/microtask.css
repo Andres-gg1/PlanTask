@@ -90,15 +90,15 @@
 
 /* Close button */
 .custom-modal-close {
-  background: transparent;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
   border: none;
   font-size: 1.5rem;
-  line-height: 1;
   cursor: pointer;
-  font-weight: 700;
-  color: #000;
-  padding: 0;
 }
+
 
 /* Body */
 .custom-modal-body {

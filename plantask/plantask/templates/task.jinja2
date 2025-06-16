@@ -208,22 +208,33 @@
   <div class="custom-modal-dialog" role="document">
     <div class="custom-modal-content">
       <div class="custom-modal-header">
-        <h5 id="microtaskDetailsModalLabel" class="custom-modal-title">Microtask Details</h5>
+        <div style="width: 100%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-right: 5rem;">
+            <h5 id="microtaskDetailsModalLabel" class="custom-modal-title" style="margin: 0;">
+              <span style="display: flex; align-items: center; gap: 10px;">
+                <span id="microtaskStatusIcon" class="fs-1" style="margin-right: 1.5rem;"></span>
+                <span id="microtaskName" style="font-size: 2rem;"></span>
+              </span>
+            </h5>
+            <span id="microtaskDueDate" style="font-size: 1.2rem; color: #666;"></span>
+          </div>
+            <div style="margin-top: 1rem; color: #666;">
+              <div style="display: flex; gap: 1rem; font-size: 1rem;"> 
+                <a href="{{ request.route_url('task_by_id', id=task.id) }}" style="text-decoration: none; color: inherit;">Task: {{ task.task_title }}</a>
+                <span style="color: #999;">|</span>
+                <a href="{{ request.route_url('project_by_id', id=project.id) }}" style="text-decoration: none; color: inherit;">Project: {{ project.name }}</a>
+              </div>
+            </div>
+        </div>
         <button type="button" class="custom-modal-close" aria-label="Close"><i class="bi-x-lg"></i></button>
       </div>
       <div class="custom-modal-body">
         <dl class="microtask-details">
-          <dt>Name</dt>
-          <dd id="microtaskName"></dd>
-
           <dt>Description</dt>
-          <dd id="microtaskDescription"></dd>
+          <dd id="microtaskDescription" style="font-size: 1.2rem; margin-bottom: 2rem;"></dd>
 
           <dt>Status</dt>
-          <dd id="microtaskStatus"></dd>
-
-          <dt>Due Date</dt>
-          <dd id="microtaskDueDate"></dd>
+          <dd id="microtaskStatus" style="font-size: 1.2rem;"></dd>
         </dl>
       </div>
     </div>
@@ -386,12 +397,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fill and open modal when clicking on a microtask
     microtaskItems.forEach(item => {
         item.addEventListener('click', () => {
+            // Get the status from the data attribute
+            const status = item.dataset.status || 'undone';
+            
+            // Set the status icon based on status
+            let statusIcon = '';
+            if (status === 'undone') {
+                statusIcon = '<i class="bi-square"></i>';
+            } else if (status === 'under_review') {
+                statusIcon = '<i class="bi-square-fill"></i>';
+            } else if (status === 'approved') {
+                statusIcon = '<i class="bi-check-square-fill"></i>';
+            }
+            
+            document.getElementById('microtaskStatusIcon').innerHTML = statusIcon;
             document.getElementById('microtaskName').textContent = item.dataset.name || 'N/A';
             document.getElementById('microtaskDescription').textContent = item.dataset.description || 'N/A';
             
-            let status = item.dataset.status || 'N/A';
-            status = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
-            document.getElementById('microtaskStatus').textContent = status;
+            let statusText = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+            document.getElementById('microtaskStatus').textContent = statusText;
             
             document.getElementById('microtaskDueDate').textContent = item.dataset.due || 'No due date';
 
