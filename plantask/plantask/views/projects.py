@@ -302,6 +302,7 @@ def delete_project(request):
         request.dbsession.flush()
 
     return HTTPFound(location=request.route_url('my_projects'))
+
 @view_config(route_name='search_users', renderer='json', request_method='GET', permission="admin")
 @verify_session
 def search_users(request):
@@ -312,8 +313,13 @@ def search_users(request):
 
         project_id = request.GET.get('project_id')
 
-        # Build base query
-        query = request.dbsession.query(User).filter(
+        query = request.dbsession.query(
+            User.id,
+            User.username,
+            User.first_name,
+            User.last_name,
+            File.route.label('image_route')
+        ).outerjoin(File, User.user_image_id == File.id).filter(
             or_(
                 User.username.ilike(f"%{search_term}%"),
                 User.first_name.ilike(f"%{search_term}%"),
@@ -321,31 +327,33 @@ def search_users(request):
             )
         )
 
-        # Exclude users already in the project
         if project_id:
             try:
                 project_id = int(project_id)
                 member_subquery = select(ProjectsUser.user_id).where(
-                     and_(
-                            ProjectsUser.project_id == project_id,
-                            ProjectsUser.active == True
-                        )
+                    and_(
+                        ProjectsUser.project_id == project_id,
+                        ProjectsUser.active == True
+                    )
                 ).scalar_subquery()
                 query = query.filter(~User.id.in_(member_subquery))
             except ValueError:
-                pass  # Ignore invalid project_id
+                pass
 
         users = query.limit(10).all()
+
         return [{
-            'id': user.id,
-            'username': user.username,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-        } for user in users]
+            'id': u.id,
+            'username': u.username,
+            'first_name': u.first_name,
+            'last_name': u.last_name,
+            'image_route': u.image_route
+        } for u in users]
 
     except SQLAlchemyError:
         request.dbsession.rollback()
         return []
+
 
 
 @view_config(route_name='add_member', request_method='POST', permission="admin")

@@ -17,7 +17,6 @@ def my_view(request):
 @verify_session
 def user_view(request):
     user_id = int(request.matchdict.get('id'))
-    print(user_id)
 
     # Only load specific fields
     user_viewing = request.dbsession.query(
@@ -33,8 +32,6 @@ def user_view(request):
     user_image = request.dbsession.query(
         File.route
     ).filter_by(id = user_viewing.user_image_id).scalar()
-
-    print(user_image)
 
     if not user_viewing:
         return {"error_ping": "User not found."}

@@ -65,13 +65,21 @@ function searchUsers() {
 
                 const userItem = document.createElement("div");
                 userItem.classList.add("search-result-item", "d-flex", "justify-content-between", "align-items-center", "mb-2");
+                const pfp = user.image_route
+                ? `<img src="${user.image_route}" alt="PFP" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">`
+                : `<i class="bi bi-person-circle fs-4 text-secondary me-2"></i>`;
+
                 userItem.innerHTML = `
+                <div class="d-flex align-items-center">
+                    ${pfp}
                     <div>
-                        <strong>${user.first_name} ${user.last_name}</strong><br>
-                        <small class="text-muted">@${user.username}</small>
+                    <strong>${user.first_name} ${user.last_name}</strong><br>
+                    <small class="text-muted">@${user.username}</small>
                     </div>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addUser('${user.id}', '${user.username}', '${user.first_name}', '${user.last_name}')">Add</button>
+                </div>
+                <button type="button" class="btn btn-sm btn-primary" onclick="addUser('${user.id}', '${user.username}', '${user.first_name}', '${user.last_name}', '${user.image_route ?? ''}')">Add</button>
                 `;
+
                 resultsContainer.appendChild(userItem);
             });
         })

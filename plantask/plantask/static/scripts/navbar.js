@@ -70,13 +70,18 @@ document.addEventListener('DOMContentLoaded', function () {
             const item = document.createElement('a');
             item.className = 'dropdown-item d-flex align-items-center gap-2 py-2';
             item.href = `/user/${user.id}`;
+            const pfp = user.image_route
+              ? `<img src="${user.image_route}" alt="PFP" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">`
+              : `<i class="bi bi-person-circle fs-4 text-secondary"></i>`;
+
             item.innerHTML = `
-              <i class="bi bi-person-circle fs-4 text-secondary"></i>
+              ${pfp}
               <div>
                 <div><strong>${user.first_name} ${user.last_name}</strong></div>
                 <div class="text-muted small">@${user.username}</div>
               </div>
             `;
+
             results.appendChild(item);
           });
         })

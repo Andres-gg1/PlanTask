@@ -52,6 +52,11 @@
     opacity: 1;
     visibility: visible;
   }
+  .btn-primary{
+    background-color: #4e8fd5;
+    border-color: #4e8fd5;
+    font-family: "Proxima Nova", sans-serif;
+  }
 </style>
 {% endblock %}
 
@@ -75,7 +80,13 @@
         <h3 class="mb-0">{{ user_viewing.first_name }} {{ user_viewing.last_name }}</h3>
         <p class="text-muted">@{{ user_viewing.username }}</p>
       </div>
-      {% if role == 'admin' or user_viewing.id == user.id %}
+      {% if user_viewing.id != user.id %}
+      <form id="message-profile-form" action="{{ request.route_url('create_message_relation') }}" method="POST">
+        <input type="hidden" name="recipient_id" value="{{ user_viewing.id }}">
+        <button id="message-profile-btn" class="btn btn-success ms-auto">Send a Message</button>
+      </form>
+      {% endif %}
+      {% if user_viewing.id == user.id %}
         <button id="edit-profile-btn" class="btn btn-primary ms-auto">Edit Profile</button>
       {% endif %}
     </div>
@@ -135,7 +146,7 @@
             <button type="submit" class="btn btn-success">Upload Image</button>
         </div>
     </form>
-    <button class="btn btn-outline-secondary" onclick="closeModals()">Close</button>
+    <button class="btn btn-outline-danger" onclick="closeModals()">Close</button>
   </div>
 </main>
 {% endblock %}

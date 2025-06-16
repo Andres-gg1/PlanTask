@@ -7,6 +7,7 @@ def includeme(config):
     config.add_route('chats', '/chats')
     config.add_route('get_personal_chat_messages', r'/get-personal-chat-messages/{chat_id:\d+}')
     config.add_route('send_message', '/send-message')
+    config.add_route('create_message_relation', '/send-message-to')
     config.add_route('calendar', '/calendar')
     config.add_route('dashboard', '/dashboard')
     config.add_route('login', '/login')

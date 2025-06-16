@@ -10,7 +10,12 @@
 <div class="main-layout">
   <main class="mycontainer" style="display: flex;">
     <aside class="left-sidebar">
-      <h1 style="margin-bottom: 1rem;">My Chats</h1> 
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <h1 style="margin: 0;">My Chats</h1>
+        <button class="groupchatbtn btn btn-primary" id="new-chat-btn">
+        <i class="bi-plus-lg"></i>
+        </button>
+      </div>
       <div class="search-container">
         <input type="text" id="chats-search" class="chats-search" placeholder="Filter by name">
         <i class="bi-search search-icon"></i>
@@ -51,10 +56,10 @@
       <img class="chatinfo-pfp" 
           src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
           alt="Profile Picture" 
-          style="width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; margin-right: 1rem;">
-      <div style="display: flex; flex-direction: column;">
+          style="width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; margin-right: 1rem; cursor: pointer;">
+      <div style="display: flex; flex-direction: column; cursor: pointer;">
         <h4 style="margin: 0; font-weight: bold;">Full Name</h4>
-        <small class="text-muted">@username</small>
+        <a class="text-muted">@username</a>
       </div>
       <i class="bi-three-dots-vertical fs-1" style="margin-left: auto; margin-right: 0.5rem;"></i>
     </div>
@@ -69,7 +74,13 @@
           <input type="hidden" name="chat_id" id="chat-id-field">
           <input type="hidden" name="is_personal_chat" id="is-personal-chat-field">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <i class="bi-person-circle user-icon"></i>
+          {% if user.pfp %}
+            <img src="{{ user.pfp }}" 
+                style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+          {% else %}
+            <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+                style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+          {% endif %}
           <input type="text" id="message-input" name="message-input" class="chat-input" placeholder="Write a message" />
           <i class="bi-paperclip attach-icon"></i>
           <button class="send-button">
@@ -86,6 +97,8 @@
 <script src="{{ request.static_url('plantask:static/scripts/chats.js') }}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialChatId = urlParams.get('currentChatId');
     const userId = {{ request.session.user_id }};
     const chatItems = document.querySelectorAll('.chat-item');
     const messagesContainer = document.querySelector('.messages');
@@ -98,8 +111,10 @@
     let currentChatId = null;
 
     function scrollToBottom() {
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
+        messagesContainer.scrollTo({
+            top: messagesContainer.scrollHeight,
+            behavior: 'smooth'
+        });
     }
 
     function handleScrollButtonVisibility() {
@@ -130,7 +145,7 @@
         messageDiv.className = isMine ? 'mymessage' : 'amessage';
 
         messageDiv.innerHTML = `
-          <p class="message-info">${new Date(msg.date_sent).toLocaleString()}</p>
+          <p class="message-info">${new Date(msg.date_sent).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
           <p class="${isMine ? 'mymessagebubble' : 'amessagebubble'}">
             ${msg.message_cont}
           </p>
@@ -171,12 +186,20 @@
         const chatInfo = document.querySelector('.ChatInfo');
         const pfpImg = chatInfo.querySelector('.chatinfo-pfp');
         const fullNameElem = chatInfo.querySelector('h4');
-        const usernameElem = chatInfo.querySelector('small');
+        const usernameElem = chatInfo.querySelector('a'); // Changed from 'small' to 'a'
 
         pfpImg.src = imageRoute || "{{ request.static_url('plantask:static/default_pfp.svg') }}";
         const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
         fullNameElem.textContent = `${cap(firstName)} ${cap(lastName)}`;
         usernameElem.textContent = `@${username}`;
+        
+        // Store user_id in data attribute for the click handler
+        chatInfo.dataset.userId = chatId;
+        
+        // Add click handlers for profile navigation
+        pfpImg.onclick = () => window.location.href = `/user/${chatId}`;
+        fullNameElem.onclick = () => window.location.href = `/user/${chatId}`;
+        usernameElem.onclick = () => window.location.href = `/user/${chatId}`;
 
         currentChatId = chatId;
         chatIdField.value = chatId;
@@ -185,6 +208,21 @@
         await fetchAndRenderMessages(chatId);
       });
     });
+        // Activar chat automáticamente si viene en la URL
+    if (initialChatId) {
+      const targetItem = Array.from(chatItems).find(item => item.dataset.chatId === initialChatId);
+      if (targetItem) {
+        targetItem.click(); // Simula click para cargar el chat
+      }
+    } else {
+      // Mostrar texto por defecto si no se seleccionó ningún chat
+      chatInfo.style.display = 'none';
+      messageForm.style.display = 'none';
+      messagesContainer.innerHTML = `
+        <p style="text-align:center; color:#aaa; margin-top: 2rem;">
+          Select a chat to view messages
+        </p>`;
+    }
 
     setInterval(() => {
       if (!currentChatId) return;

@@ -9,12 +9,14 @@ from plantask.models.chat import PersonalChat, ChatLog
 from plantask.models.file import File
 from plantask.auth.verifysession import verify_session
 import json
-from sqlalchemy import or_
 
 @view_config(route_name='chats', renderer='plantask:templates/chats.jinja2')
 @verify_session
 def chats_page(request):
     user_id = request.session.get('user_id')
+
+    # Obtener el chat_id de la consulta, si existe
+    current_chat_id = request.params.get('currentChatId')
 
     # Simplified query to get the other user's details
     personal_chats = request.dbsession.query(
@@ -43,11 +45,36 @@ def chats_page(request):
         for chat in personal_chats
     ]
 
-    return {'chats': chats}
+    return {'chats': chats, 'current_chat_id': current_chat_id}
 
 
-from pyramid.response import Response
-import json
+@view_config(route_name='create_message_relation', request_method='POST')
+@verify_session
+def create_message_relation(request):
+    user_id = request.session.get('user_id')
+    recipient_id = request.params.get('recipient_id')
+
+    # Verifica si ya existe un chat personal entre estos dos usuarios (sin importar el orden)
+    existing_chat = request.dbsession.query(PersonalChat).filter(
+        or_(
+            and_(PersonalChat.user1_id == user_id, PersonalChat.user2_id == recipient_id),
+            and_(PersonalChat.user1_id == recipient_id, PersonalChat.user2_id == user_id)
+        )
+    ).first()
+
+    if not existing_chat:
+        new_chat = PersonalChat(
+            user1_id=user_id,
+            user2_id=recipient_id
+        )
+        request.dbsession.add(new_chat)
+        request.dbsession.flush()
+        chat_id = new_chat.id
+    else:
+        chat_id = existing_chat.id
+
+    # Redirige a la vista de chats, pasando el chat_id como parámetro para JS
+    return HTTPFound(location=request.route_url('chats', _query={'currentChatId': chat_id}))
 
 @view_config(route_name='get_personal_chat_messages', request_method='GET')
 @verify_session
@@ -73,7 +100,7 @@ def get_personal_messages(request):
         
         messages_data = [{
             "sender_id": msg.sender_id,
-            "date_sent": msg.date_sent.isoformat(),
+            "date_sent": msg.date_sent.strftime('%Y-%m-%d %H:%M'),
             "message_cont": msg.message_cont,
             "state": msg.state
         } for msg in messages]
@@ -102,8 +129,6 @@ def send_message(request):
         chat_id = request.params.get('chat_id')
         message_content = request.params.get('message-input')
         is_personal_chat = request.params.get('is_personal_chat')
-        print(f"############################{chat_id}")
-        print(f"############################{message_content}")
         if is_personal_chat:
             new_message = ChatLog(
                 perschat_id=chat_id,
@@ -141,7 +166,14 @@ def search_users_global(request):
     if len(query) < 2:
         return []
 
-    results = request.dbsession.query(User).filter(
+    results = request.dbsession.query(
+        User.id,
+        User.username,
+        User.first_name,
+        User.last_name,
+        File.route.label('image_route')
+    ).outerjoin(File, User.user_image_id == File.id) \
+     .filter(
         or_(
             User.username.ilike(f'%{query}%'),
             User.first_name.ilike(f'%{query}%'),
@@ -154,7 +186,8 @@ def search_users_global(request):
             "id": u.id,
             "username": u.username,
             "first_name": u.first_name,
-            "last_name": u.last_name
+            "last_name": u.last_name,
+            "image_route": u.image_route
         }
         for u in results
     ]
