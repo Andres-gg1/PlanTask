@@ -28,11 +28,9 @@
               <div style="cursor:pointer; display: flex; align-items: center;">
                 {% if f.image_route %}
                   <img src="{{ f.image_route }}" 
-                  alt="Profile Picture" 
                   style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; display: inline-block; margin-right: 1rem;">
                 {% else %}
                   <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
-                  alt="Default Profile Picture" 
                   style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; display: inline-block; margin-right: 1rem;">
                 {% endif %}
                 <div style="display: flex; flex-direction: column;">

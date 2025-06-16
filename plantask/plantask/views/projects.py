@@ -222,9 +222,6 @@ def project_page(request):
 
 
         flashes = request.session.pop_flash()
-        print("#########################################################################")
-        print(tasks_by_label_status)
-        print("#########################################################################")
 
         return {
             "project": project,
