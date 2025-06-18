@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import or_, and_
 from datetime import datetime
 from plantask.models.user import User
-from plantask.models.chat import PersonalChat, ChatLog
+from plantask.models.chat import PersonalChat, ChatLog, GroupChat
 from plantask.models.file import File
 from plantask.auth.verifysession import verify_session
 import json
@@ -13,6 +13,8 @@ import json
 @view_config(route_name='chats', renderer='plantask:templates/chats.jinja2')
 @verify_session
 def chats_page(request):
+    groupchats = request.dbsession.query(GroupChat).all()
+    print("Group chats:", groupchats)
     user_id = request.session.get('user_id')
 
     # Obtener el chat_id de la consulta, si existe
@@ -78,9 +80,9 @@ def create_message_relation(request):
     # Redirige a la vista de chats, pasando el chat_id como parámetro para JS
     return HTTPFound(location=request.route_url('chats', _query={'currentChatId': chat_id}))
 
-@view_config(route_name='get_personal_chat_messages', request_method='GET')
+@view_config(route_name='get_chat_messages', request_method='GET')
 @verify_session
-def get_personal_messages(request):
+def get_chat_messages(request):
     try:
         chat_id = request.matchdict.get('chat_id')
         
@@ -193,3 +195,36 @@ def search_users_global(request):
         }
         for u in results
     ]
+
+@view_config(route_name='create_group_chat', request_method='POST')
+@verify_session
+def create_group_chat(request):
+    try:
+        user_id = request.session.get('user_id')
+        group_name = request.POST.get('group_name')
+        user_ids = request.POST.getall('user_ids')
+
+        if len(user_ids) < 2:
+            request.session.flash({'message': 'You must select at least two users.', 'style': 'danger'})
+            return HTTPFound(location=request.route_url('chats'))
+
+        group = GroupChat(
+            chat_name=group_name,
+            creation_date=datetime.now()
+        )
+        request.dbsession.add(group)
+        request.dbsession.flush()
+
+        # Insertar al creador y a los seleccionados como miembros (crear tabla intermedia si no la tienes)
+        request.dbsession.execute(
+            "INSERT INTO group_chats_users (group_chat_id, user_id) VALUES (:group_id, :user_id)",
+            [{'group_id': group.id, 'user_id': int(uid)} for uid in [user_id] + user_ids]
+        )
+        request.dbsession.flush()
+
+        return HTTPFound(location=request.route_url('chats', _query={'currentChatId': group.id}))
+    except Exception as e:
+        print("Error creating group:", e)
+        request.session.flash({'message': 'Error creating group chat.', 'style': 'danger'})
+        return HTTPFound(location=request.route_url('chats'))
+

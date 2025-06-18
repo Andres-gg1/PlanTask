@@ -1,37 +1,101 @@
-.project-name{
+/* ---------- GENERAL BUTTON STYLING ---------- */
+.btn, .mybtn, .filebtn, .create-microtask-button {
+    font-family: "Proxima Nova", sans-serif;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    border-radius: 0.6rem;
+    color: white;
+}
+
+/* Default hover/active behavior for all buttons */
+.btn:hover,
+.mybtn:hover,
+.filebtn:hover,
+.create-microtask-button:hover {
+    transform: scale(1.05);
+    color: white !important;
+}
+
+.btn:active,
+.mybtn:active,
+.filebtn:active,
+.create-microtask-button:active {
+    transform: scale(0.95) !important;
+    color: white !important;
+}
+
+/* ---------- BUTTON COLORS ---------- */
+.mybtn {
+    background-color: #767097;
+    color: white;
+    font-size: 1.45rem;
+}
+.mybtn:hover {
+    background-color: #5e5880;
+}
+.mybtn:active {
+    background-color: #4b456b !important;
+    color: white !important;
+}
+
+.filebtn {
+    background-color: #5175B9;
+    border: 1px solid #2D5775;
+    color: white;
+}
+.filebtn:hover {
+    background-color: #4366a7;
+}
+.filebtn:active {
+    background-color: #34548f !important;
+}
+
+.addlbbtn, .addlbbtn:hover, .addlbbtn:active {
+    color: #252525 !important;
+}
+/* ---------- FLOATING ACTION BUTTON ---------- */
+.create-microtask-button {
+    z-index: 1050;
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 0.5rem 1rem;
+    background-color: #76c47e;
+    color: white;
+    border-radius: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+.create-microtask-button:hover {
+    background-color: #67b36e;
+}
+.create-microtask-button:active {
+    background-color: #529e5d;
+}
+.create-microtask-button i {
+    margin-left: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: bolder;
+}
+
+/* ---------- TEXT & LAYOUT STYLES ---------- */
+.project-name {
     text-decoration: none;
     color: black;
     padding-left: 1rem;
 }
-.info{
-    font-family: "Proxima Nova" sans-serif;
+.info {
+    font-family: "Proxima Nova", sans-serif;
     font-size: 1.45rem;
 }
-.due-date{
+.due-date {
     color: #5175B9;
     font-weight: 600;
-}
-.mybtn{
-    background-color: #767097;
-    color: white;
-    font-family: "Proxima Nova" sans-serif;
-    font-size: 1.45rem;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-.mybtn:hover{
-    background-color: #5e5880;
-    transform: scale(1.025);
-    color: white;
-    font-family: "Proxima Nova" sans-serif;
-    font-size: 1.45rem;
-}
-.mybtn:active{
-    background-color: #4b456b !important;
-    color: white !important;
-    transform: scale(1) !important;
-}
-.btn{
-    font-weight: 500;
 }
 .info-row {
     display: flex;
@@ -43,75 +107,67 @@
 .info-row > div {
     margin-right: 1.5rem;
 }
-.admin-actions, .status-actions {
+.admin-actions,
+.status-actions {
     display: flex;
     gap: 0.5rem;
     align-items: center;
 }
 
-.create-microtask-button {
-    z-index: 1050;
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem; 
-    width: auto;
-    height: auto;
-    padding: 0.5rem 1rem;
-    background-color: #76c47e; 
-    color: white;
-    border-radius: 1.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
-    text-decoration: none;
-    font-size: 1.25rem; 
-    font-family: "Proxima Nova", sans-serif;
-    font-weight: 600;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.create-microtask-button:hover {
-    background-color: #67b36e; 
-    transform: scale(1.1);
-}
-
-.create-microtask-button i {
-    margin-left: 0.5rem;
-    font-size: 1.5rem;
-    font-weight: bolder;
-}
-
+/* ---------- MODAL BACKGROUND ---------- */
 .modal-body,
 .modal-footer {
     background-color: #f6f7f8;
 }
 
-.filebtn{
-    background-color: #5175B9;
-    border: 1px solid;
-    border-color: #2D5775;
+/* ---------- CUSTOM MODAL STYLE OVERRIDES ---------- */
+.modal-content,
+.alert {
+    font-family: "Proxima Nova", sans-serif !important;
+    border-radius: 1rem;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    border: none;
 }
 
-.filebtn:hover{
-    background-color: #4366a7;
-    transform: scale(1.025);
-    color: white;
-    font-family: "Proxima Nova" sans-serif;
-    font-size: 1.45rem;
+/* Modal animation */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    transform: translateY(-20px);
+    opacity: 0;
 }
-.filebtn:active{
-    background-color: #34548f !important;
-    color: white !important;
-    transform: scale(1) !important;
+.modal.fade.show .modal-dialog {
+    transform: translateY(0);
+    opacity: 1;
 }
 
+/* Modal header/footer style */
+.modal-header,
+.modal-footer {
+    background-color: #f6f7f8;
+    border: none;
+}
+.modal-title {
+    font-family: "Proxima Nova", sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #343a40;
+}
+.modal-body {
+    background-color: #f6f7f8;
+    padding: 1.5rem;
+    font-family: "Proxima Nova", sans-serif;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+
+
+/* ---------- RESPONSIVE POSITIONING ---------- */
 @media (min-width: 56.25rem) {
     .create-microtask-button {
         right: 23rem;
     }
 }
-
 @media (max-width: 56.24rem) {
     .create-microtask-button {
         right: 2rem;

@@ -119,7 +119,8 @@
     width: 100%;
     outline: none;
   }
-  
+
+
   .navbar-search-icon,
   .navbar-search-button {
     padding: 0 0.75rem;
@@ -361,6 +362,19 @@
       font-size: 1rem;
       padding: 0 0.75rem;
       border-radius: 0.25rem;
+    }
+
+    .navbar-icon.dropdown {
+      display: flex;
+      justify-content: center; /* Centrado horizontal */
+      align-items: center;
+      width: 100%;
+      margin-left: 1rem;
+    }
+
+    .navbar-icon.dropdown img {
+      margin: 0 auto;
+      display: block;
     }
   }
   

@@ -185,3 +185,25 @@
   opacity: 1;
   pointer-events: auto;
 }
+/* Alerts */
+.alert {
+    padding: 1rem 1.25rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    margin-top: 1rem;
+}
+.alert-info {
+    background-color: #eef4fb;
+    color: #2f5d84;
+    border-left: 4px solid #2f5d84;
+}
+.alert-success {
+    background-color: #e7f7ed;
+    color: #276749;
+    border-left: 4px solid #276749;
+}
+.alert-danger {
+    background-color: #fdecea;
+    color: #a94442;
+    border-left: 4px solid #a94442;
+}

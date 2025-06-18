@@ -369,13 +369,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                window.location.reload();
-            } else {
-                alert(data.error || "Failed to update status.");
-            }
+            window.location.reload();
         })
-        .catch(() => alert("Failed to update status."));
     }
 
     {% if task.status == 'assigned' %}
