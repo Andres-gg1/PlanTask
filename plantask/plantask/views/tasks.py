@@ -334,3 +334,25 @@ def edit_label(request):
     except Exception as e:
         request.dbsession.rollback()
         return HTTPBadRequest(f"Error editing label: {str(e)}")
+
+@view_config(route_name="update_microtask_status", request_method="POST", renderer="json")
+@verify_session
+def update_microtask_status(request):
+    try:
+        data = request.json_body
+        microtask_id = int(data['microtask_id'])
+        new_status = data['new_status']
+
+        microtask = request.dbsession.query(Microtask).filter_by(id=microtask_id).first()
+        if not microtask:
+            return {"error": "Microtask not found"}
+
+        previous_status = microtask.status
+        if previous_status == new_status:
+            return {"message": "No status change"}
+        microtask.status = new_status
+        request.dbsession.flush()
+
+        return {"message": "Status updated"}
+    except Exception as e:
+        return {"error": str(e)}
