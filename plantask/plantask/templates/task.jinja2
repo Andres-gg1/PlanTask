@@ -98,7 +98,7 @@
                             {% if mt.status == 'undone' %}
                                 <i class="bi-square"></i>
                             {% elif mt.status == 'under_review' %}
-                                <i class="bi-square-fill"></i>
+                                <i class="bi-eye-fill"></i>
                             {% elif mt.status == 'approved' %}
                                 <i class="bi-check-square-fill"></i>
                             {% endif %}
@@ -225,10 +225,19 @@
             </div>
           </div>
           <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; padding-right: 2rem !important;">
-            <span id="microtaskDueDate" style="font-size: 1.1rem; color: #666;" >Due Date</span>
-            <button class="btn btn-secondary" id="markReviewButton" style="background: #a6a6be; color: #fff; border: none; border-radius: 6px; padding: 0.4rem 1.2rem; font-size: 1.1rem; font-weight: 500;">
-              Mark for Review <i class="bi-eye"></i>
-            </button>
+            <span id="microtaskDueDate" style="font-size: 1.1rem; color: #666;">Due Date</span>
+            {% if role in ['admin', 'project_manager'] %}
+              <!-- Admin/PM can see all status options -->
+              <button class="btn btn-secondary" id="markReviewButton" style="background: rgb(118, 112, 151); color: #fff; border: none; border-radius: 6px; padding: 0.4rem 1.2rem; font-size: 1.1rem; font-weight: 500;">
+                Mark for Review <i class="bi-eye-fill"></i>
+              </button>
+            {% else %}
+              <!-- Regular users can only mark for review when status is undone -->
+              <button class="btn btn-secondary" id="markReviewButton" style="background: rgb(118, 112, 151); color: #fff; border: none; border-radius: 6px; padding: 0.4rem 1.2rem; font-size: 1.1rem; font-weight: 500;"
+                      {% if status != 'undone' %}style="display: none;"{% endif %}>
+                Mark for Review <i class="bi-eye-fill"></i>
+              </button>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -354,53 +363,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Task status update functionality
-    function updateStatus(newStatus) {
-        fetch("{{ request.route_url('update_task_status') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"
-            },
-            body: JSON.stringify({
-                task_id: {{ task.id }},
-                new_status: newStatus
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            window.location.reload();
-        })
-    }
-
-    {% if task.status == 'assigned' %}
-    document.getElementById('movestatusbutton').onclick = function() {
-        updateStatus('in_progress');
-    };
-    {% elif task.status == 'in_progress' %}
-    document.getElementById('backtoassigned').onclick = function() {
-        updateStatus('assigned');
-    };
-    document.getElementById('sendforreview').onclick = function() {
-        updateStatus('under_review');
-    };
-    {% elif task.status == 'under_review' %}
-    document.getElementById('backtoinprogress').onclick = function() {
-        updateStatus('in_progress');
-    };
-    document.getElementById('completetask').onclick = function() {
-        updateStatus('completed');
-    };
-    {% elif task.status == 'completed' %}
-    document.getElementById('backtoreview').onclick = function() {
-        updateStatus('under_review');
-    };
-    {% endif %}
-
-    // Microtask modal functionality
     const modal = document.getElementById('microtaskDetailsModal');
     const closeBtn = modal.querySelector('.custom-modal-close');
     const microtaskItems = document.querySelectorAll('.microtask-list-item');
+    const markReviewButton = document.getElementById('markReviewButton');
 
     function openModal() {
         modal.style.display = 'flex';
@@ -412,116 +378,128 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 10);
     }
 
+    function updateMarkReviewButton(status) {
+        const userRole = '{{ role }}';
+
+        if (userRole !== 'admin' && userRole !== 'project_manager') {
+        // Regular users can only mark for review from undone state
+            if (status === 'undone') {
+                markReviewButton.style.display = 'block';
+                markReviewButton.innerHTML = 'Mark for Review <i class="bi-eye-fill"></i>';
+                markReviewButton.style.background = '#a6a6be';
+            } else {
+                markReviewButton.style.display = 'none';
+            }
+        } else {
+            // Admin and PM can use all states
+            markReviewButton.style.display = 'block';
+            if (status === 'undone') {
+                markReviewButton.innerHTML = 'Mark for Review <i class="bi-eye-fill"></i>';
+                markReviewButton.style.background = 'rgb(118, 112, 151)';
+            } else if (status === 'under_review') {
+                markReviewButton.innerHTML = 'Mark as Approved <i class="bi-check-lg"></i>';
+                markReviewButton.style.background = '#28a745';
+            } else if (status === 'approved') {
+                markReviewButton.innerHTML = 'Mark as Undone <i class="bi-arrow-counterclockwise"></i>';
+                markReviewButton.style.background = '#6c757d';
+            }
+        }
+    }
+
+    function updateMicrotaskStatus(microtaskId, currentStatus) {
+        let newStatus;
+        if (currentStatus === 'undone') {
+            newStatus = 'under_review';
+        } else if (currentStatus === 'under_review') {
+            newStatus = 'approved';
+        } else if (currentStatus === 'approved') {
+            newStatus = 'undone';
+        }
+
+        fetch("{{ request.route_url('update_microtask_status') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"
+            },
+            body: JSON.stringify({
+                microtask_id: microtaskId,
+                new_status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+            // Update the list item
+            const microtaskItem = document.querySelector(`[data-mtid="${microtaskId}"]`);
+            if (microtaskItem) {
+                microtaskItem.dataset.status = newStatus;
+                const icon = microtaskItem.querySelector('i');
+                if (icon) {
+                    if (newStatus === 'undone') {
+                        icon.className = 'bi-square';
+                    } else if (newStatus === 'under_review') {
+                        icon.className = 'bi-eye-fill';
+                    } else if (newStatus === 'approved') {
+                        icon.className = 'bi-check-square-fill';
+                    }
+                }
+                
+                // Update modal immediately
+                document.getElementById('microtaskStatusIcon').innerHTML = `<i class="${icon.className}"></i>`;
+                let statusText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1).replace(/_/g, ' ');
+                document.getElementById('microtaskStatus').textContent = statusText;
+                
+                // Update button and its click handler
+                updateMarkReviewButton(newStatus);
+                markReviewButton.onclick = () => updateMicrotaskStatus(microtaskId, newStatus);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
     function closeModal() {
         modal.classList.add('animating-out');
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';  // Re-enable background scrolling
-
-        // Ocultar visualmente después de que termine la animación
+        document.body.style.overflow = '';
+        
         setTimeout(() => {
-            modal.classList.remove('animating-out');
             modal.style.display = 'none';
+            modal.classList.remove('animating-out');
         }, 350);
     }
 
-    // Close modal when close button is clicked
+    // Event Listeners
     closeBtn.addEventListener('click', closeModal);
 
-    // Fill and open modal when clicking on a microtask
     microtaskItems.forEach(item => {
         item.addEventListener('click', () => {
-            // Get the status from the data attribute
             const status = item.dataset.status || 'undone';
+            const microtaskId = item.dataset.mtid;
+            const statusIcon = item.querySelector('i').outerHTML;
             
-            // Set the status icon based on status
-            let statusIcon = '';
-            if (status === 'undone') {
-                statusIcon = '<i class="bi-square"></i>';
-            } else if (status === 'under_review') {
-                statusIcon = '<i class="bi-square-fill"></i>';
-            } else if (status === 'approved') {
-                statusIcon = '<i class="bi-check-square-fill"></i>';
-            }
+            updateMarkReviewButton(status);
+            markReviewButton.onclick = () => updateMicrotaskStatus(microtaskId, status);
             
             document.getElementById('microtaskStatusIcon').innerHTML = statusIcon;
             document.getElementById('microtaskName').textContent = item.dataset.name || 'N/A';
             document.getElementById('microtaskDescription').textContent = item.dataset.description || 'N/A';
-            
             let statusText = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
             document.getElementById('microtaskStatus').textContent = statusText;
-            
             document.getElementById('microtaskDueDate').textContent = item.dataset.due || 'No due date';
 
             openModal();
         });
     });
 
-    // Optional: close modal with ESC key
+    // ESC key to close modal
     document.addEventListener('keydown', (e) => {
         if (e.key === "Escape" && modal.classList.contains('show')) {
             closeModal();
-        }
-    });
-
-    // Modal for download reason
-    const downloadModal = document.getElementById('downloadReasonModal');
-    const downloadForm = document.getElementById('downloadReasonForm');
-    const downloadCloseBtn = downloadModal.querySelector('.custom-modal-close');
-    const cancelDownloadBtn = document.getElementById('cancelDownloadReason');
-    const downloadFileName = document.getElementById('downloadFileName');
-    const downloadReasonSuccess = document.getElementById('downloadReasonSuccess');
-
-    // Attach click event to all download buttons
-    document.querySelectorAll('.file-item .download-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            // Get file info from DOM
-            const fileItem = btn.closest('.file-item');
-            const fileName = fileItem.querySelector('strong')?.textContent || 'Unknown';
-            downloadFileName.textContent = fileName;
-            downloadReasonSuccess.style.display = 'none';
-            downloadForm.style.pointerEvents = '';
-            downloadForm.reset();
-            // Show modal
-            downloadModal.style.display = 'flex';
-            setTimeout(() => {
-                downloadModal.classList.add('show');
-                downloadModal.setAttribute('aria-hidden', 'false');
-                document.body.style.overflow = 'hidden';
-            }, 10);
-        });
-    });
-
-    // Close modal logic
-    function closeDownloadModal() {
-        downloadModal.classList.remove('show');
-        downloadModal.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-        setTimeout(() => {
-            downloadModal.style.display = 'none';
-        }, 350);
-    }
-    downloadCloseBtn.addEventListener('click', closeDownloadModal);
-    cancelDownloadBtn.addEventListener('click', closeDownloadModal);
-
-    // Simulate backend on submit
-    downloadForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        downloadForm.style.pointerEvents = 'none';
-        downloadReasonSuccess.style.display = 'block';
-        setTimeout(() => {
-            closeDownloadModal();
-            // Simulate download (replace with real download if needed)
-            // window.location.href = btn.href;
-        }, 1500);
-    });
-
-    // Optional: close modal with ESC key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === "Escape" && downloadModal.classList.contains('show')) {
-            closeDownloadModal();
         }
     });
 });

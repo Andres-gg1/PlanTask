@@ -3,7 +3,8 @@ from sqlalchemy import (
     Integer, 
     Text, 
     DateTime, 
-    ForeignKey
+    ForeignKey,
+    Table
 )
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -12,6 +13,13 @@ from sqlalchemy.dialects.postgresql import ENUM
 msg_state = ('sent','delivered','read')
 
 msg_state_enum = ENUM(*msg_state, name='msg_state')
+
+groupchat_users = Table(
+    'groupchat_users',
+    Base.metadata,
+    Column('groupchat_id', ForeignKey('group_chats.id'), primary_key=True),
+    Column('user_id', ForeignKey('users.id'), primary_key=True)
+)
 
 class GroupChat(Base):
     __tablename__ = 'group_chats'
@@ -31,6 +39,9 @@ class GroupChat(Base):
     image = relationship('File')
     members = relationship('GroupChatUser', back_populates='groupchat', cascade='all, delete-orphan')
 
+
+    # Many-to-many relationship with User
+    users = relationship('User', secondary=groupchat_users, back_populates='group_chats')
 
     def __repr__(self):
         return f"<GroupChat(id={self.id}, chat_name={self.chat_name})>"
