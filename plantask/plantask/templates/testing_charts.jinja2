@@ -19,12 +19,10 @@
         There are currently no tasks registered in this project.
     </div>
 {% else %}
-
     {% set assigned_labels = tasks_by_status_and_label['assigned'] %}
     {% set in_progress_labels = tasks_by_status_and_label['in_progress'] %}
     {% set under_review_labels = tasks_by_status_and_label['under_review'] %}
     {% set completed_labels = tasks_by_status_and_label['completed'] %}
-
     <br>
 
     <div id="chartsContainer">

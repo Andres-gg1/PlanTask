@@ -176,20 +176,20 @@ def project_page(request):
         for task_id, label_id in task_labels_query:
             labels_by_task[task_id].append(label_id)
 
-        member_labels = {}
-        label_assignments = request.dbsession.query(
-            ProjectsUser.user_id, 
-            LabelsProjectsUser.labels_id
-        ).join(
-            LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id
-        ).filter(
-            ProjectsUser.project_id == project_id
-        ).all()
+        member_labels = defaultdict(list)
+
+        label_assignments = (
+            request.dbsession.query(
+                ProjectsUser.user_id,
+                LabelsProjectsUser.labels_id
+            )
+            .join(LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id)
+            .filter(ProjectsUser.project_id == project_id)
+            .all()
+        )
 
         for user_id, label_id in label_assignments:
-            if user_id not in member_labels:
-                member_labels[user_id] = []
-
+            member_labels[user_id].append(label_id)
 
 
         for task_list in tasks_by_status.values():

@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Optional: reset selectedUsers when modal opens
     const addMemberModal = document.getElementById('addMemberModal');
     if (addMemberModal) {
         addMemberModal.addEventListener('show.bs.modal', () => {
