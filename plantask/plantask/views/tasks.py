@@ -8,7 +8,7 @@ from plantask.models.activity_log import ActivityLog
 from plantask.auth.verifysession import verify_session
 from plantask.models.task import Task, TasksFile
 from plantask.models.label import Label, LabelsTask
-from plantask.models.microtask import Microtask
+from plantask.models.microtask import Microtask, MicrotaskComment
 from datetime import date
 
 @view_config(route_name='create_task', renderer='plantask:templates/create_task.jinja2', request_method='GET', permission="admin")
@@ -354,5 +354,70 @@ def update_microtask_status(request):
         request.dbsession.flush()
 
         return {"message": "Status updated"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@view_config(route_name="add_microtask_comment", request_method="POST", renderer="json")
+@verify_session
+def add_microtask_comment(request):
+    try:
+        # Get data from JSON body instead of POST
+        microtask_id = int(request.matchdict.get('microtask_id'))
+        data = request.json_body
+        content = data.get('content')
+
+        if not content:
+            return {"error": "Comment content cannot be empty"}
+
+        microtask = request.dbsession.query(Microtask).filter_by(id=microtask_id).first()
+        if not microtask:
+            return {"error": "Microtask not found"}
+
+        new_comment = MicrotaskComment(
+            user_id=request.session['user_id'],
+            microtask_id=microtask_id,
+            time_posted=datetime.now(),
+            content=content
+        )
+        request.dbsession.add(new_comment)
+        request.dbsession.flush()
+
+        # Return the new comment data
+        return {
+            "message": "Comment added successfully",
+            "comment": {
+                "id": new_comment.id,
+                "user_id": new_comment.user_id,
+                "username": request.session.get('username'),
+                "time_posted": new_comment.time_posted.strftime('%Y-%m-%d %H:%M:%S'),
+                "content": new_comment.content
+            }
+        }
+    except Exception as e:
+        request.dbsession.rollback()
+        return {"error": str(e)}
+
+@view_config(route_name="get_microtask_comments", request_method="GET", renderer="json")
+@verify_session
+def get_microtask_comments(request):
+    try:
+        microtask_id = int(request.params.get('microtask_id'))
+        microtask = request.dbsession.query(Microtask).filter_by(id=microtask_id).first()
+
+        if not microtask:
+            return {"error": "Microtask not found"}
+
+        comments = [
+            {
+                "id": comment.id,
+                "user_id": comment.user_id,
+                "username": comment.user.username,
+                "content": comment.content,
+                "time_posted": comment.time_posted.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            for comment in microtask.comments
+        ]
+
+        return {"comments": comments}
     except Exception as e:
         return {"error": str(e)}

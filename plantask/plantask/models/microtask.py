@@ -41,6 +41,7 @@ class Microtask(Base):
     # Relationship with the 'Task' model
     task = relationship('Task')
     users_link = relationship('ProjectsUsersMicrotask', back_populates='microtasks', cascade="all, delete-orphan")
+    comments = relationship('MicrotaskComment', back_populates='microtask', cascade="all, delete-orphan")
 
 
     def __repr__(self):

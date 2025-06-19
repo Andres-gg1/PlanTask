@@ -245,8 +245,7 @@
         <div id="microtaskDescription" class="info" style="font-size: 1.2rem; margin-bottom: 2rem; margin-top: 1rem; color: #222;"></div>
         <!-- Attached Files Section -->
         <div id="microtaskFiles" style="display: flex; gap: 1.5rem; margin-bottom: 2rem;">
-          <!-- Example file card, repeat for each file -->
-          <!--
+          
           <div class="file-card" style="border: 1px solid #ccc; border-radius: 8px; padding: 1rem 1.2rem; min-width: 180px; display: flex; flex-direction: column; align-items: flex-start; background: #fafbfc;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <i class="bi-file-earmark-pdf fs-2"></i>
@@ -258,33 +257,24 @@
               <i class="bi-download fs-3"></i>
             </button>
           </div>
-          -->
         </div>
         <!-- Comments Section -->
-        <div id="microtaskComments" style="margin-bottom: 1.5rem;">
-          <!-- Example comment, repeat for each comment -->
-          <!--
-          <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
-            <div style="width: 48px; height: 48px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center;">
-              <i class="bi-person-circle fs-2"></i>
-            </div>
-            <div>
-              <div style="font-weight: 600;">@username</div>
-              <div style="font-size: 1.05rem; color: #222;">Comment text goes here.</div>
-            </div>
+        <div style="background-color: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div id="microtaskComments" style="margin-bottom: 1.5rem; overflow-y: auto; max-height: 300px; flex-grow: 1; padding-right: 0.5rem;">
+            <!-- Comments will be dynamically loaded here -->
           </div>
-          -->
+          <!-- Comment Input -->
+          <form id="microtaskCommentForm" style="display: flex; align-items: center; gap: 1rem; border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem 1rem; background: white;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <i class="bi-person-circle fs-4"></i>
+              </div>
+              <input type="text" id="microtaskCommentInput" class="form-control" name="content" placeholder="Write a comment" style="border: none; box-shadow: none; font-size: 1.1rem;">
+              <button type="button" id="submitCommentButton" class="btn btn-info" style="border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <i class="bi-send fs-5"></i>
+              </button>
+          </form>
         </div>
-        <!-- Comment Input -->
-        <form id="microtaskCommentForm" style="display: flex; align-items: center; gap: 1rem; border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem 1rem;">
-          <div style="width: 36px; height: 36px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center;">
-            <i class="bi-person-circle fs-4"></i>
-          </div>
-          <input type="text" id="microtaskCommentInput" class="form-control" placeholder="Write a comment" style="border: none; box-shadow: none; font-size: 1.1rem;">
-          <button type="submit" class="btn btn-info" style="border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
-            <i class="bi-send fs-5"></i>
-          </button>
-        </form>
       </div>
     </div>
   </div>
@@ -368,6 +358,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const microtaskItems = document.querySelectorAll('.microtask-list-item');
     const markReviewButton = document.getElementById('markReviewButton');
 
+    const submitCommentButton = document.getElementById('submitCommentButton');
+    const commentInput = document.getElementById('microtaskCommentInput');
+    const commentsContainer = document.getElementById('microtaskComments');
+
     function openModal() {
         modal.style.display = 'flex';
         setTimeout(() => {
@@ -376,6 +370,50 @@ document.addEventListener('DOMContentLoaded', function() {
             modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden'; 
         }, 10);
+    }
+
+    function fetchComments(microtaskId) {
+        fetch(`{{ request.route_url('get_microtask_comments') }}?microtask_id=${microtaskId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+
+            // Clear existing comments
+            commentsContainer.innerHTML = '';
+
+            // Populate comments
+            data.comments.forEach(comment => {
+                const commentElement = document.createElement('div');
+                commentElement.style.display = 'flex';
+                commentElement.style.alignItems = 'flex-start';
+                commentElement.style.gap = '1rem';
+                commentElement.style.marginBottom = '1rem';
+
+                commentElement.innerHTML = `
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi-person-circle fs-2"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600;">${comment.username}</div>
+                        <div style="font-size: 1.05rem; color: #222;">${comment.content}</div>
+                        <div style="font-size: 0.85rem; color: #888;">${comment.time_posted}</div>
+                    </div>
+                `;
+
+                commentsContainer.appendChild(commentElement);
+            });
+            commentsContainer.scrollTop = commentsContainer.scrollHeight;
+        })
+        .catch(error => console.error('Error:', error));
     }
 
     function updateMarkReviewButton(status) {
@@ -461,6 +499,55 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => console.error('Error:', error));
     }
 
+    submitCommentButton.addEventListener('click', submitComment);
+
+    commentInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent default form submission
+            submitComment();
+        }
+    });
+
+    function submitComment() {
+        const content = commentInput.value.trim();
+        if (!content) {
+            alert('Comment cannot be empty');
+            return;
+        }
+
+        // Get the microtask ID from the currently displayed microtask
+        const microtaskId = document.querySelector('.microtask-list-item.active')?.dataset.mtid;
+        if (!microtaskId) {
+            alert('No microtask selected');
+            return;
+        }
+
+         const url = "{{ request.route_url('add_microtask_comment', microtask_id='__id__') }}".replace('__id__', microtaskId);
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"
+            },
+            body: JSON.stringify({
+                content: content
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+            // Clear input and refresh comments
+            commentInput.value = '';
+            fetchComments(microtaskId);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+      
     function closeModal() {
         modal.classList.add('animating-out');
         modal.classList.remove('show');
@@ -478,20 +565,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     microtaskItems.forEach(item => {
         item.addEventListener('click', () => {
+            // Remove active class from all items
+            microtaskItems.forEach(i => i.classList.remove('active'));
+            // Add active class to clicked item
+            item.classList.add('active');
+
             const status = item.dataset.status || 'undone';
             const microtaskId = item.dataset.mtid;
             const statusIcon = item.querySelector('i').outerHTML;
             
+            // Update modal content
+            document.getElementById('microtaskStatusIcon').innerHTML = statusIcon;
+            document.getElementById('microtaskName').textContent = item.dataset.name;
+            document.getElementById('microtaskDescription').textContent = item.dataset.description;
+            document.getElementById('microtaskDueDate').textContent = `Due Date: ${item.dataset.due}`;
+            
+            let statusText = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+            document.getElementById('microtaskStatus').textContent = statusText;
+            
+            // Update review button
             updateMarkReviewButton(status);
             markReviewButton.onclick = () => updateMicrotaskStatus(microtaskId, status);
             
-            document.getElementById('microtaskStatusIcon').innerHTML = statusIcon;
-            document.getElementById('microtaskName').textContent = item.dataset.name || 'N/A';
-            document.getElementById('microtaskDescription').textContent = item.dataset.description || 'N/A';
-            let statusText = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
-            document.getElementById('microtaskStatus').textContent = statusText;
-            document.getElementById('microtaskDueDate').textContent = item.dataset.due || 'No due date';
-
+            // Fetch comments
+            fetchComments(microtaskId);
+            
+            // Open modal
             openModal();
         });
     });

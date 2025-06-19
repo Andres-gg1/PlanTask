@@ -39,6 +39,10 @@ def includeme(config):
     config.add_route('toggle_label_for_task', '/task/{id}/toggle_label')
     config.add_route('edit_label', '/label/edit/{label_id}')
     config.add_route('project_info', '/project-info')
+
+    # Comment Routes
+    config.add_route('add_microtask_comment', r'/add-microtask-comment/{microtask_id:\d+}')
+    config.add_route('get_microtask_comments', '/microtask/comments')
     
     # Notification routes
     config.add_route('get_notifications', '/get-notifications')

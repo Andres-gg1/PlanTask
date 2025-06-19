@@ -99,6 +99,9 @@
   cursor: pointer;
 }
 
+.microtask-list-item.active {
+  background-color: rgba(0, 123, 255, 0.1);
+}
 
 /* Body */
 .custom-modal-body {
