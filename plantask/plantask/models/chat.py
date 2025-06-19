@@ -29,6 +29,8 @@ class GroupChat(Base):
 
     # Relationship to access the associated image file
     image = relationship('File')
+    members = relationship('GroupChatUser', back_populates='groupchat', cascade='all, delete-orphan')
+
 
     def __repr__(self):
         return f"<GroupChat(id={self.id}, chat_name={self.chat_name})>"
@@ -56,6 +58,20 @@ class PersonalChat(Base):
 
     def __repr__(self):
         return f"<PersonalChat(id={self.id}, user1_id={self.user1_id}, user2_id={self.user2_id})>"
+
+class GroupChatUser(Base):
+    __tablename__ = 'groupchat_users'
+
+    groupchat_id = Column(ForeignKey('group_chats.id'), primary_key=True)
+    user_id = Column(ForeignKey('users.id'), primary_key=True)
+
+    # Relaciones para acceso desde ambas direcciones
+    groupchat = relationship('GroupChat', back_populates='members')
+    user = relationship('User', back_populates='group_memberships')
+
+    def __repr__(self):
+        return f"<GroupChatUser(groupchat_id={self.groupchat_id}, user_id={self.user_id})>"
+
 
 class ChatLog(Base):
     __tablename__ = 'chat_logs'

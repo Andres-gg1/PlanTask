@@ -38,6 +38,8 @@ class User(Base):
     object_activity_logs = relationship('ActivityLog', back_populates='object_user', foreign_keys='ActivityLog.object_user_id')
     # En el modelo User:
     projects_users = relationship('ProjectsUser', back_populates='user')
+    group_memberships = relationship('GroupChatUser', back_populates='user', cascade='all, delete-orphan')
+
 
 
     def __repr__(self) -> str:

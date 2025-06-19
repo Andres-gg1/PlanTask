@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-    
+<main class="mycontainer">
 <h2 class="mb-4">Project Dashboard: {{ project.name }}</h2>
 
 {% set total_tasks = chart_data | sum %}
@@ -83,6 +83,7 @@
             </div>
         </div>
     </div>
+</main>
 {% endif %}
 
 <!-- Modal to show tasks by status -->
