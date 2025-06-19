@@ -26,9 +26,9 @@
             </div>
         </div>
         {% for f in flashes %}
-            <div class="alert alert-{{ f.style }} announcement" role="alert">
-                {{ f.message }}
-            </div>
+        <div class="alert alert-{{ f.style }} announcement show" role="alert">
+            {{ f.message }}
+        </div>
         {% endfor %}
         <div class="dropdown">
             <button class="mybtn btn btn-secondary" type="button" id="membersDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="false">
@@ -72,10 +72,10 @@
                                     >
                                         <i class="bi-person-gear"></i>
                                     </button>
-                                    <form method="POST" action="{{ request.route_url('remove_member', id=project.id) }}" class="remove-member-form" data-member-name="{{ member.first_name }} {{ member.last_name }}">
+                                    <form method="POST" action="{{ request.route_url('remove_member', id=project.id) }}" class="remove-member-form" data-member-name="{{ member.first_name }} {{ member.last_name }}" id="remove-form-{{ member.id }}">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                         <input type="hidden" name="user_id" value="{{ member.id }}">
-                                        <button type="submit" class="btn btn-outline-danger" title="Remove member">
+                                        <button type="button" class="btn btn-outline-danger btn-remove-member" title="Remove member">
                                             <i class="bi-person-dash"></i>
                                         </button>
                                     </form>
@@ -334,4 +334,40 @@
   window.memberLabels = {{ member_labels | tojson }};
 </script>
 <script src="{{ request.static_url('plantask:static/scripts/edit_members.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const confirmRemoveModal = new bootstrap.Modal(document.getElementById('confirmRemoveMemberModal'));
+  let formToSubmit = null;
+
+  document.querySelectorAll('.btn-remove-member').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      formToSubmit = btn.closest('form');
+      const memberName = formToSubmit.getAttribute('data-member-name') || 'this member';
+      document.getElementById('removeMemberMessage').textContent = `Are you sure you want to remove ${memberName} from the project?`;
+      confirmRemoveModal.show();
+    });
+  });
+
+  document.getElementById('confirmRemoveBtn').addEventListener('click', () => {
+    if (formToSubmit) {
+      formToSubmit.submit();
+      confirmRemoveModal.hide();
+    }
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const alerts = document.querySelectorAll('.alert.announcement.show');
+  alerts.forEach(alert => {
+    setTimeout(() => {
+      alert.classList.remove('show');
+      alert.classList.add('fade');    
+
+      setTimeout(() => alert.remove(), 500);
+    }, 5000);
+  });
+});
+</script>
 {% endblock %}
