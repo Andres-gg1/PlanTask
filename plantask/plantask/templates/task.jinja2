@@ -10,81 +10,72 @@
 
 {% block content %}
 <div class="main-layout">
-    <main class="mycontainer"> 
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-            <h1 style="margin: 0;">{{ task.task_title }}</h1>
-            <div class="label-list">
-                {% for label_id, label_name, label_hex_color in labels %}
-                    <div class="label" style="background-color: {{ label_hex_color }};">
-                        {{ label_name }}
-                    </div>
-                {% endfor %}
-            </div>
-            {% if role == 'admin' %}
-                <button class="addlbbtn btn" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">Labels <i class="bi-plus-lg"></i></button>
-            {% endif %}
-        </div>
-        <h3>
-            <a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a>
-        </h3>
-        <div class="info-row">
-            <div class="info">Creation Date: {{ task.date_created.strftime('%Y-%m-%d') }}</div>
-            <div class="info due-date">Due Date: {{ task.due_date.strftime('%Y-%m-%d') }}</div>
-            {% if role == 'admin' %}
-            <div class="admin-actions">
-                <button type="button" class="btn btn-info btn-lg" data-bs-toggle="modal" data-bs-target="#editTaskModal">
-                    Edit Task <i class="bi-pencil-square"></i>
-                </button>
-                <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
-                    Delete Task <i class="bi-trash3"></i>
-                </button>
-            </div>
-            <button class="filebtn mybtn btn" type="button" data-bs-toggle="modal" data-bs-target="#attachFileModal">
-                Attach File
-                <i class="bi-paperclip"></i>
-            </button>
-            {% endif %}
-            <div class="status-actions">
-                {% if task.status == 'assigned' %}
-                    <button class="mybtn btn" type="button" id="movestatusbutton">
-                        Move to In Progress
-                        <i class="bi-box-arrow-right"></i>
-                        <i class="bi-pen-fill"></i>
-                    </button>
-                {% elif task.status == 'in_progress' %}
-                    <button class="mybtn btn" type="button" id="backtoassigned">
-                        Back to Assigned
-                        <i class="bi-pin-angle-fill"></i>
-                        <i class="bi-box-arrow-left"></i>
-                    </button>
-                    <button class="mybtn btn" type="button" id="sendforreview">
-                        Send for Review
-                        <i class="bi-box-arrow-right"></i>
-                        <i class="bi-eye-fill"></i>
-                    </button>
-                {% elif task.status == 'under_review' %}
-                    <button class="mybtn btn" type="button" id="backtoinprogress">
-                        Back to In Progress
-                        <i class="bi-pen-fill"></i>
-                        <i class="bi-box-arrow-left"></i>
-                    </button>
-                    <button class="mybtn btn" type="button" id="completetask">
-                        Complete Task
-                        <i class="bi-box-arrow-right"></i>
-                        <i class="bi-check-circle-fill"></i>
-                    </button>
-                {% elif task.status == 'completed' %}
-                    <button class="mybtn btn" type="button" id="backtoreview">
-                        Back to In Review
-                        <i class="bi-eye-fill"></i>
-                        <i class="bi-box-arrow-left"></i>
+    <main class="mycontainer">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+            <h1 class="m-0">{{ task.task_title }}</h1>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="d-flex flex-wrap align-items-center gap-2 label-list">
+                    {% for label_id, label_name, label_hex_color in labels %}
+                        <div class="label" style="background-color: {{ label_hex_color }};">{{ label_name }}</div>
+                    {% endfor %}
+                </div>
+                {% if role == 'admin' %}
+                    <button class="btn mybtn-gray" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">
+                        Labels <i class="bi-plus-lg"></i>
                     </button>
                 {% endif %}
             </div>
         </div>
+
+        <h3><a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a></h3>
+
+        <div class="info-row">
+            <div class="info">Creation Date: {{ task.date_created.strftime('%Y-%m-%d') }}</div>
+            <div class="info due-date">Due Date: {{ task.due_date.strftime('%Y-%m-%d') }}</div>
+
+            {% if role == 'admin' %}
+                <div class="admin-actions">
+                    <button type="button" class="btn mybtn-blue" data-bs-toggle="modal" data-bs-target="#editTaskModal">
+                        Edit Task <i class="bi-pencil-square"></i>
+                    </button>
+                    <button type="button" class="btn mybtn-red" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
+                        Delete Task <i class="bi-trash3"></i>
+                    </button>
+                    <button class="btn mybtn-green" type="button" data-bs-toggle="modal" data-bs-target="#attachFileModal">
+                        Attach File <i class="bi-paperclip"></i>
+                    </button>
+                </div>
+            {% endif %}
+
+            <div class="status-actions">
+                {% if task.status == 'assigned' %}
+                    <button class="btn mybtn-purple" type="button" id="movestatusbutton">
+                        Move to In Progress <i class="bi-box-arrow-right"></i><i class="bi-pen-fill"></i>
+                    </button>
+                {% elif task.status == 'in_progress' %}
+                    <button class="btn mybtn-gray" type="button" id="backtoassigned">
+                        Back to Assigned <i class="bi-pin-angle-fill"></i><i class="bi-box-arrow-left"></i>
+                    </button>
+                    <button class="btn mybtn-purple" type="button" id="sendforreview">
+                        Send for Review <i class="bi-box-arrow-right"></i><i class="bi-eye-fill"></i>
+                    </button>
+                {% elif task.status == 'under_review' %}
+                    <button class="btn mybtn-gray" type="button" id="backtoinprogress">
+                        Back to In Progress <i class="bi-pen-fill"></i><i class="bi-box-arrow-left"></i>
+                    </button>
+                    <button class="btn mybtn-blue" type="button" id="completetask">
+                        Complete Task <i class="bi-box-arrow-right"></i><i class="bi-check-circle-fill"></i>
+                    </button>
+                {% elif task.status == 'completed' %}
+                    <button class="btn mybtn-purple" type="button" id="backtoreview">
+                        Back to In Review <i class="bi-eye-fill"></i><i class="bi-box-arrow-left"></i>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
         <p class="info">{{ task.task_description }}</p>
 
-        <!-- Microtasks List -->
         {% if microtasks %}
             <ul class="list-group mb-4">
                 {% for mt in microtasks %}

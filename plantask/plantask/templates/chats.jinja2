@@ -134,64 +134,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const groupUserSearch = document.getElementById('groupUserSearch');
   const groupUserResults = document.getElementById('groupUserResults');
+  const chatItems = document.querySelectorAll('.chat-item');
+  const messagesContainer = document.querySelector('.messages');
+  const chatInfo = document.querySelector('.ChatInfo');
+  const chatIdField = document.getElementById('chat-id-field');
+  const isPersonalField = document.getElementById('is-personal-chat-field');
+  const messageForm = document.getElementById('message-form');
+  const messageInput = document.getElementById('message-input');
+  const scrollBtn = document.getElementById('scroll-to-bottom-btn');
+  const userId = {{ request.session.user_id }};
+  let currentChatId = null;
+
+  // ========== MODAL HANDLING ==========
 
   document.getElementById('new-chat-btn').addEventListener('click', () => {
     groupSelected = [];
     groupUserSearch.value = '';
-    groupUserResults.innerHTML = '';
+    groupUserResults.textContent = '';
     document.getElementById('groupSelectedUsers').innerHTML = "<li class='text-muted list-group-item'>No users selected</li>";
-    document.getElementById('groupHiddenInputs').innerHTML = '';
+    document.getElementById('groupHiddenInputs').textContent = '';
     document.getElementById('createGroupSubmit').disabled = true;
-    document.activeElement.blur();
     new bootstrap.Modal(document.getElementById('createGroupModal')).show();
   });
 
   groupUserSearch.addEventListener('input', async function () {
-  const value = this.value.trim();
-  if (value.length < 2) return;
+    const value = this.value.trim();
+    if (value.length < 2) return;
 
-  try {
-    const res = await fetch(`/search-users-global?q=${encodeURIComponent(value)}`);
-    const users = await res.json();
+    try {
+      const res = await fetch(`/search-users-global?q=${encodeURIComponent(value)}`);
+      const users = await res.json();
 
-    groupUserResults.innerHTML = "";
+      groupUserResults.textContent = '';
+      if (!users.length) {
+        groupUserResults.textContent = "No users found";
+        return;
+      }
 
-    if (!users.length) {
-      groupUserResults.innerHTML = `<p class="text-muted">No users found</p>`;
-      return;
-    }
+      users.forEach(user => {
+        if (groupSelected.some(u => u.id === user.id)) return;
 
-    users.forEach(user => {
-      if (groupSelected.some(u => u.id === user.id)) return;
-
-      const wrapper = document.createElement('div');
-      wrapper.className = "d-flex justify-content-between align-items-center border rounded p-2 mb-2";
-
-      wrapper.innerHTML = `
-        <div class="d-flex align-items-center">
-          <img src="${user.image_route || '{{ request.static_url('plantask:static/default_pfp.svg') }}'}"
-               class="rounded-circle me-2" style="width: 2.5rem; height: 2.5rem; object-fit: cover;">
-          <div>
-            <strong>${user.first_name} ${user.last_name}</strong><br>
-            <small class="text-muted">@${user.username}</small>
+        const wrapper = document.createElement('div');
+        wrapper.className = "d-flex justify-content-between align-items-center border rounded p-2 mb-2";
+        wrapper.innerHTML = `
+          <div class="d-flex align-items-center">
+            <img src="${user.image_route || '/static/default_pfp.svg'}"
+                 class="rounded-circle me-2" style="width: 2.5rem; height: 2.5rem; object-fit: cover;">
+            <div>
+              <strong>${user.first_name} ${user.last_name}</strong><br>
+              <small class="text-muted">@${user.username}</small>
+            </div>
           </div>
-        </div>
-        <button class="btn btn-sm btn-success ms-2">Add</button>
-      `;
-
-      wrapper.querySelector('button').addEventListener('click', () => {
-        groupSelected.push(user);
-        updateGroupSelected();
-        wrapper.remove(); // quita al usuario ya seleccionado de los resultados
+          <button class="btn btn-sm btn-success ms-2">Add</button>
+        `;
+        wrapper.querySelector('button').addEventListener('click', () => {
+          groupSelected.push(user);
+          updateGroupSelected();
+          wrapper.remove();
+        });
+        groupUserResults.appendChild(wrapper);
       });
-
-      groupUserResults.appendChild(wrapper);
-    });
-  } catch (err) {
-    console.error("❌ Fetch failed:", err);
-    groupUserResults.innerHTML = `<p class="text-danger">Error fetching users</p>`;
-  }
-});
+    } catch (err) {
+      console.error("❌ Fetch failed:", err);
+      groupUserResults.textContent = "Error fetching users";
+    }
+  });
 
   function updateGroupSelected() {
     const list = document.getElementById('groupSelectedUsers');
@@ -201,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     list.innerHTML = '';
     hidden.innerHTML = '';
 
-    if (groupSelected.length === 0) {
+    if (!groupSelected.length) {
       list.innerHTML = "<li class='text-muted list-group-item'>No users selected</li>";
       submit.disabled = true;
       return;
@@ -211,9 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const li = document.createElement('li');
       li.className = "list-group-item d-flex justify-content-between align-items-center";
       li.innerHTML = `
-        <div>
-          <strong>${u.first_name} ${u.last_name}</strong> <small class="text-muted">@${u.username}</small>
-        </div>
+        <div><strong>${u.first_name} ${u.last_name}</strong> <small class="text-muted">@${u.username}</small></div>
         <button class="btn btn-sm btn-outline-danger">Remove</button>
       `;
       li.querySelector('button').addEventListener('click', () => {
@@ -232,19 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     submit.disabled = groupSelected.length < 2;
   }
 
-  // === PERSONAL CHAT HANDLING ===
-  const urlParams = new URLSearchParams(window.location.search);
-  const initialChatId = urlParams.get('currentChatId');
-  const userId = {{ request.session.user_id }};
-  const chatItems = document.querySelectorAll('.chat-item');
-  const messagesContainer = document.querySelector('.messages');
-  const chatInfo = document.querySelector('.ChatInfo');
-  const chatIdField = document.getElementById('chat-id-field');
-  const isPersonalField = document.getElementById('is-personal-chat-field');
-  const messageForm = document.getElementById('message-form');
-  const messageInput = document.getElementById('message-input');
-  const scrollBtn = document.getElementById('scroll-to-bottom-btn');
-  let currentChatId = null;
+  // ========== CHAT SECTION ==========
 
   const scrollToBottom = () => {
     messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
@@ -258,6 +251,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   scrollBtn.addEventListener('click', scrollToBottom);
   messagesContainer.addEventListener('scroll', handleScrollButtonVisibility);
+
+  function getFriendlyDateLabel(dateObj) {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    if (dateObj.toDateString() === today.toDateString()) return "Today";
+    if (dateObj.toDateString() === yesterday.toDateString()) return "Yesterday";
+    return dateObj.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  }
 
   const renderMessages = (messages) => {
     chatInfo.classList.remove('d-none');
@@ -273,15 +275,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     messages.forEach(msg => {
       const dateObj = new Date(msg.date_sent);
-      const fechaDia = dateObj.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+      const dateLabel = getFriendlyDateLabel(dateObj);
       const hora = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      if (fechaDia !== lastRenderedDate) {
+      if (dateLabel !== lastRenderedDate) {
         const dateDivider = document.createElement('div');
         dateDivider.className = "date-divider text-muted my-2";
-        dateDivider.textContent = fechaDia;
+        dateDivider.textContent = dateLabel;
         messagesContainer.appendChild(dateDivider);
-        lastRenderedDate = fechaDia;
+        lastRenderedDate = dateLabel;
       }
 
       const msgWrapper = document.createElement('div');
@@ -322,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isPersonalField.value = 'true';
       currentChatId = chatId;
 
-      chatInfo.querySelector('.chatinfo-pfp').src = imageRoute || "{{ request.static_url('plantask:static/default_pfp.svg') }}";
+      chatInfo.querySelector('.chatinfo-pfp').src = imageRoute || "/static/default_pfp.svg";
       chatInfo.querySelector('h4').textContent = `${cap(firstName)} ${cap(lastName)}`;
       chatInfo.querySelector('a').textContent = `@${username}`;
 
@@ -334,6 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialChatId = urlParams.get('currentChatId');
   if (initialChatId) {
     const target = [...chatItems].find(i => i.dataset.chatId === initialChatId);
     if (target) target.click();

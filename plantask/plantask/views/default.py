@@ -1,7 +1,5 @@
 from pyramid.view import view_config
-from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound, HTTPForbidden
-from sqlalchemy.exc import SQLAlchemyError
 from plantask.models.user import User
 from plantask.models.file import File
 from plantask.models.task import Task
@@ -129,8 +127,6 @@ def user_view(request):
     return { "user_viewing": user_viewing,
             "user_image" : user_image }
 
-from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPFound
 
 @view_config(route_name='edit_user', request_method='POST')
 @verify_session
@@ -144,6 +140,7 @@ def edit_user(request):
     if request.session.get('role') != 'admin' and request.session.get('user_id') != user_id:
         return HTTPForbidden()
 
+    user.username = request.params.get('username', user.username)
     user.first_name = request.params.get('first_name', user.first_name)
     user.last_name = request.params.get('last_name', user.last_name)
     user.email = request.params.get('email', user.email)

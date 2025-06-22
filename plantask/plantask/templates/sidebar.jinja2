@@ -20,8 +20,8 @@
             </li>
             {% if role == 'admin'%}
             <li class="nav-item">
-                <a href="{{ request.route_url('dashboard') }}" class="{% if active_page == 'dashboard' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Dashboard" title="Dashboard">
-                    <i class="bi-map-fill"></i>
+                <a href="{{ request.route_url('register') }}" class="{% if active_page == 'register' %}nav-active{% else %}nav-link{% endif %} py-3 px-2" aria-label="Register User" title="Register User">
+                    <i class="bi-clipboard-plus"></i>
                 </a>
             </li>
             {% endif %}

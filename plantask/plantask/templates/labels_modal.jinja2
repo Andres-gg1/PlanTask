@@ -6,11 +6,9 @@
             <form method="POST" id="labelForm" action="{{ request.route_url('add_label', project_id=project.id) }}" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <input type="hidden" name="label_id" id="labelIdInput" value="">
-
                 <div class="modal-header">
                     <h5 class="modal-title" id="addLabelModalLabel">Add a New Label</h5>
                 </div>
-
                 <div class="modal-body">
                     <!-- Label Name Input -->
                     <div class="mb-3">
@@ -21,7 +19,6 @@
                             <input type="hidden" name="task_id" value="{{ task_id }}">
                         {% endif %}
                     </div>
-
                     <!-- Color Picker -->
                     <div class="mb-3">
                         <label class="form-label">Label Color</label>
@@ -35,8 +32,7 @@
                             {% endfor %}
                         </div>
                     </div>
-
-                    <button type="submit" class="btn btn-info" id="submitLabelBtn">Create Label</button>
+                    <button type="submit" class="btn mybtn-blue" id="submitLabelBtn">Create Label</button>
                     {% if project_labels %}
                     <!-- Existing Labels List -->
                     <div class="content-row mt-4" style="background-color: #f6f7f8; border-radius: 0.5rem; padding: 1rem;">
@@ -57,10 +53,10 @@
                                         {% endif %}
                                     </button>
                                 {% endif %}
-                                <div class="label" style="flex: 1; background-color: {{ label_hex_color }}; padding: 0.5rem 0.5rem; border-radius: 0.5rem; color: #fff; font-weight: 500;">
+                                <div class="label" style="flex: 1; background-color: {{ label_hex_color }}; padding: 0.5rem 0.5rem; border-radius: 0.5rem; color: #fff; font-weight: 600; font-family: 'Proxima Nova', sans-serif;">
                                     {{ label_name }}
                                 </div>
-                                <button type="button" class="btn btn-info edit-label-btn" data-bs-target="#editLabel" data-label-id="{{ label_id }}">
+                                <button type="button" class="btn mybtn-blue edit-label-btn" data-bs-target="#editLabel" data-label-id="{{ label_id }}">
                                     <i class="bi-pencil-square"></i>
                                 </button>
                             </div>
@@ -68,7 +64,6 @@
                     </div>
                     {% endif%}
                 </div>
-
                 <div class="modal-footer border-0">
                 </div>
             </form>
