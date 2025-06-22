@@ -43,6 +43,8 @@ def includeme(config):
     # Comment Routes
     config.add_route('add_microtask_comment', r'/add-microtask-comment/{microtask_id:\d+}')
     config.add_route('get_microtask_comments', '/microtask/comments')
+    config.add_route('add_task_comment', r'/add-task-comment/{task_id:\d+}')
+    config.add_route('get_task_comments', '/task/comments')
     
     # Notification routes
     config.add_route('get_notifications', '/get-notifications')

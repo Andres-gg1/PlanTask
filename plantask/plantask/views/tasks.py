@@ -6,9 +6,10 @@ from datetime import datetime
 from plantask.models.project import Project
 from plantask.models.activity_log import ActivityLog
 from plantask.auth.verifysession import verify_session
-from plantask.models.task import Task, TasksFile
+from plantask.models.task import Task, TasksFile, TaskComment
 from plantask.models.label import Label, LabelsTask
 from plantask.models.microtask import Microtask, MicrotaskComment
+from plantask.models.file import File
 from datetime import date
 
 @view_config(route_name='create_task', renderer='plantask:templates/create_task.jinja2', request_method='GET', permission="admin")
@@ -121,7 +122,7 @@ def task_by_id(request):
             'labels': assigned_labels,
             'project_labels': project_labels_ordered,
             'assigned_label_ids': assigned_label_ids,
-            'task_id': task.id  # to pass to template if needed
+            'task_id': task_id
         }
     except Exception:
         return HTTPNotFound("Task not found")
@@ -407,17 +408,89 @@ def get_microtask_comments(request):
         if not microtask:
             return {"error": "Microtask not found"}
 
-        comments = [
-            {
+        comments = []
+        for comment in microtask.comments:
+            user = comment.user
+            profile_picture_url = None
+            if user and user.user_image_id:
+                file = request.dbsession.query(File).filter_by(id=user.user_image_id).first()
+                if file:
+                    profile_picture_url = file.route
+            username = user.first_name + " " + user.last_name if user else "Unknown"
+            comments.append({
                 "id": comment.id,
                 "user_id": comment.user_id,
-                "username": comment.user.username,
+                "username": username,
+                "profile_picture_url": profile_picture_url,
                 "content": comment.content,
                 "time_posted": comment.time_posted.strftime('%Y-%m-%d %H:%M:%S')
-            }
-            for comment in microtask.comments
-        ]
+            })
 
+        return {"comments": comments}
+    except Exception as e:
+        return {"error": str(e)}
+    
+@view_config(route_name="add_task_comment", request_method="POST", renderer="json")
+@verify_session
+def add_task_comment(request):
+    try:
+        task_id = int(request.matchdict.get('task_id'))
+        content = request.POST.get('content')
+
+        if not content:
+            return {"error": "Comment content cannot be empty"}
+
+        task = request.dbsession.query(Task).filter_by(id=task_id).first()
+        if not task:
+            return {"error": "Task not found"}
+
+        new_comment = TaskComment(
+            user_id=request.session['user_id'],
+            task_id=task_id,
+            time_posted=datetime.now(),
+            content=content
+        )
+        request.dbsession.add(new_comment)
+        request.dbsession.flush()
+        return {
+            "message": "Comment added successfully",
+            "comment": {
+                "id": new_comment.id,
+                "user_id": new_comment.user_id,
+                "username": request.session.get('username'),
+                "time_posted": new_comment.time_posted.strftime('%Y-%m-%d %H:%M:%S'),
+                "content": new_comment.content
+            }
+        }
+    except Exception as e:
+        request.dbsession.rollback()
+        return {"error": str(e)}
+    
+@view_config(route_name="get_task_comments", request_method="GET", renderer="json")
+@verify_session
+def get_task_comments(request):
+    try:
+        task_id = int(request.params.get('task_id'))
+        task_c = request.dbsession.query(TaskComment).filter_by(task_id=task_id).all()
+        if not task_c:
+            return {"error": "No comments found for this task"}
+        comments = []
+        for c in task_c:
+            user = c.user
+            # Get the profile picture URL if available
+            profile_picture_url = None
+            if user and user.user_image_id:
+                file = request.dbsession.query(File).filter_by(id=user.user_image_id).first()
+                if file:
+                    profile_picture_url = file.route
+            username = user.first_name + " " + user.last_name if user else "Unknown"
+            comments.append({
+                "user_id": c.user_id,
+                "username": username,
+                "profile_picture_url": profile_picture_url,
+                "content": c.content,
+                "time_posted": c.time_posted.strftime('%Y-%m-%d %H:%M:%S')
+            })
         return {"comments": comments}
     except Exception as e:
         return {"error": str(e)}

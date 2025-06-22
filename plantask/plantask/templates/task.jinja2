@@ -103,10 +103,36 @@
         {% endif %}
 
         {% if role == 'admin' %}
-            <a href="{{ request.route_url('create_microtask', task_id=task.id) }}" class="create-microtask-button">
+            <a href="{{ request.route_url('create_microtask', task_id=task_id) }}" class="create-microtask-button">
                 Create New MicroTask <i class="bi-plus-lg"></i>
             </a>
         {% endif %}
+
+        <div>
+            <!-- Task Comments Section -->
+            <div style="background-color: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <div id="taskComments" style="margin-bottom: 1.5rem; overflow-y: auto; max-height: 300px; flex-grow: 1; padding-right: 0.5rem;">
+                <!-- Comments will be loaded here -->
+            </div>
+            <!-- Comment Input -->
+            <form id="taskCommentForm" autocomplete="off" style="display: flex; align-items: center; gap: 1rem; border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem 1rem; background: white;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                {% if user.pfp %}
+                    <img src="{{ user.pfp }}" 
+                    style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+                {% else %}
+                    <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+                    style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+                {% endif %}
+                </div>
+                <input type="text" id="taskCommentInput" class="form-control" name="content" placeholder="Write a comment" style="border: none; box-shadow: none; font-size: 1.1rem;">
+                <button type="submit" id="submitTaskCommentButton" class="btn btn-info" style="border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="bi-send fs-5"></i>
+                </button>
+            </form>
+            </div>
+        </div>
     </main>
     <aside class="right-sidebar">
         <h3>Files</h3>
@@ -258,7 +284,13 @@
           <form id="microtaskCommentForm" style="display: flex; align-items: center; gap: 1rem; border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem 1rem; background: white;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
               <div style="width: 36px; height: 36px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <i class="bi-person-circle fs-4"></i>
+                  {% if user.pfp %}
+                      <img src="{{ user.pfp }}" 
+                      style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+                  {% else %}
+                      <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+                      style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+                  {% endif %}
               </div>
               <input type="text" id="microtaskCommentInput" class="form-control" name="content" placeholder="Write a comment" style="border: none; box-shadow: none; font-size: 1.1rem;">
               <button type="button" id="submitCommentButton" class="btn btn-info" style="border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -353,6 +385,81 @@ document.addEventListener('DOMContentLoaded', function() {
     const commentInput = document.getElementById('microtaskCommentInput');
     const commentsContainer = document.getElementById('microtaskComments');
 
+    const taskCommentsContainer = document.getElementById('taskComments');
+    const taskCommentForm = document.getElementById('taskCommentForm');
+    const taskCommentInput = document.getElementById('taskCommentInput');
+    const taskId = '{{ task_id }}';
+
+    function fetchTaskComments() {
+        fetch(`{{ request.route_url('get_task_comments') }}?task_id=${taskId}`)
+        .then(response => response.json())
+        .then(data => {
+            taskCommentsContainer.innerHTML = '';
+            if (data.comments) {
+                data.comments.forEach(comment => {
+                    const el = document.createElement('div');
+                    el.style.display = 'flex';
+                    el.style.alignItems = 'flex-start';
+                    el.style.gap = '1rem';
+                    el.style.marginBottom = '1rem';
+                    el.innerHTML = `
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            ${
+                                comment.profile_picture_url
+                                ? `<img src="${comment.profile_picture_url}" alt="${comment.username}" style="width: 100%; height: 100%; object-fit: cover;">`
+                                : `<i class="bi-person-circle fs-2"></i>`
+                            }
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;">${comment.username}</div>
+                            <div style="font-size: 1.05rem; color: #222;">${comment.content}</div>
+                            <div style="font-size: 0.85rem; color: #888;">${comment.time_posted}</div>
+                        </div>
+                    `;
+                    taskCommentsContainer.appendChild(el);
+                });
+                taskCommentsContainer.scrollTop = taskCommentsContainer.scrollHeight;
+            }
+        })
+        .catch(error => console.log('Error:', error));
+    }
+
+    taskCommentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const content = taskCommentInput.value.trim();
+        if (!content) return;
+        
+        fetch("{{ request.route_url('add_task_comment', task_id=task.id) }}", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                content: content,
+                csrf_token: "{{ csrf_token }}"
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                console.log('Server error:', data.error);
+                return;
+            }
+            taskCommentInput.value = '';
+            fetchTaskComments();
+        })
+        .catch(error => {
+            console.log('Error:', error);
+        });
+    });
+
+    fetchTaskComments();
+
     function openModal() {
         modal.style.display = 'flex';
         setTimeout(() => {
@@ -390,8 +497,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 commentElement.style.marginBottom = '1rem';
 
                 commentElement.innerHTML = `
-                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center;">
-                        <i class="bi-person-circle fs-2"></i>
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        ${
+                            comment.profile_picture_url
+                            ? `<img src="${comment.profile_picture_url}" alt="${comment.username}" style="width: 100%; height: 100%; object-fit: cover;">`
+                            : `<i class="bi-person-circle fs-2"></i>`
+                        }
                     </div>
                     <div>
                         <div style="font-weight: 600;">${comment.username}</div>
