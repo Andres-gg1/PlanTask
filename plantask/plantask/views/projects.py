@@ -58,7 +58,7 @@ def create_project(request):
             project_id=new_project.id,  # Added project.id
             timestamp=datetime.now(),
             action='project_added',
-            changes=f"{new_project.__repr__()}",
+            changes=f"{new_project.name}",
         )
         request.dbsession.add(activity_log_new_project)
         request.dbsession.flush()
@@ -261,7 +261,7 @@ def edit_project(request):
             project_id=project.id,  # Added project.id
             timestamp=datetime.now(),
             action='project_edited_title',
-            changes=f"old: {old_name} --> new: {request.POST.get('name', project.name)}"
+            changes=f"{old_name}, {project.name}"  # Changed to use project.name directly
         )
         request.dbsession.add(activity_log_project_name_changed)
         request.dbsession.flush()
@@ -274,7 +274,7 @@ def edit_project(request):
             project_id=project.id,  # Added project.id
             timestamp=datetime.now(),
             action='project_edited_description',
-            changes=f"old: {old_description} --> new: {request.POST.get('description', project.description)}"
+            changes=f"{old_description}, {request.POST.get('description', project.description)}"
         )
         request.dbsession.add(activity_log_project_description_changed)
         request.dbsession.flush()
@@ -296,7 +296,7 @@ def delete_project(request):
             project_id=project.id,  # Added project.id
             timestamp=datetime.now(),
             action='project_removed',
-            changes=f"Project: {project.name} set to inactive"
+            changes=f"{project.name}"
         )
         request.dbsession.add(activity_log_removed_project)
         request.dbsession.flush()
@@ -391,7 +391,7 @@ def add_member(request):
                                 object_user_id=user.id,
                                 timestamp=datetime.now(),
                                 action='project_added_user',
-                                changes=f"User: {user.username} added to Project: {project.name}"
+                                changes=f"{user.username}, {project.name}"
                             )
                             request.dbsession.add(project_user)
                             request.dbsession.add(activity_log_added_user)
@@ -495,7 +495,7 @@ def remove_member(request):
                 object_user_id=user_id,
                 timestamp=datetime.now(),
                 action='project_removed_user',
-                changes=f"User removed from Project: {project.name}"
+                changes=f"{project.name}"
             )
             request.dbsession.add(activity_log_removed_user)
             request.dbsession.flush()

@@ -100,24 +100,27 @@ class FileUploadService:
             if entity_type == 'task':
                 tasks_file = TasksFile(tasks_id=entity_id, files_id=new_file.id)
                 log_action = "task_added_file"
+                changes = new_file.route
                 self.dbsession.add(tasks_file)
             elif entity_type == 'microtask':
                 microtasks_file = MicrotasksFile(microtasks_id=entity_id, files_id=new_file.id)
                 log_action = "microtask_added_file"
+                changes = new_file.route
                 self.dbsession.add(microtasks_file)
             elif entity_type == "project":
                 project = self.dbsession.query(Project).filter_by(id = entity_id).first()
                 project.project_image_id = new_file.id
                 log_action = "project_added_image"
+                changes = new_file.route
                 self.dbsession.flush()
             elif entity_type == "profile_picture":
                 user = self.dbsession.query(User).filter_by(id = entity_id).first()
                 user.user_image_id = new_file.id
+                changes = new_file.route
                 self.dbsession.flush()
 
             self.dbsession.flush()
-
-            changes = f"view: {view_name}" if view_name else log_action
+            
             if log_action:
                 log = ActivityLog(
                     user_id=self.user_id,
@@ -155,15 +158,13 @@ class FileUploadService:
                 return {"bool": False, "msg": "File not found in the database."}
             if not file_record.active:
                 return {"bool": False, "msg": "File is already deleted (inactive)."}
-            print(f"[DEBUG] Deleting file: {file_record.filename} (ID: {file_id})")
-            print(file_record.active)
 
             file_record.active = False
 
             log_action = 'task_removed_file'
             if context and context.get('action') == 'task_removed_file':
                 log_action = context.get('action')
-            action_enum = f"task_removed_file"
+            action_enum = f"File_removed"
             if view_name:
                 action_enum += f" | view: {view_name}"
             log = ActivityLog(
@@ -172,7 +173,7 @@ class FileUploadService:
                 file_id=file_id,
                 timestamp=datetime.now(),
                 action=log_action,
-                changes=action_enum,
+                changes=file_record.filename,
             )
             self.dbsession.add(log)
 

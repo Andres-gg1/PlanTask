@@ -65,7 +65,7 @@ def create_task(request):
                         task_id = new_task.id,
                         timestamp = datetime.now(),
                         action = 'task_created',
-                        changes = f"{new_task.__repr__()}"
+                        changes = f"{new_task.task_title}"
         )
         request.dbsession.add(activity_log_task_created)
         request.dbsession.flush()
@@ -161,7 +161,7 @@ def edit_task(request):
                 project_id=task.project_id,
                 timestamp=datetime.now(),
                 action='task_edited_title',
-                changes=f"old: {old_title} --> new: {name}"
+                changes=f"{old_title}, {name}"
             )
             request.dbsession.add(activity_log_title_changed)
 
@@ -175,7 +175,7 @@ def edit_task(request):
                 project_id=task.project_id,
                 timestamp=datetime.now(),
                 action='task_edited_description',
-                changes=f"old: {old_description} --> new: {description}"
+                changes=f"{old_description}, {description}"
             )
             request.dbsession.add(activity_log_description_changed)
 
@@ -190,7 +190,7 @@ def edit_task(request):
                 project_id=task.project_id,
                 timestamp=datetime.now(),
                 action='task_edited_duedate',
-                changes=f"old: {old_due_date.strftime('%Y-%m-%d')} --> new: {new_due_date.strftime('%Y-%m-%d')}"
+                changes=f"{old_due_date.strftime('%Y-%m-%d')}, {new_due_date.strftime('%Y-%m-%d')}"
             )
             request.dbsession.add(activity_log_due_date_changed)
 
@@ -219,7 +219,7 @@ def delete_task(request):
                 task_id = task.id,
                 timestamp=datetime.now(),
                 action='task_removed',
-                changes=f"task.__repr__()"
+                changes=f"{task.task_title}"
             )
             request.dbsession.add(activity_log_deleted_task)
             request.dbsession.flush()
