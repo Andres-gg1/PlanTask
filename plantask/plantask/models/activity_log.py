@@ -122,7 +122,7 @@ class ActivityLog(Base):
     groupchat = relationship('GroupChat')
     microtask = relationship('Microtask')
     object_user = relationship('User', primaryjoin='ActivityLog.object_user_id == User.id')
-    project = relationship('Project')
+    project = relationship('Project', primaryjoin='ActivityLog.project_id == Project.id')
     task = relationship('Task')
     user = relationship('User', primaryjoin='ActivityLog.user_id == User.id')
 

@@ -3,14 +3,476 @@
 {% block title %}History{% endblock %}
 
 {% block styles %}
-
+<link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/history.css') }}">
 {% endblock %}
 
 {% block content %}
 <main class="mycontainer">
   <h1 style="margin-bottom: 1rem;">History</h1>
+
+
+  {% if role == "admin" %}
+  <ul class="navtasks nav nav-underline">
+    <li class="nav-item">
+      <a class="nav-link active" id="your-actions-tab" href="#">Your actions</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="everyones-actions-tab" href="#">Everyone's actions</a>
+    </li>
+  </ul>
+  {% else %}
+  <ul class="navtasks nav nav-underline" style="display: none;">
+    <li class="nav-item">
+      <a class="nav-link active" id="your-actions-tab" href="#">Your actions</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="everyones-actions-tab" href="#">Everyone's actions</a>
+    </li>
+  </ul>
+  {% endif %}
+  
+  
+  <div id="your-actions-container">
+    <!--Action cards will be replaced here-->
+  </div>
+
+
+  {% if role == "admin" %}
+  <div id="everyone-actions-container" style="display: none;">
+    <!--Action cards will be replaced here-->
+  </div>
+  {% endif %}
+
+
 </main>
 {% endblock %}
 
 {% block scripts %}
+<script>
+
+//TEMPLATE DEFINITION
+const actionTemplates = {
+    // Project related templates
+    project_added: (data) => `
+    <div class="action-card">
+        <div class="card">
+            <div class="card-head">
+                <i class="bi-window-plus"></i>
+                <h5 class="card-title mb-0"> New project <a href="/project/${data.project_id}" class="user-link">${data.project_name}</a> was created by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a></h5>
+            </div>
+            <p class="card-text"><small class="text-body-secondary">${ data.timestamp }</small></p>
+        </div>
+    </div>
+    `,
+    project_removed: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-folder-minus"></i>
+            <span>Removed project: ${data.changes}</span>
+        </div>
+    `,
+    project_added_image: (data) => `
+        <div class="action-item project-action">
+            <i class="fas file-earmark-image-fill"></i>
+            <span>Added image to project: ${data.changes}</span>
+        </div>
+    `,
+    project_removed_image: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-image"></i>
+            <span>Removed image from project: ${data.changes}</span>
+        </div>
+    `,
+    project_edited_title: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-edit"></i>
+            <span>Changed project title to: ${data.changes}</span>
+        </div>
+    `,
+    project_edited_description: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-align-left"></i>
+            <span>Edited project description: ${data.changes}</span>
+        </div>
+    `,
+    project_added_user: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-user-plus"></i>
+            <span>Added user to project: ${data.changes}</span>
+        </div>
+    `,
+    project_removed_user: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-user-minus"></i>
+            <span>Removed user from project: ${data.changes}</span>
+        </div>
+    `,
+    project_added_label: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-tag"></i>
+            <span>Added label to project: ${data.changes}</span>
+        </div>
+    `,
+    project_removed_label: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-tag"></i>
+            <span>Removed label from project: ${data.changes}</span>
+        </div>
+    `,
+    project_user_assigned_label: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-user-tag"></i>
+            <span>Assigned label to user: ${data.changes}</span>
+        </div>
+    `,
+    project_user_removed_label: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-user-tag"></i>
+            <span>Removed label from user: ${data.changes}</span>
+        </div>
+    `,
+    project_task_assigned_label: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-tasks"></i>
+            <span>Assigned label to task: ${data.changes}</span>
+        </div>
+    `,
+    project_task_removed_label: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-tasks"></i>
+            <span>Removed label from task: ${data.changes}</span>
+        </div>
+    `,
+
+    // Task related templates
+    task_created: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-tasks"></i>
+            <span>Created new task: ${data.changes}</span>
+        </div>
+    `,
+    task_removed: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-trash"></i>
+            <span>Removed task: ${data.changes}</span>
+        </div>
+    `,
+    task_edited_title: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-edit"></i>
+            <span>Edited task title: ${data.changes}</span>
+        </div>
+    `,
+    task_edited_description: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-align-left"></i>
+            <span>Edited task description: ${data.changes}</span>
+        </div>
+    `,
+    task_edited_status: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Changed task status: ${data.changes}</span>
+        </div>
+    `,
+    task_edited_duedate: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Edited task due date: ${data.changes}</span>
+        </div>
+    `,
+    task_added_file: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-file-upload"></i>
+            <span>Added file to task: ${data.changes}</span>
+        </div>
+    `,
+    task_removed_file: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-file-upload"></i>
+            <span>Removed file from task: ${data.changes}</span>
+        </div>
+    `,
+    task_added_comment: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-comment"></i>
+            <span>Added comment to task: ${data.changes}</span>
+        </div>
+    `,
+    task_removed_comment: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-comment"></i>
+            <span>Removed comment from task: ${data.changes}</span>
+        </div>
+    `,
+    task_comment_added_file: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-file-upload"></i>
+            <span>Added file to task comment: ${data.changes}</span>
+        </div>
+    `,
+    task_comment_removed_file: (data) => `
+        <div class="action-item task-action">
+            <i class="fas fa-file-upload"></i>
+            <span>Removed file from task comment: ${data.changes}</span>
+        </div>
+    `,
+
+    // Microtask related templates
+    microtask_created: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-tasks"></i>
+            <span>Created new microtask: ${data.changes}</span>
+        </div>
+    `,
+    microtask_removed: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-trash"></i>
+            <span>Removed microtask: ${data.changes}</span>
+        </div>
+    `,
+    microtask_edited_name: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-edit"></i>
+            <span>Edited microtask name: ${data.changes}</span>
+        </div>
+    `,
+    microtask_edited_description: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-align-left"></i>
+            <span>Edited microtask description: ${data.changes}</span>
+        </div>
+    `,
+    microtask_edited_percentage: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-percent"></i>
+            <span>Edited microtask percentage: ${data.changes}</span>
+        </div>
+    `,
+    microtask_edited_status: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Changed microtask status: ${data.changes}</span>
+        </div>
+    `,
+    microtask_assigned_user: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-user-plus"></i>
+            <span>Assigned user to microtask: ${data.changes}</span>
+        </div>
+    `,
+    microtask_removed_user: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-user-minus"></i>
+            <span>Removed user from microtask: ${data.changes}</span>
+        </div>
+    `,
+    microtask_added_comment: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-comment"></i>
+            <span>Added comment to microtask: ${data.changes}</span>
+        </div>
+    `,
+    microtask_removed_comment: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-comment"></i>
+            <span>Removed comment from microtask: ${data.changes}</span>
+        </div>
+    `,
+    microtask_comment_added_file: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-file-upload"></i>
+            <span>Added file to microtask comment: ${data.changes}</span>
+        </div>
+    `,
+    microtask_comment_removed_file: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-file-upload"></i>
+            <span>Removed file from microtask comment: ${data.changes}</span>
+        </div>
+    `,
+    microtask_added_file: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-file-upload"></i>
+            <span>Added file to microtask: ${data.changes}</span>
+        </div>
+    `,
+    microtask_removed_file: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-file-upload"></i>
+            <span>Removed file from microtask: ${data.changes}</span>
+        </div>
+    `,
+    microtask_added_duedate: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Added due date to microtask: ${data.changes}</span>
+        </div>
+    `,
+    microtask_removed_duedate: (data) => `
+        <div class="action-item microtask-action">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Removed due date from microtask: ${data.changes}</span>
+        </div>
+    `,
+
+    // Group Chat related templates
+    message_group_created: (data) => `
+        <div class="action-item group-chat-action">
+            <i class="fas fa-comments"></i>
+            <span>Created new message group: ${data.changes}</span>
+        </div>
+    `,
+    message_group_deleted: (data) => `
+        <div class="action-item group-chat-action">
+            <i class="fas fa-trash"></i>
+            <span>Deleted message group: ${data.changes}</span>
+        </div>
+    `,
+    message_group_edited_name: (data) => `
+        <div class="action-item group-chat-action">
+            <i class="fas fa-edit"></i>
+            <span>Edited message group name: ${data.changes}</span>
+        </div>
+    `,
+    message_group_added_image: (data) => `
+        <div class="action-item group-chat-action">
+            <i class="fas fa-image"></i>
+            <span>Added image to message group: ${data.changes}</span>
+        </div>
+    `,
+    message_group_removed_image: (data) => `
+        <div class="action-item group-chat-action">
+            <i class="fas fa-image"></i>
+            <span>Removed image from message group: ${data.changes}</span>
+        </div>
+    `,
+    message_group_added_member: (data) => `
+        <div class="action-item group-chat-action">
+            <i class="fas fa-user-plus"></i>
+            <span>Added member to message group: ${data.changes}</span>
+        </div>
+    `,
+    message_group_removed_member: (data) => `
+        <div class="action-item group-chat-action">
+            <i class="fas fa-user-minus"></i>
+            <span>Removed member from message group: ${data.changes}</span>
+        </div>
+    `,
+    message_group_added_description: (data) => `
+        <div class="action-item group-chat-action">
+            <i class="fas fa-align-left"></i>
+            <span>Added description to message group: ${data.changes}</span>
+        </div>
+    `,
+    message_group_edited_description: (data) => `
+        <div class="action-item group-chat-action">
+            <i class="fas fa-edit"></i>
+            <span>Edited message group description: ${data.changes}</span>
+        </div>
+    `,
+    message_group_removed_description: (data) => `
+        <div class="action-item group-chat-action">
+            <i class="fas fa-align-left"></i>
+            <span>Removed description from message group: ${data.changes}</span>
+        </div>
+    `,
+
+    // Login related templates
+    login_several_failed_attempts: (data) => `
+        <div class="action-item login-action">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Several failed login attempts detected: ${data.changes}</span>
+        </div>
+    `,
+    login_user_successful: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-head">
+                    <i class="bi-box-arrow-in-right"></i>
+                    <h5 class="card-title mb-0">User <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a> logged in successfully</h5>
+                </div>
+                <p class="card-text"><small class="text-body-secondary">${ data.timestamp }</small></p>
+            </div>
+        </div>
+    `,
+
+    // Registration related templates
+    registration_new_user: (data) => {
+    const [fullName, email] = data.changes.split(', ').map(item => item.trim());
+    return `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-head">
+                    <i class="bi-box-arrow-in-right"></i>
+                    <h5 class="card-title mb-0">New user <a href="/user/${data.object_user_id}" class="user-link">${fullName}</a> was registered by <a href="/user/${data.user_id}">${data.first_name} ${data.last_name}</a></h5>
+                </div>
+                <p class="card-text"><small class="text-body-secondary">${ data.timestamp }</small></p>
+            </div>
+        </div>
+    `
+    }
+};
+
+function renderActionCard(action) {
+    // Get the template function for this action type or use a default template
+    const template = actionTemplates[action.action] || ((data) => `
+    <div class="action-card">
+        <div class="card">
+            <div class="card-body">
+            <h5 class="card-title">${data.action } -- ${ data.changes }</h5>
+            <p class="card-text"><small class="text-body-secondary">${ data.timestamp }</small></p>
+            </div>
+        </div>
+    </div>
+    `);
+
+    return template(action);
+}
+
+//Serialize actions and myactions to json to be used in js
+const actions = {{ actions | tojson }};
+const myActions = {{ my_actions | tojson }};
+
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    //functionality for the buttons on top
+    const yourActionsTab = document.getElementById('your-actions-tab');
+    const everyonesActionsTab = document.getElementById('everyones-actions-tab');
+    const yourActionsContainer = document.getElementById('your-actions-container');
+    const everyonesActionsContainer = document.getElementById('everyone-actions-container');
+
+    // Function to render actions into a container
+    function renderActions(actions, container) {
+        container.innerHTML = '';
+        actions.forEach(action => {
+            const card = document.createElement('div');
+            card.className = 'action-card';
+            card.innerHTML = renderActionCard(action);
+            container.appendChild(card);
+        });
+    }
+
+    renderActions(myActions, yourActionsContainer);
+    
+    yourActionsTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        yourActionsTab.classList.add('active');
+        everyonesActionsTab.classList.remove('active');
+        yourActionsContainer.style.display = 'block';
+        everyonesActionsContainer.style.display = 'none';
+        renderActions(myActions, yourActionsContainer);
+    });
+
+    everyonesActionsTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        yourActionsTab.classList.remove('active');
+        everyonesActionsTab.classList.add('active');
+        yourActionsContainer.style.display = 'none';
+        everyonesActionsContainer.style.display = 'block';
+        renderActions(actions, everyonesActionsContainer);
+    });
+    
+});
+</script>
 {% endblock %}
