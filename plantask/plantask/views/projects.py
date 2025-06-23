@@ -532,7 +532,7 @@ def update_task_status(request):
 
         if new_status == 'under_review' and prevous_status != 'under_review':  
             request.registry.notify(TaskReadyForReviewEvent(request, task_id))
-        return {"message": "Status updated"}
+        return {"success": True, "message": "Status updated"}
     except Exception as e:
         return {"error": str(e)}
     

@@ -80,13 +80,13 @@
 }
 
 .addlbbtn {
-    min-width: 2.25rem !important;
-    min-height: 2.25rem !important;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
     align-items: center;
+    border-radius: .4rem;
     justify-content: center;
     background-color: #FAFAFA;
-    border: 2px solid #ACACAC;
-    color: #212529;
+    border: 2px solid #c6c6c6;
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 

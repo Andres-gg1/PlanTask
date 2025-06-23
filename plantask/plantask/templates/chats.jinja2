@@ -28,7 +28,7 @@
         {% if chats %}
         <ul class="list-group mb-4" id="chats-list">
           {% for f in chats %}
-          <li class="list-group-item chat-item d-flex align-items-center"
+          <li class="list-group-item chat-item d-flex align-items-center visible"
               data-chat-id="{{ f.chat_id }}"
               data-other-user-id="{{ f.other_user_id }}"
               data-first-name="{{ f.first_name | lower }}"

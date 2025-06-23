@@ -64,6 +64,13 @@
 }
 
 /* ---------- BUTTON VARIANTS ---------- */
+.mybtn-edit-label { 
+    background-color: #3b82f6; 
+    max-width: 2.5rem;
+    justify-content: center;
+}
+.mybtn-edit-label:hover { background-color: #2563eb; }
+
 .mybtn-blue { background-color: #3b82f6; }
 .mybtn-blue:hover { background-color: #2563eb; }
 

@@ -4,14 +4,26 @@
 
 {% block styles %}
     <link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/charts.css') }}">
+    <link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/projects.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cal-heatmap@4.3.4/cal-heatmap.css">
     <link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/project_dashboard.css') }}">
 {% endblock %}
 
 {% block content %}
-<main class="mycontainer">
-<h2 class="mb-4">Project Dashboard: {{ project.name }}</h2>
-
+{% if not image_path %}
+<div class="banner" style="background-image: url('{{ request.static_url('plantask:static/img_example.jpg') }}');"></div>
+{% else %}
+<div class="banner" style="background-image: url('{{ image_path }}');"></div>
+{% endif %}
+<main class="mycontainer" style="margin-top: 1rem;">
+    <div class="d-flex align-items-center mb-4">
+        <h2 class="mb-0" style="font-size: 2rem; font-weight: 600;">
+            Project Dashboard:&nbsp;
+        </h2>
+        <a href="{{ request.route_url('project_by_id', id=project.id) }}" style="font-size: 2rem; font-weight: 600; color: inherit; text-decoration: underline;">
+            {{ project.name }}
+        </a>
+    </div>
 {% set total_tasks = chart_data | sum %}
 
 {% if total_tasks == 0 %}
