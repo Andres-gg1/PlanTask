@@ -388,3 +388,95 @@ h4{
     opacity: 1;
   }
 }
+
+/* File attachment styles */
+.file-attachments-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-right: 0.5rem;
+  max-width: 60%;
+}
+
+.file-attachment-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #f0f0f0;
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  max-width: 10rem;
+}
+
+.file-attachment-item .file-name {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 0.5rem;
+}
+
+.file-attachment-item .remove-file {
+  font-size: 0.8rem;
+  color: #777;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+}
+
+.file-attachment-item .remove-file:hover {
+  color: #d9534f;
+}
+
+.file-drop-zone {
+  border: 2px dashed #aaa;
+  border-radius: 0.5rem;
+  background-color: #f8f9fa;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.file-drop-zone.active {
+  background-color: #e9ecef;
+  border-color: #7d4ec4;
+}
+
+.drop-message {
+  font-size: 1.2rem;
+  color: #666;
+  text-align: center;
+}
+
+/* For file type icons */
+.file-icon {
+  margin-right: 0.3rem;
+}
+
+/* Attachment in message bubbles */
+.message-attachment {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 0.3rem;
+  margin-top: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+}
+
+.message-attachment .file-icon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+.message-attachment .file-name {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -207,3 +207,26 @@
     color: #a94442;
     border-left: 4px solid #a94442;
 }
+
+/* ---------- BUTTON VARIANTS ---------- */
+
+.mybtn-blue { background-color: #3b82f6; color: white !important;}
+.mybtn-blue:hover { background-color: #2563eb; }
+
+.mybtn-red { background-color: #ef4444; color: white !important; }
+.mybtn-red:hover { background-color: #dc2626; }
+
+.mybtn-green { background-color: #45a079; color: white !important;}
+.mybtn-green:hover { background-color: #3b8c68; }
+
+.mybtn-purple { background-color: #6c63ff; color: white !important; }
+.mybtn-purple:hover { background-color: #554fd1; }
+
+.mybtn-gray {
+    background-color: #d8d8d8;
+    color: white !important;
+    color: #3a3a3a !important;
+}
+.mybtn-gray:hover {
+    background-color: #dadada;
+}

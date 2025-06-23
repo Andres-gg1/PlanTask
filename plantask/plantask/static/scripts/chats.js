@@ -39,20 +39,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const filter = searchInput.value.toLowerCase();
 
     chatItems.forEach(item => {
-      const firstName = item.getAttribute('data-first-name') || '';
-      const lastName = item.getAttribute('data-last-name') || '';
-      const username = item.getAttribute('data-username') || '';
+      const firstName = (item.getAttribute('data-first-name') || '').toLowerCase();
+      const lastName = (item.getAttribute('data-last-name') || '').toLowerCase();
+      const username = (item.getAttribute('data-username') || '').toLowerCase();
+      const fullname = (firstName + ' ' + lastName).trim();
 
       if (
-        firstName.includes(filter) ||
-        lastName.includes(filter) ||
-        username.includes(filter)
+      firstName.includes(filter) ||
+      lastName.includes(filter) ||
+      username.includes(filter) ||
+      fullname.includes(filter)
       ) {
-        item.classList.remove('hidden');
-        item.classList.add('visible');
+      item.classList.remove('hidden');
+      item.classList.add('visible');
       } else {
-        item.classList.remove('visible');
-        item.classList.add('hidden');
+      item.classList.remove('visible');
+      item.classList.add('hidden');
       }
     });
 

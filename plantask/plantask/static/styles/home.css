@@ -85,10 +85,13 @@
 .micro-task-list {
   list-style: none;
   padding: 0;
+  padding-right: 0.3rem;
   margin: 0.5rem 0 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  max-height: 8rem;
+  overflow-y: auto;
 }
 
 .microtask-listed {

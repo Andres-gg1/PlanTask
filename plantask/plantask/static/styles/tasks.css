@@ -63,33 +63,6 @@
     transform: scale(0.95);
 }
 
-/* ---------- BUTTON VARIANTS ---------- */
-.mybtn-edit-label { 
-    background-color: #3b82f6; 
-    max-width: 2.5rem;
-    justify-content: center;
-}
-.mybtn-edit-label:hover { background-color: #2563eb; }
-
-.mybtn-blue { background-color: #3b82f6; }
-.mybtn-blue:hover { background-color: #2563eb; }
-
-.mybtn-red { background-color: #ef4444; }
-.mybtn-red:hover { background-color: #dc2626; }
-
-.mybtn-green { background-color: #45a079; }
-.mybtn-green:hover { background-color: #3b8c68; }
-
-.mybtn-purple { background-color: #6c63ff; }
-.mybtn-purple:hover { background-color: #554fd1; }
-
-.mybtn-gray {
-    background-color: #d8d8d8;
-    color: #3a3a3a !important;
-}
-.mybtn-gray:hover {
-    background-color: #dadada;
-}
 
 /* ---------- TEXT & FORMS ---------- */
 .form-label {
