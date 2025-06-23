@@ -38,7 +38,7 @@
             </button>
             <ul class="dropdown-menu p-3 smooth-dropdown" aria-labelledby="membersDropdown" style="width: 22rem;">
                 {% for member, show_role, member_id, member_pfp in project_members %}
-                <li class="mb-3">
+                <li class="mb-3" style=" border: 1px solid #dedede; border-radius:0.4rem">
                     <div class="card-body">
                         <div class="d-flex user-card-wrapper {% if not (role == 'admin' and member.id != request.session.get('user_id')) %}only-user{% endif %}">
                             <div class="d-flex align-items-center gap-3">
@@ -94,10 +94,10 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="label-list-kanban" style="padding: 1rem; padding-top:0;">
+                        <div class="task-labels" style="padding: 1rem; padding-top:0;">
                             {% for label_id, label_name, label_hex_color in project_labels %}
                                 {% if label_id in member_labels.get(member.id, []) %}
-                                    <div class="label-kanban" style="background-color: {{ label_hex_color }};">
+                                    <div class="badge" style="background-color: {{ label_hex_color }};">
                                         {{ label_name }}
                                     </div>
                                 {% endif %}

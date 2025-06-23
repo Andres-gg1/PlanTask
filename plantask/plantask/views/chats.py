@@ -7,6 +7,7 @@ from datetime import datetime
 from plantask.models.user import User
 from plantask.models.chat import PersonalChat, ChatLog, GroupChat, groupchat_users
 from plantask.models.file import File
+from plantask.models.project import Project, ProjectsUser  # Add this import
 from plantask.auth.verifysession import verify_session
 import json
 
@@ -189,13 +190,16 @@ def send_message(request):
         return {"error_ping": "An unexpected error occurred."}
 
 @view_config(route_name='search_users_global', renderer='json')
+@verify_session
 def search_users_global(request):
     query = request.params.get('q', '').strip()
+    user_id = request.session.get('user_id')
 
     if len(query) < 2:
         return []
 
-    results = request.dbsession.query(
+    # Search for users
+    user_results = request.dbsession.query(
         User.id,
         User.username,
         User.first_name,
@@ -208,18 +212,50 @@ def search_users_global(request):
             User.first_name.ilike(f'%{query}%'),
             User.last_name.ilike(f'%{query}%')
         )
-    ).limit(10).all()
+    ).limit(5).all()
+    
+    # Search for projects the user is part of
+    project_results = request.dbsession.query(
+        Project.id,
+        Project.name.label('project_name'),
+        Project.description,
+        File.route.label('image_route')
+    ).outerjoin(File, Project.project_image_id == File.id) \
+     .join(ProjectsUser, Project.id == ProjectsUser.project_id) \
+     .filter(
+        ProjectsUser.user_id == user_id,
+        Project.name.ilike(f'%{query}%')
+    ).limit(5).all()
 
-    return [
+    # Format results with type indicators
+    results = []
+    
+    # Add users with 'user' type
+    results.extend([
         {
             "id": u.id,
             "username": u.username,
             "first_name": u.first_name,
             "last_name": u.last_name,
-            "image_route": u.image_route
+            "image_route": u.image_route,
+            "type": "user"
         }
-        for u in results
-    ]
+        for u in user_results
+    ])
+    
+    # Add projects with 'project' type
+    results.extend([
+        {
+            "id": p.id,
+            "name": p.project_name,
+            "description": p.description[:50] + "..." if p.description and len(p.description) > 50 else (p.description or ""),
+            "image_route": p.image_route,
+            "type": "project"
+        }
+        for p in project_results
+    ])
+    
+    return results
 
 @view_config(route_name='create_group_chat', request_method='POST')
 @verify_session

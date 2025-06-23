@@ -93,11 +93,10 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    color: white !important;
+    color: white;
 }
 .btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .btn:active {
     transform: scale(0.95);
