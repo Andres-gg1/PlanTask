@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function () {
   const toggleBtn = document.getElementById('navbarToggle');
   const navbarContent = document.getElementById('navbarContent');
@@ -36,9 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
     e.preventDefault();
     pomodoroWrapper.classList.toggle('visible');
   });
-});
 
-document.addEventListener('DOMContentLoaded', function () {
   const input = document.getElementById('globalUserSearch');
   const results = document.getElementById('navbarUserSearchResults');
   let searchTimeout;
@@ -65,25 +62,62 @@ document.addEventListener('DOMContentLoaded', function () {
             results.innerHTML = "<p class='dropdown-item text-muted'>No results found</p>";
             return;
           }
+          
+          // Group results by type
+          const users = data.filter(item => item.type === 'user');
+          const projects = data.filter(item => item.type === 'project');
+          
+          // Add section headers and results
+          if (users.length > 0) {
+            results.innerHTML += '<h6 class="dropdown-header">Users</h6>';
+            users.forEach(user => {
+              const item = document.createElement('a');
+              item.className = 'dropdown-item d-flex align-items-center gap-2 py-2';
+              item.href = `/user/${user.id}`;
+              const pfp = user.image_route
+                ? `<img src="${user.image_route}" alt="PFP" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">`
+                : `<i class="bi bi-person-circle fs-4 text-secondary"></i>`;
 
-          data.forEach(user => {
-            const item = document.createElement('a');
-            item.className = 'dropdown-item d-flex align-items-center gap-2 py-2';
-            item.href = `/user/${user.id}`;
-            const pfp = user.image_route
-              ? `<img src="${user.image_route}" alt="PFP" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">`
-              : `<i class="bi bi-person-circle fs-4 text-secondary"></i>`;
+              item.innerHTML = `
+                ${pfp}
+                <div>
+                  <div><strong>${user.first_name} ${user.last_name}</strong></div>
+                  <div class="text-muted small">@${user.username}</div>
+                </div>
+              `;
 
-            item.innerHTML = `
-              ${pfp}
-              <div>
-                <div><strong>${user.first_name} ${user.last_name}</strong></div>
-                <div class="text-muted small">@${user.username}</div>
-              </div>
-            `;
+              results.appendChild(item);
+            });
+          }
+          
+          if (projects.length > 0) {
+            // Add divider if we already have users
+            if (users.length > 0) {
+              const divider = document.createElement('div');
+              divider.className = 'dropdown-divider';
+              results.appendChild(divider);
+            }
+            
+            results.innerHTML += '<h6 class="dropdown-header">Projects</h6>';
+            projects.forEach(project => {
+              const item = document.createElement('a');
+              item.className = 'dropdown-item d-flex align-items-center gap-2 py-2';
+              item.href = `/project/${project.id}`;
+              const icon = project.image_route
+                ? `<img src="${project.image_route}" alt="Project" class="rounded" style="width: 32px; height: 32px; object-fit: cover;">`
+                : `<img src="/static/img_example.jpg" alt="Project" class="rounded" style="width: 32px; height: 32px; object-fit: cover;">`
 
-            results.appendChild(item);
-          });
+              item.innerHTML = `
+                ${icon}
+                <div>
+                  <div><strong>${project.name}</strong></div>
+                  <div class="text-muted small">${project.description}</div>
+                </div>
+              `;
+
+              results.appendChild(item);
+            });
+          }
         })
         .catch(err => {
           results.innerHTML = `<p class='dropdown-item text-danger'>Error: ${err.message}</p>`;

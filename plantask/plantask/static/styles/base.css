@@ -170,6 +170,23 @@
 }
 
 
+.task-labels {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.task-labels::-webkit-scrollbar {
+  height: 0.25rem;
+}
+
+.task-labels::-webkit-scrollbar-thumb {
+  background: #aaa;
+  border-radius: 1rem;
+}
+
+
 #pomodoro-wrapper {
   position: fixed;
   bottom: 0;
@@ -216,6 +233,10 @@
 .mybtn-red { background-color: #ef4444; color: white !important; }
 .mybtn-red:hover { background-color: #dc2626; }
 
+.mybtn-yellow { background-color: #facc15; color: white !important;}
+.mybtn-yellow:hover { background-color: #eab308; }
+
+
 .mybtn-green { background-color: #45a079; color: white !important;}
 .mybtn-green:hover { background-color: #3b8c68; }
 
@@ -224,9 +245,44 @@
 
 .mybtn-gray {
     background-color: #d8d8d8;
-    color: white !important;
     color: #3a3a3a !important;
 }
 .mybtn-gray:hover {
     background-color: #dadada;
+}
+
+/* Styling for search dropdown */
+#navbarUserSearchResults {
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 0.5rem;
+}
+
+#navbarUserSearchResults .dropdown-header {
+  color: #7574C7;
+  font-weight: bold;
+  padding-left: 1rem;
+  padding-top: 0.75rem;
+}
+
+#navbarUserSearchResults .dropdown-item {
+  padding: 0.5rem 1rem;
+  transition: background-color 0.2s ease;
+}
+
+#navbarUserSearchResults .dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+#navbarUserSearchResults .dropdown-divider {
+  margin: 0.25rem 0;
+}
+
+#navbarUserSearchResults::-webkit-scrollbar {
+  width: 0.5rem;
+}
+
+#navbarUserSearchResults::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 0.25rem;
 }

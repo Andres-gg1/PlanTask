@@ -93,34 +93,13 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    color: white !important;
+    color: white;
 }
 .btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .btn:active {
     transform: scale(0.95);
-}
-
-.mybtn-blue { background-color: #3b82f6; }
-.mybtn-blue:hover { background-color: #2563eb; }
-
-.mybtn-red { background-color: #ef4444; }
-.mybtn-red:hover { background-color: #dc2626; }
-
-.mybtn-yellow { background-color: #f59e0b; }
-.mybtn-yellow:hover { background-color: #d97706; }
-
-.mybtn-green { background-color: #45a079; }
-.mybtn-green:hover { background-color: #3b8c68; }
-
-.mybtn-gray {
-    background-color: #d8d8d8;
-    color: #3a3a3a !important;
-}
-.mybtn-gray:hover {
-    background-color: #dadada;
 }
 
 .form-label {

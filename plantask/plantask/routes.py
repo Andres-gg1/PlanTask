@@ -70,3 +70,4 @@ def includeme(config):
     
     #config.add_view(renderer='templates/update_file.jinja2', route_name='update_file_page')
     #config.add_view(renderer='templates/delete_file.jinja2', route_name='delete_file_page')
+    config.add_route('get_group_chat_messages', r'/get-group-chat-messages/{chat_id:\d+}')

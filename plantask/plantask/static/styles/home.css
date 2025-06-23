@@ -66,22 +66,6 @@
   background-color: #e4e4e4;
 }
 
-.task-labels {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-}
-
-.task-labels::-webkit-scrollbar {
-  height: 0.25rem;
-}
-
-.task-labels::-webkit-scrollbar-thumb {
-  background: #aaa;
-  border-radius: 1rem;
-}
-
 .micro-task-list {
   list-style: none;
   padding: 0;

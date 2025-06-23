@@ -38,7 +38,7 @@
             </button>
             <ul class="dropdown-menu p-3 smooth-dropdown" aria-labelledby="membersDropdown" style="width: 22rem;">
                 {% for member, show_role, member_id, member_pfp in project_members %}
-                <li class="mb-3">
+                <li class="mb-3" style=" border: 1px solid #dedede; border-radius:0.4rem">
                     <div class="card-body">
                         <div class="d-flex user-card-wrapper {% if not (role == 'admin' and member.id != request.session.get('user_id')) %}only-user{% endif %}">
                             <div class="d-flex align-items-center gap-3">
@@ -93,6 +93,15 @@
                                     </form>
                                 {% endif %}
                             </div>
+                        </div>
+                        <div class="task-labels" style="padding: 1rem; padding-top:0;">
+                            {% for label_id, label_name, label_hex_color in project_labels %}
+                                {% if label_id in member_labels.get(member.id, []) %}
+                                    <div class="badge" style="background-color: {{ label_hex_color }};">
+                                        {{ label_name }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
                         </div>
                     </div>
                 </li>
@@ -293,7 +302,7 @@
               <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; margin-right: 0.75rem; margin-left: 0.75rem;">
                 <button 
                   type="button" 
-                  class="checktaskbtn addlbbtn btn toggle-label-btn {% if label.id in member_label_ids %}assigned{% endif %}" 
+                  class="checktaskbtn addlbbtn toggle-label-btn {% if label.id in member_label_ids %}assigned{% endif %}" 
                   style="margin-right: 0.5rem; {% if label.id in member_label_ids %}background-color: #28a745; color: #fff;{% else %}background-color: #FAFAFA;{% endif %}" 
                   data-label-id="{{ label.id }}"
                   aria-label="Assign Label" 
