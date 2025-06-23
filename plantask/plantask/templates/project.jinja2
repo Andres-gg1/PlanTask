@@ -94,6 +94,15 @@
                                 {% endif %}
                             </div>
                         </div>
+                        <div class="label-list-kanban" style="padding: 1rem; padding-top:0;">
+                            {% for label_id, label_name, label_hex_color in project_labels %}
+                                {% if label_id in member_labels.get(member.id, []) %}
+                                    <div class="label-kanban" style="background-color: {{ label_hex_color }};">
+                                        {{ label_name }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     </div>
                 </li>
                 {% endfor %}
