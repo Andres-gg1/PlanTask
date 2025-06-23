@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import or_, and_
 from datetime import datetime
 from plantask.models.user import User
-from plantask.models.chat import PersonalChat, ChatLog, GroupChat
+from plantask.models.chat import PersonalChat, ChatLog, GroupChat, groupchat_users
 from plantask.models.file import File
 from plantask.auth.verifysession import verify_session
 import json
@@ -13,14 +13,10 @@ import json
 @view_config(route_name='chats', renderer='plantask:templates/chats.jinja2')
 @verify_session
 def chats_page(request):
-    groupchats = request.dbsession.query(GroupChat).all()
-    print("Group chats:", groupchats)
     user_id = request.session.get('user_id')
-
-    # Obtener el chat_id de la consulta, si existe
     current_chat_id = request.params.get('currentChatId')
 
-    # Simplified query to get the other user's details
+    # Query personal chats
     personal_chats = request.dbsession.query(
         PersonalChat.id.label('chat_id'),
         User.id.label('other_user_id'),
@@ -36,7 +32,7 @@ def chats_page(request):
         )
     ).outerjoin(File, User.user_image_id == File.id).all()
 
-    # Format the data to pass to the template
+    # Format personal chats
     chats = [
         {
             'chat_id': chat.chat_id,
@@ -44,10 +40,39 @@ def chats_page(request):
             'other_user_id': chat.other_user_id,
             'first_name': chat.first_name,
             'last_name': chat.last_name,
-            'image_route': chat.image_route
+            'image_route': chat.image_route,
+            'is_group': False
         }
         for chat in personal_chats
     ]
+    
+    # Query group chats that the user belongs to
+    group_chats = request.dbsession.query(
+        GroupChat.id.label('chat_id'),
+        GroupChat.chat_name.label('name'),
+        File.route.label('image_route')
+    ).join(
+        groupchat_users,
+        GroupChat.id == groupchat_users.c.groupchat_id
+    ).outerjoin(
+        File, 
+        GroupChat.image_id == File.id
+    ).filter(
+        groupchat_users.c.user_id == user_id
+    ).all()
+    
+    # Add group chats to the list
+    chats.extend([
+        {
+            'chat_id': chat.chat_id,
+            'first_name': chat.name,  # Use chat_name as first_name for display
+            'last_name': '',
+            'username': 'group',
+            'image_route': chat.image_route,
+            'is_group': True
+        }
+        for chat in group_chats
+    ])
 
     return {'chats': chats, 'current_chat_id': current_chat_id}
 
@@ -215,11 +240,23 @@ def create_group_chat(request):
         request.dbsession.add(group)
         request.dbsession.flush()
 
-        # Insertar al creador y a los seleccionados como miembros (crear tabla intermedia si no la tienes)
+        # Fix: Use the correct table name 'groupchat_users' instead of 'group_chats_users'
+        for uid in user_ids:
+            request.dbsession.execute(
+                groupchat_users.insert().values(
+                    groupchat_id=group.id, 
+                    user_id=int(uid)
+                )
+            )
+        
+        # Also add the creator to the group
         request.dbsession.execute(
-            "INSERT INTO group_chats_users (group_chat_id, user_id) VALUES (:group_id, :user_id)",
-            [{'group_id': group.id, 'user_id': int(uid)} for uid in [user_id] + user_ids]
+            groupchat_users.insert().values(
+                groupchat_id=group.id,
+                user_id=user_id
+            )
         )
+        
         request.dbsession.flush()
 
         return HTTPFound(location=request.route_url('chats', _query={'currentChatId': group.id}))
@@ -227,4 +264,77 @@ def create_group_chat(request):
         print("Error creating group:", e)
         request.session.flash({'message': 'Error creating group chat.', 'style': 'danger'})
         return HTTPFound(location=request.route_url('chats'))
+
+@view_config(route_name='get_group_chat_messages', request_method='GET')
+@verify_session
+def get_group_chat_messages(request):
+    try:
+        chat_id = request.matchdict.get('chat_id')
+        user_id = request.session.get('user_id')
+        
+        # Check if user is member of this group chat
+        is_member = request.dbsession.query(groupchat_users).filter(
+            groupchat_users.c.groupchat_id == chat_id,
+            groupchat_users.c.user_id == user_id
+        ).first()
+        
+        if not is_member:
+            return Response(json.dumps({"error": "Not authorized"}), status=403)
+        
+        # Get messages for this group chat
+        messages = request.dbsession.query(
+            ChatLog,
+            User.first_name,
+            User.last_name
+        ).join(
+            User, 
+            ChatLog.sender_id == User.id
+        ).filter(
+            ChatLog.groupchat_id == chat_id
+        ).order_by(ChatLog.date_sent.asc()).all()
+        
+        # Convert to JSON-serializable format
+        messages_data = [{
+            "sender_id": msg.ChatLog.sender_id,
+            "sender_name": f"{msg.first_name} {msg.last_name}",
+            "date_sent": msg.ChatLog.date_sent.strftime('%Y-%m-%d %H:%M'),
+            "message_cont": msg.ChatLog.message_cont,
+            "state": msg.ChatLog.state
+        } for msg in messages]
+
+        # Get group chat details
+        group_info = request.dbsession.query(
+            GroupChat.chat_name,
+            GroupChat.image_id,
+            File.route.label('image_route')
+        ).outerjoin(
+            File, 
+            GroupChat.image_id == File.id
+        ).filter(
+            GroupChat.id == chat_id
+        ).first()
+        
+        # Get member count
+        member_count = request.dbsession.query(groupchat_users).filter(
+            groupchat_users.c.groupchat_id == chat_id
+        ).count()
+
+        return Response(
+            json.dumps({
+                "messages": messages_data,
+                "is_personal_chat": False,
+                "chat_id": chat_id,
+                "chat_name": group_info.chat_name if group_info else "Group Chat",
+                "image_route": group_info.image_route if group_info else None,
+                "member_count": member_count
+            }).encode('utf-8'),
+            content_type='application/json; charset=utf-8',
+        )
+    except SQLAlchemyError as e:
+        request.dbsession.rollback()
+        print(f"Database error: {str(e)}")
+        return {"error": "An error occurred while fetching messages"}
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        return {"error": "An unexpected error occurred"}
 

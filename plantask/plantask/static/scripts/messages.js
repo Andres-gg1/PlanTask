@@ -181,29 +181,102 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Update chat item click handler
   chatItems.forEach(item => {
     item.addEventListener('click', async () => {
       chatItems.forEach(el => el.classList.remove('active'));
       item.classList.add('active');
 
       const { chatId, firstName, lastName, username, imageRoute, otherUserId } = item.dataset;
-      const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-
-      chatIdField.value = chatId;
-      isPersonalField.value = 'true';
+      const isGroup = item.dataset.isGroup === 'true';
+      
       currentChatId = chatId;
+      chatIdField.value = chatId;
+      isPersonalField.value = isGroup ? 'false' : 'true';
+      
+      // Clear existing messages
+      messagesContainer.innerHTML = '<p class="text-center">Loading messages...</p>';
 
-      chatInfo.querySelector('.chatinfo-pfp').src = imageRoute || "/static/default_pfp.svg";
-      chatInfo.querySelector('h4').textContent = `${cap(firstName)} ${cap(lastName)}`;
-      chatInfo.querySelector('a').textContent = `@${username}`;
-
-      ['.chatinfo-pfp', 'h4', 'a'].forEach(selector => {
-        chatInfo.querySelector(selector).onclick = () => window.location.href = `/user/${otherUserId}`;
-      });
-
-      await fetchAndRenderMessages(chatId);
+      if (isGroup) {
+        // Group chat display
+        chatInfo.querySelector('.chatinfo-pfp').src = imageRoute || "/static/default_pfp.svg";
+        chatInfo.querySelector('h4').textContent = firstName;
+        chatInfo.querySelector('a').textContent = "Group Chat";
+        
+        // Fetch group messages
+        try {
+          const res = await fetch(`/get-group-chat-messages/${chatId}`);
+          const data = await res.json();
+          renderGroupMessages(data.messages || [], data.chat_name);
+        } catch (err) {
+          console.error('Error fetching group messages:', err);
+          messagesContainer.innerHTML = '<p class="text-center text-danger">Error loading messages</p>';
+        }
+      } else {
+        // Personal chat display
+        const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+        chatInfo.querySelector('.chatinfo-pfp').src = imageRoute || "/static/default_pfp.svg";
+        chatInfo.querySelector('h4').textContent = `${cap(firstName)} ${cap(lastName)}`;
+        chatInfo.querySelector('a').textContent = `@${username}`;
+        
+        // Set profile click handlers for personal chats
+        ['.chatinfo-pfp', 'h4', 'a'].forEach(selector => {
+          chatInfo.querySelector(selector).onclick = () => window.location.href = `/user/${otherUserId}`;
+        });
+        
+        // Fetch personal messages
+        await fetchAndRenderMessages(chatId);
+      }
+      
+      chatInfo.classList.remove('d-none');
+      messageForm.classList.remove('d-none');
     });
   });
+  
+  // Add this new function for rendering group messages
+  const renderGroupMessages = (messages, groupName) => {
+    messagesContainer.innerHTML = "";
+
+    if (!messages.length) {
+      messagesContainer.innerHTML = '<p style="text-align:center; color:#aaa;">No messages yet in this group</p>';
+      return;
+    }
+
+    let lastRenderedDate = null;
+
+    messages.forEach(msg => {
+      const dateObj = new Date(msg.date_sent);
+      const dateLabel = getFriendlyDateLabel(dateObj);
+      const hora = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (dateLabel !== lastRenderedDate) {
+        const dateDivider = document.createElement('div');
+        dateDivider.className = "date-divider text-muted my-2";
+        dateDivider.textContent = dateLabel;
+        messagesContainer.appendChild(dateDivider);
+        lastRenderedDate = dateLabel;
+      }
+
+      const msgWrapper = document.createElement('div');
+      msgWrapper.className = msg.sender_id === userId ? 'mymessage' : 'amessage';
+
+      // For group chats, show sender name for messages from others
+      const senderInfo = msg.sender_id === userId ? '' : 
+        `<small class="sender-name text-muted">${msg.sender_name}</small>`;
+
+      msgWrapper.innerHTML = `
+        <p class="message-info">${hora}</p>
+        ${senderInfo}
+        <p class="${msg.sender_id === userId ? 'mymessagebubble' : 'amessagebubble'}">${msg.message_cont}</p>
+        ${msg.sender_id === userId ? `<i class="bi ${msg.state === 'read' ? 'bi-check2-all' : 'bi-check2'}"></i>` : ''}
+      `;
+
+      messagesContainer.appendChild(msgWrapper);
+    });
+
+    scrollToBottom();
+    handleScrollButtonVisibility();
+  };
 
   const urlParams = new URLSearchParams(window.location.search);
   const initialChatId = urlParams.get('currentChatId');
