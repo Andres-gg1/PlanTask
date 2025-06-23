@@ -53,16 +53,22 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    color: white !important;
+    color: white;
 }
 .btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .btn:active {
     transform: scale(0.95);
 }
 
+/* ---------- BUTTON VARIANTS ---------- */
+.mybtn-edit-label { 
+    background-color: #3b82f6; 
+    max-width: 2.5rem;
+    justify-content: center;
+}
+.mybtn-edit-label:hover { background-color: #2563eb; }
 
 /* ---------- TEXT & FORMS ---------- */
 .form-label {
