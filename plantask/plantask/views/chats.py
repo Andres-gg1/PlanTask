@@ -159,7 +159,9 @@ def send_message(request):
         chat_id = request.params.get('chat_id')
         message_content = request.params.get('message-input')
         is_personal_chat = request.params.get('is_personal_chat')
-        if is_personal_chat:
+        
+        # Convert string to boolean - check if it's "true"
+        if is_personal_chat == 'true':
             new_message = ChatLog(
                 perschat_id=chat_id,
                 sender_id=user_id,
