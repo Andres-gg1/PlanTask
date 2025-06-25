@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const scrollBtn = document.getElementById('scroll-to-bottom-btn');
   const userId = parseInt(document.getElementById('user-data')?.dataset.userId || '0');
   let currentChatId = null;
+  let currentChatIsGroup = false;
 
   // ========== MODAL HANDLING ==========
 
@@ -171,13 +172,20 @@ document.addEventListener('DOMContentLoaded', () => {
     handleScrollButtonVisibility();
   };
 
-  const fetchAndRenderMessages = async (chatId) => {
+  const fetchAndRenderMessages = async (chatId, isGroup = false) => {
     try {
-      const res = await fetch(`/get-chat-messages/${chatId}`);
+      const endpoint = isGroup ? `/get-group-chat-messages/${chatId}` : `/get-chat-messages/${chatId}`;
+      const res = await fetch(endpoint);
       const data = await res.json();
-      renderMessages(data.messages || []);
+      
+      if (isGroup) {
+        renderGroupMessages(data.messages || [], data.chat_name || 'Group Chat');
+      } else {
+        renderMessages(data.messages || []);
+      }
     } catch (err) {
       console.error('Fetch error:', err);
+      messagesContainer.innerHTML = '<p class="text-center text-danger">Error loading messages</p>';
     }
   };
 
@@ -191,6 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isGroup = item.dataset.isGroup === 'true';
       
       currentChatId = chatId;
+      currentChatIsGroup = isGroup;
       chatIdField.value = chatId;
       isPersonalField.value = isGroup ? 'false' : 'true';
       
@@ -203,15 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInfo.querySelector('h4').textContent = firstName;
         chatInfo.querySelector('a').textContent = "Group Chat";
         
-        // Fetch group messages
-        try {
-          const res = await fetch(`/get-group-chat-messages/${chatId}`);
-          const data = await res.json();
-          renderGroupMessages(data.messages || [], data.chat_name);
-        } catch (err) {
-          console.error('Error fetching group messages:', err);
-          messagesContainer.innerHTML = '<p class="text-center text-danger">Error loading messages</p>';
-        }
+        // Fetch group messages using unified function
+        await fetchAndRenderMessages(chatId, true);
       } else {
         // Personal chat display
         const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
@@ -224,8 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
           chatInfo.querySelector(selector).onclick = () => window.location.href = `/user/${otherUserId}`;
         });
         
-        // Fetch personal messages
-        await fetchAndRenderMessages(chatId);
+        // Fetch personal messages using unified function
+        await fetchAndRenderMessages(chatId, false);
       }
       
       chatInfo.classList.remove('d-none');
@@ -282,7 +284,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const initialChatId = urlParams.get('currentChatId');
   if (initialChatId) {
     const target = [...chatItems].find(i => i.dataset.chatId === initialChatId);
-    if (target) target.click();
+    if (target) {
+      // Set the global variables before clicking
+      currentChatId = initialChatId;
+      currentChatIsGroup = target.dataset.isGroup === 'true';
+      target.click();
+    }
   } else {
     chatInfo.classList.add('d-none');
     messageForm.classList.add('d-none');
@@ -293,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentChatId) return;
     const distanceFromBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight;
     if (distanceFromBottom < 100) {
-      fetchAndRenderMessages(currentChatId);
+      fetchAndRenderMessages(currentChatId, currentChatIsGroup);
     }
   }, 3000);
 
@@ -309,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (data.success) {
         messageInput.value = '';
-        await fetchAndRenderMessages(currentChatId);
+        await fetchAndRenderMessages(currentChatId, currentChatIsGroup);
       } else {
         console.error('Send error:', data.error_ping || 'Unknown error');
       }
