@@ -199,9 +199,11 @@ def register_user(request):
     new_user = User(first_name=firstname,last_name = lastname,username=username, email=email, password=hashed_password, permission=permission)
     request.dbsession.add(new_user)
     request.dbsession.flush()
+    print(new_user.id)
     activity_log_register = ActivityLog(
                         user_id = request.session['user_id'],
                         timestamp = datetime.now(),
+                        object_user_id = new_user.id,
                         action = 'registration_new_user',
                         changes = f"{new_user.first_name} {new_user.last_name}, {new_user.email}"
                     )

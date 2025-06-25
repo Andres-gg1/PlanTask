@@ -1,0 +1,16 @@
+.action-card {
+    margin: 2rem;
+    margin-right: 4rem;
+    margin-left: 4rem;
+}
+
+.card-text {
+    padding: 0.5rem;
+}
+
+.card-head {
+    display: flex; 
+    align-items: center; 
+    gap: 1rem; 
+    padding: 0.7rem;
+}
