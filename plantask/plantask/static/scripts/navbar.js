@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
       results.classList.remove('d-none');
       results.innerHTML = "<p class='dropdown-item text-muted'>Searching...</p>";
 
-      fetch(`/search-users-global?q=${encodeURIComponent(value)}`)
+      fetch(`/search-global?q=${encodeURIComponent(value)}`)
         .then(r => r.json())
         .then(data => {
           results.innerHTML = '';

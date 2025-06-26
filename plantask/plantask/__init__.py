@@ -78,14 +78,27 @@ def main(global_config, **settings):
 
     # Authentication and Authorization policies
     
-    authn_policy = AuthTktAuthenticationPolicy(secretkey, hashalg='sha512', cookie_name='auth_tkt', callback=groupfinder)
+    authn_policy = AuthTktAuthenticationPolicy(
+        secretkey, 
+        hashalg='sha512', 
+        cookie_name='auth_tkt', 
+        callback=groupfinder,
+        secure=True,
+        http_only=True,
+        samesite='Strict'
+    )
     authz_policy = ACLAuthorizationPolicy()
 
     with Configurator(settings=settings, root_factory=RootFactory) as config:
         config.set_authentication_policy(authn_policy)
         config.set_authorization_policy(authz_policy)
 
-        my_session_factory = SignedCookieSessionFactory(secretkey)
+        my_session_factory = SignedCookieSessionFactory(
+            secretkey,
+            secure=True,
+            httponly=True,
+            samesite='Strict'
+        )
         config.set_session_factory(my_session_factory)
         config.set_csrf_storage_policy(CookieCSRFStoragePolicy())
         config.include('pyramid_jinja2')

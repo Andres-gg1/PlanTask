@@ -30,6 +30,65 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('userSearchResults').innerHTML = '';
         });
     }
+
+    // Read more functionality for project description
+    const readMoreBtn = document.getElementById('readMoreBtn');
+    const projectDescription = document.getElementById('projectDescription');
+    
+    if (readMoreBtn && projectDescription) {
+        const fullText = projectDescription.textContent;
+        const truncatedText = fullText.length > 75 ? fullText.substring(0, 75) + '...' : fullText;
+        let isExpanded = false;
+
+        // Initially show truncated text
+        if (fullText.length > 75) {
+            projectDescription.textContent = truncatedText;
+        }
+
+        readMoreBtn.addEventListener('click', function() {
+            if (isExpanded) {
+                projectDescription.textContent = truncatedText;
+                readMoreBtn.textContent = 'Read More';
+                isExpanded = false;
+            } else {
+                projectDescription.textContent = fullText;
+                readMoreBtn.textContent = 'Read Less';
+                isExpanded = true;
+            }
+        });
+    }
+
+    // Remove member confirmation modal functionality
+    const confirmRemoveModal = new bootstrap.Modal(document.getElementById('confirmRemoveMemberModal'));
+    let formToSubmit = null;
+
+    document.querySelectorAll('.btn-remove-member').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            formToSubmit = btn.closest('form');
+            const memberName = formToSubmit.getAttribute('data-member-name') || 'this member';
+            document.getElementById('removeMemberMessage').textContent = `Are you sure you want to remove ${memberName} from the project?`;
+            confirmRemoveModal.show();
+        });
+    });
+
+    document.getElementById('confirmRemoveBtn').addEventListener('click', () => {
+        if (formToSubmit) {
+            formToSubmit.submit();
+            confirmRemoveModal.hide();
+        }
+    });
+
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert.announcement.show');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.classList.remove('show');
+            alert.classList.add('fade');    
+
+            setTimeout(() => alert.remove(), 500);
+        }, 5000);
+    });
 });
 function searchUsers() {
     const searchTerm = document.getElementById("usernameSearch").value.trim();

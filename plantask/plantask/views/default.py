@@ -3,6 +3,7 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound, HTTPForbidden
 from plantask.models.user import User
 from plantask.models.file import File
 from plantask.models.task import Task
+from sqlalchemy import or_, and_
 from plantask.models.microtask import Microtask
 from plantask.models.label import Label, LabelsTask, LabelsProjectsUser
 from plantask.models.project import Project, ProjectsUser
@@ -152,3 +153,73 @@ def edit_user(request):
 @verify_session
 def show_project_info(request):
     return {}
+
+
+@view_config(route_name='search_global', renderer='json')
+@verify_session
+def search_global(request):
+    query = request.params.get('q', '').strip()
+    user_id = request.session.get('user_id')
+
+    if len(query) < 2:
+        return []
+
+    # Search for users
+    user_results = request.dbsession.query(
+        User.id,
+        User.username,
+        User.first_name,
+        User.last_name,
+        File.route.label('image_route')
+    ).outerjoin(File, User.user_image_id == File.id) \
+     .filter(
+        or_(
+            User.username.ilike(f'%{query}%'),
+            User.first_name.ilike(f'%{query}%'),
+            User.last_name.ilike(f'%{query}%')
+        )
+    ).limit(5).all()
+    
+    # Search for projects the user is part of
+    project_results = request.dbsession.query(
+        Project.id,
+        Project.name.label('project_name'),
+        Project.description,
+        File.route.label('image_route')
+    ).outerjoin(File, Project.project_image_id == File.id) \
+     .join(ProjectsUser, Project.id == ProjectsUser.project_id) \
+     .filter(
+        ProjectsUser.user_id == user_id,
+        Project.name.ilike(f'%{query}%'),
+        Project.active == True
+    ).limit(5).all()
+        
+    # Format results with type indicators
+    results = []
+    
+    # Add users with 'user' type
+    results.extend([
+        {
+            "id": u.id,
+            "username": u.username,
+            "first_name": u.first_name,
+            "last_name": u.last_name,
+            "image_route": u.image_route,
+            "type": "user"
+        }
+        for u in user_results
+    ])
+    
+    # Add projects with 'project' type
+    results.extend([
+        {
+            "id": p.id,
+            "name": p.project_name,
+            "description": p.description[:50] + "..." if p.description and len(p.description) > 50 else (p.description or ""),
+            "image_route": p.image_route,
+            "type": "project"
+        }
+        for p in project_results
+    ])
+    
+    return results
