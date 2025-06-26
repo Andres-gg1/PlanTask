@@ -207,11 +207,15 @@ document.addEventListener('DOMContentLoaded', () => {
     groupInfoSidebar.classList.remove('d-none');
     groupInfoSidebar.classList.add('show');
     messagesContainer.classList.add('sidebar-open');
+    document.querySelector('.ChatInfo').classList.add('sidebar-open');
+    document.querySelector('.chat-input-bar').classList.add('sidebar-open');
   };
 
   const hideGroupSidebar = () => {
     groupInfoSidebar.classList.remove('show');
     messagesContainer.classList.remove('sidebar-open');
+    document.querySelector('.ChatInfo').classList.remove('sidebar-open');
+    document.querySelector('.chat-input-bar').classList.remove('sidebar-open');
     setTimeout(() => {
       groupInfoSidebar.classList.add('d-none');
     }, 300);
@@ -287,6 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
       messagesContainer.innerHTML = '<p class="text-center">Loading messages...</p>';
 
       if (isGroup) {
+        // Set the current group ID for the group editing functionality
+        setCurrentGroupId(chatId);
+        
         // Show group options button
         document.querySelector('.group-options-btn').classList.remove('d-none');
         document.querySelector('.group-indicator').classList.remove('d-none');
@@ -304,6 +311,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fetch group messages using unified function
         await fetchAndRenderMessages(chatId, true);
       } else {
+        // Clear group ID when personal chat is selected
+        setCurrentGroupId(null);
+        
         // Hide group options button
         document.querySelector('.group-options-btn').classList.add('d-none');
         document.querySelector('.group-indicator').classList.add('d-none');
@@ -394,6 +404,12 @@ document.addEventListener('DOMContentLoaded', () => {
       // Set the global variables before clicking
       currentChatId = initialChatId;
       currentChatIsGroup = target.dataset.isGroup === 'true';
+      
+      // Set group ID if it's a group chat
+      if (currentChatIsGroup) {
+        setCurrentGroupId(initialChatId);
+      }
+      
       target.click();
     }
   } else {

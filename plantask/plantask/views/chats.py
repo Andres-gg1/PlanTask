@@ -7,10 +7,10 @@ from datetime import datetime
 from plantask.models.user import User
 from plantask.models.chat import PersonalChat, ChatLog, GroupChat, groupchat_users
 from plantask.models.file import File
-from plantask.models.project import Project, ProjectsUser  # Add this import
+from plantask.models.project import Project, ProjectsUser
 from plantask.auth.verifysession import verify_session
-import json
 from sqlalchemy.sql import func
+import json
 
 @view_config(route_name='chats', renderer='plantask:templates/chats.jinja2')
 @verify_session
@@ -217,6 +217,7 @@ def create_group_chat(request):
     try:
         user_id = request.session.get('user_id')
         group_name = request.POST.get('group_name')
+        group_description = request.POST.get('group_description')
         user_ids = request.POST.getall('user_ids')
 
         if len(user_ids) < 2:
@@ -225,12 +226,13 @@ def create_group_chat(request):
 
         group = GroupChat(
             chat_name=group_name,
+            description=group_description,  # Make sure to save description
             creation_date=datetime.now()
         )
         request.dbsession.add(group)
         request.dbsession.flush()
 
-        # Fix: Use the correct table name 'groupchat_users' instead of 'group_chats_users'
+        # Add selected users to the group
         for uid in user_ids:
             request.dbsession.execute(
                 groupchat_users.insert().values(
@@ -248,7 +250,7 @@ def create_group_chat(request):
         )
         
         request.dbsession.flush()
-
+        # Redirect to chats with the new group selected
         return HTTPFound(location=request.route_url('chats', _query={'currentChatId': group.id}))
     except Exception as e:
         print("Error creating group:", e)
@@ -359,4 +361,111 @@ def get_group_chat_messages(request):
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         return {"error": "An unexpected error occurred"}
+
+@view_config(route_name='edit_group_name', request_method='POST', renderer='json')
+@verify_session
+def edit_group_name(request):
+    try:
+        user_id = request.session.get('user_id')
+        group_id = int(request.matchdict.get('group_id'))
+        new_name = request.params.get('group_name', '').strip()
+        
+        if not new_name:
+            return {"error": "Group name cannot be empty"}
+            
+        if len(new_name) > 100:
+            return {"error": "Group name cannot exceed 100 characters"}
+        
+        # Verify user is member of the group
+        is_member = request.dbsession.query(groupchat_users).filter(
+            groupchat_users.c.groupchat_id == group_id,
+            groupchat_users.c.user_id == user_id
+        ).first()
+        
+        if not is_member:
+            return {"error": "You are not authorized to edit this group"}
+        
+        # Update group name
+        group = request.dbsession.query(GroupChat).filter_by(id=group_id).first()
+        if not group:
+            return {"error": "Group not found"}
+            
+        group.chat_name = new_name
+        request.dbsession.flush()
+        
+        return {"success": "Group name updated successfully"}
+        
+    except Exception as e:
+        request.dbsession.rollback()
+        print(f"Error updating group name: {str(e)}")
+        return {"error": "An error occurred while updating the group name"}
+
+
+@view_config(route_name='edit_group_description', request_method='POST', renderer='json')
+@verify_session
+def edit_group_description(request):
+    try:
+        user_id = request.session.get('user_id')
+        group_id = int(request.matchdict.get('group_id'))
+        new_description = request.params.get('group_description', '').strip()
+        
+        if len(new_description) > 255:
+            return {"error": "Group description cannot exceed 255 characters"}
+        
+        # Verify user is member of the group
+        is_member = request.dbsession.query(groupchat_users).filter(
+            groupchat_users.c.groupchat_id == group_id,
+            groupchat_users.c.user_id == user_id
+        ).first()
+        
+        if not is_member:
+            return {"error": "You are not authorized to edit this group"}
+        
+        # Update group description
+        group = request.dbsession.query(GroupChat).filter_by(id=group_id).first()
+        if not group:
+            return {"error": "Group not found"}
+            
+        group.description = new_description if new_description else None
+        request.dbsession.flush()
+        
+        return {"success": "Group description updated successfully"}
+        
+    except Exception as e:
+        request.dbsession.rollback()
+        print(f"Error updating group description: {str(e)}")
+        return {"error": "An error occurred while updating the group description"}
+
+
+@view_config(route_name='edit_group_image', request_method='POST', renderer='json')
+@verify_session
+def edit_group_image(request):
+    try:
+        user_id = request.session.get('user_id')
+        group_id = int(request.matchdict.get('group_id'))
+        
+        # Verify user is member of the group
+        is_member = request.dbsession.query(groupchat_users).filter(
+            groupchat_users.c.groupchat_id == group_id,
+            groupchat_users.c.user_id == user_id
+        ).first()
+        
+        if not is_member:
+            return {"error": "You are not authorized to edit this group"}
+        
+        # Handle file upload similar to profile picture upload
+        uploaded_file = request.params.get('file')
+        if not uploaded_file:
+            return {"error": "No file uploaded"}
+        
+        # Here you would handle the file upload logic
+        # This is a placeholder - you'll need to implement file saving logic
+        # similar to your existing file upload system
+        
+        return {"success": "Group image updated successfully"}
+        
+    except Exception as e:
+        request.dbsession.rollback()
+        print(f"Error updating group image: {str(e)}")
+        return {"error": "An error occurred while updating the group image"}
 

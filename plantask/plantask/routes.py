@@ -66,6 +66,9 @@ def includeme(config):
     config.add_route('send_message', '/send-message')
     config.add_route('create_message_relation', '/send-message-to')
     config.add_route('create_group_chat', '/create-group-chat')
+    config.add_route('edit_group_name', '/edit-group-name/{group_id}')
+    config.add_route('edit_group_description', '/edit-group-description/{group_id}')
+    config.add_route('edit_group_image', '/edit-group-image/{group_id}')
     
     # Notification routes
     config.add_route('get_notifications', '/get-notifications')
@@ -81,3 +84,4 @@ def includeme(config):
     # Charts and analytics routes
     config.add_route('tasks_charts', '/project/dashboard/{project_id}')
     config.add_route('tasks_completed', '/tasks-completed/{project_id}')
+    

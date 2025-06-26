@@ -76,34 +76,60 @@
         <div class="messages text-center text-muted">
           <p class="empty-message-hint">Select a chat to view messages</p>
         </div>
+      </div>
 
-        <!-- Group Chat Info Sidebar -->
-        <div class="group-info-sidebar d-none" id="group-info-sidebar">
-          <div class="group-info-header">
-            <h5 class="group-info-title">Group Info</h5>
-            <i class="bi-x-lg close-sidebar-btn" id="close-sidebar-btn"></i>
+      <!-- Group Chat Info Sidebar - Moved outside chat-content-wrapper -->
+      <div class="group-info-sidebar d-none" id="group-info-sidebar">
+        <div class="group-info-header">
+          <h5 class="group-info-title">Group Info</h5>
+          <i class="bi-x-lg close-sidebar-btn" id="close-sidebar-btn"></i>
+        </div>
+        
+        <div class="group-info-content">
+          <div class="group-basic-info">
+            <div class="group-avatar-section">
+              <img class="group-avatar" src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+                   alt="Group Avatar" style="cursor: pointer;" id="group-avatar-img">
+            </div>
+            
+            <!-- Editable Group Name -->
+            <div class="group-name-section">
+              <h6 class="group-name" id="group-name-display">Group Name</h6>
+              <form id="group-name-form" class="d-none" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="text" class="form-control form-control-sm" id="group-name-input" name="group_name" maxlength="100" required>
+                <div class="mt-2">
+                  <button type="submit" class="btn btn-success btn-sm">Save</button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="cancel-name-edit">Cancel</button>
+                </div>
+              </form>
+              <i class="bi-pen-fill edit-icon ms-2" id="edit-group-name-btn" style="cursor: pointer; font-size: 0.8rem;"></i>
+            </div>
+            
+            <!-- Editable Group Description -->
+            <div class="group-description-section">
+              <p class="group-description" id="group-description-display">Group Description</p>
+              <form id="group-description-form" class="d-none" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <textarea class="form-control form-control-sm" id="group-description-input" name="group_description" maxlength="255" rows="3" placeholder="Enter group description..."></textarea>
+                <div class="mt-2">
+                  <button type="submit" class="btn btn-success btn-sm">Save</button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="cancel-description-edit">Cancel</button>
+                </div>
+              </form>
+              <i class="bi-pen-fill edit-icon ms-2" id="edit-group-description-btn" style="cursor: pointer; font-size: 0.8rem;"></i>
+            </div>
           </div>
-          
-          <div class="group-info-content">
-            <div class="group-basic-info">
-              <div class="group-avatar-section">
-                <img class="group-avatar" src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
-                     alt="Group Avatar">
-              </div>
-              <h6 class="group-name">Group Name</h6>
-              <p class="group-description">Group Description</p>
-            </div>
 
-            <div class="group-members-section">
-              <h6 class="section-title">Chat Members</h6>
-              <div class="group-members-list" id="group-members-list">
-                <!-- Members will be populated by JavaScript -->
-              </div>
+          <div class="group-members-section">
+            <h6 class="section-title">Chat Members</h6>
+            <div class="group-members-list" id="group-members-list">
+              <!-- Members will be populated by JavaScript -->
             </div>
+          </div>
 
-            <div class="group-creation-info">
-              <span class="creation-date">Created on: <span id="group-creation-date">Date</span></span>
-            </div>
+          <div class="group-creation-info">
+            <span class="creation-date">Created on: <span id="group-creation-date">Date</span></span>
           </div>
         </div>
       </div>
@@ -157,18 +183,29 @@
 <!-- Create group modal -->
 <div class="modal fade show-modal" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
-    <form method="POST" action="{{ request.route_url('create_group_chat') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <div class="modal-content">
+    <div class="modal-content">
+      <!-- Form for creating group info -->
+      <form method="POST" action="{{ request.route_url('create_group_chat') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <div class="modal-header">
           <h5 class="modal-title" id="createGroupModalLabel">Create Group Chat</h5>
         </div>
         <div class="modal-body">
+          <!-- Group Name -->
           <div class="mb-3">
-            <label class="form-label">Group Name</label>
-            <input type="text" class="form-control" name="group_name" required>
+            <label class="form-label">Group Name *</label>
+            <input type="text" class="form-control" name="group_name" required maxlength="100">
           </div>
 
+          <!-- Group Description -->
+          <div class="mb-3">
+            <label class="form-label">Group Description (Optional)</label>
+            <textarea class="form-control" name="group_description" rows="3" maxlength="255" 
+                      placeholder="Enter a brief description of the group..."></textarea>C
+            <small class="text-muted">Maximum 255 characters</small>
+          </div>
+
+          <!-- Search Users -->
           <div class="mb-3">
             <label class="form-label">Search Users</label>
             <input type="text" class="form-control" id="groupUserSearch" placeholder="Enter name or username">
@@ -176,18 +213,61 @@
             <div id="groupUserResults" class="mt-2"></div>
           </div>
 
+          <!-- Selected Users -->
           <div class="mb-3">
             <label class="form-label">Selected Users</label>
             <ul id="groupSelectedUsers" class="list-group"></ul>
             <div id="groupHiddenInputs"></div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           <button type="submit" class="btn btn-success" id="createGroupSubmit" disabled>Create Group</button>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Group Image Upload Modal -->
+<div class="modal fade" id="groupImageModal" tabindex="-1" aria-labelledby="groupImageModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="group-image-form" method="POST" action="{{ request.route_url('file_upload_page') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="entity_type" value="group_chat">
+        <input type="hidden" name="entity_id" id="group-entity-id" value="">
+        <div class="modal-header">
+          <h5 class="modal-title" id="groupImageModalLabel">Change Group Image</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center">
+          <!-- Current Image Preview -->
+          <div class="mb-3">
+            <img id="current-group-image" src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+                 class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+          </div>
+          
+          <!-- File Input -->
+          <div class="mb-3">
+            <input type="file" class="form-control" id="group-image-input" name="file" accept="image/*" required>
+            <div class="form-text">Choose a new image for the group (JPEG, PNG, GIF)</div>
+          </div>
+          
+          <!-- Image Preview -->
+          <div class="mb-3 d-none" id="group-image-preview-container">
+            <label class="form-label">Preview:</label>
+            <div>
+              <img id="group-image-preview" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn mybtn-gray" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn mybtn-green" id="group-image-submit">Upload Image</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}
