@@ -348,40 +348,4 @@
   window.memberLabels = {{ member_labels | tojson }};
 </script>
 <script src="{{ request.static_url('plantask:static/scripts/edit_members.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const confirmRemoveModal = new bootstrap.Modal(document.getElementById('confirmRemoveMemberModal'));
-  let formToSubmit = null;
-
-  document.querySelectorAll('.btn-remove-member').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      formToSubmit = btn.closest('form');
-      const memberName = formToSubmit.getAttribute('data-member-name') || 'this member';
-      document.getElementById('removeMemberMessage').textContent = `Are you sure you want to remove ${memberName} from the project?`;
-      confirmRemoveModal.show();
-    });
-  });
-
-  document.getElementById('confirmRemoveBtn').addEventListener('click', () => {
-    if (formToSubmit) {
-      formToSubmit.submit();
-      confirmRemoveModal.hide();
-    }
-  });
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const alerts = document.querySelectorAll('.alert.announcement.show');
-  alerts.forEach(alert => {
-    setTimeout(() => {
-      alert.classList.remove('show');
-      alert.classList.add('fade');    
-
-      setTimeout(() => alert.remove(), 500);
-    }, 5000);
-  });
-});
-</script>
 {% endblock %}

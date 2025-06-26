@@ -226,9 +226,10 @@ def search_users_global(request):
      .join(ProjectsUser, Project.id == ProjectsUser.project_id) \
      .filter(
         ProjectsUser.user_id == user_id,
-        Project.name.ilike(f'%{query}%')
+        Project.name.ilike(f'%{query}%'),
+        Project.active == True
     ).limit(5).all()
-
+        
     # Format results with type indicators
     results = []
     
