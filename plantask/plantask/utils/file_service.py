@@ -126,6 +126,7 @@ class FileUploadService:
                     user_id=self.user_id,
                     task_id=entity_id if entity_type == 'task' else None,
                     microtask_id = entity_id if entity_type == 'microtask' else None,
+                    project_id = project.id,
                     file_id=new_file.id,
                     timestamp=datetime.now(),
                     action=log_action,

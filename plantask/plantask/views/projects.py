@@ -87,7 +87,7 @@ def project_page(request):
         # Load project with members using a better query structure
         project = (
             request.dbsession.query(Project)
-            .filter(Project.id == project_id, Project.active == True)
+            .filter(and_(Project.id == project_id, Project.active == True))
             .first()
         )
 
@@ -300,7 +300,7 @@ def delete_project(request):
         project.active = False
         activity_log_removed_project = ActivityLog(
             user_id=request.session['user_id'],
-            project_id=project.id,  # Added project.id
+            project_id=project.id,  
             timestamp=datetime.now(),
             action='project_removed',
             changes=f"{project.name}"
