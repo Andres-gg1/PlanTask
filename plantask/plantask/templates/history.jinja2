@@ -298,7 +298,7 @@ const actionTemplates = {
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <i class="bi-person-badge"></i>
                             <h5 class="card-title mb-0">
-                                Label "${data.changes}" was assigned to 
+                                Label(s) "${data.changes}" was/were assigned to 
                                 <a href="/user/${data.object_user_id}" class="user-link">${data.object_user_first_name} ${data.object_user_last_name}</a>
                                 in project ${data.project_is_active ? 
                                     `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
@@ -326,7 +326,7 @@ const actionTemplates = {
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <i class="bi-person-badge"></i>
                             <h5 class="card-title mb-0">
-                                Label "${data.changes}" was removed from 
+                                Label(s) "${data.changes}" was/were removed from 
                                 <a href="/user/${data.object_user_id}" class="user-link">${data.object_user_first_name} ${data.object_user_last_name}</a>
                                 in project ${data.project_is_active ? 
                                     `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
@@ -354,7 +354,7 @@ const actionTemplates = {
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <i class="bi-bookmark-plus"></i>
                             <h5 class="card-title mb-0">
-                                Label "${data.changes}" was assigned to task in project 
+                                Label "${data.changes}" was assigned to task <a href="/task/${data.task_id}" class="user-link">${data.task_name}</a> in project 
                                 ${data.project_is_active ? 
                                     `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
                                     `<span class="text-muted">${data.project_name}</span>`}
@@ -629,7 +629,7 @@ task_added_file: (data) => `
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <i class="bi-chat-dots"></i>
                             <h5 class="card-title mb-0">
-                                Comment added to task in project ${data.project_is_active ? 
+                                Comment "${data.changes}" added to task in project ${data.project_is_active ? 
                                     `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
                                     `<span class="text-muted">${data.project_name}</span>`}
                                 by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
@@ -875,7 +875,7 @@ task_added_file: (data) => `
                             <div class="d-flex align-items-center gap-2 mb-2">
                                 <i class="bi-arrow-left-right"></i>
                                 <h5 class="card-title mb-0">
-                                    Microtask status changed from "${old_status}" to "${new_status}" in project ${data.project_is_active ? 
+                                    Microtask ${data.microtask_name} status changed from "${old_status}" to "${new_status}" in project ${data.project_is_active ? 
                                         `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
                                         `<span class="text-muted">${data.project_name}</span>`}
                                     by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
@@ -955,7 +955,7 @@ task_added_file: (data) => `
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <i class="bi-chat-dots"></i>
                             <h5 class="card-title mb-0">
-                                Comment added to microtask in project ${data.project_is_active ? 
+                                Comment "${data.changes}" added to microtask ${data.microtask_name} in project ${data.project_is_active ? 
                                     `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
                                     `<span class="text-muted">${data.project_name}</span>`}
                                 by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
