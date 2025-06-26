@@ -50,7 +50,7 @@ def includeme(config):
     config.add_route('get_notifications', '/get-notifications')
     
     #SEARCH USERS IN MESSAGES/NAVBAR
-    config.add_route('search_users_global', '/search-users-global')
+    config.add_route('search_global', '/search-global')
 
     #File services
     #config.add_route('task_add_upload', '/upload')

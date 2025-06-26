@@ -10,28 +10,36 @@ from plantask.models.file import File
 from plantask.models.project import Project, ProjectsUser  # Add this import
 from plantask.auth.verifysession import verify_session
 import json
+from sqlalchemy.sql import func
 
 @view_config(route_name='chats', renderer='plantask:templates/chats.jinja2')
 @verify_session
 def chats_page(request):
     user_id = request.session.get('user_id')
     current_chat_id = request.params.get('currentChatId')
+    # Query personal chats with last message date
 
-    # Query personal chats
     personal_chats = request.dbsession.query(
         PersonalChat.id.label('chat_id'),
         User.id.label('other_user_id'),
         User.username.label('username'),
         User.first_name.label('first_name'),
         User.last_name.label('last_name'),
-        File.route.label('image_route')
+        File.route.label('image_route'),
+        func.max(ChatLog.date_sent).label('last_message_date')
     ).join(
         User,
         or_(
             and_(PersonalChat.user1_id == user_id, PersonalChat.user2_id == User.id),
             and_(PersonalChat.user2_id == user_id, PersonalChat.user1_id == User.id)
         )
-    ).outerjoin(File, User.user_image_id == File.id).all()
+    ).outerjoin(File, User.user_image_id == File.id
+    ).outerjoin(ChatLog, ChatLog.perschat_id == PersonalChat.id
+    ).group_by(
+        PersonalChat.id, User.id, User.username, User.first_name, User.last_name, File.route
+    ).order_by(
+        func.max(ChatLog.date_sent).desc().nullslast()
+    ).all()
 
     # Format personal chats
     chats = [
@@ -42,27 +50,35 @@ def chats_page(request):
             'first_name': chat.first_name,
             'last_name': chat.last_name,
             'image_route': chat.image_route,
-            'is_group': False
+            'is_group': False,
+            'last_message_date': chat.last_message_date
         }
         for chat in personal_chats
     ]
     
-    # Query group chats that the user belongs to
+    # Query group chats that the user belongs to, with last message date
     group_chats = request.dbsession.query(
         GroupChat.id.label('chat_id'),
         GroupChat.chat_name.label('name'),
-        File.route.label('image_route')
+        File.route.label('image_route'),
+        func.max(ChatLog.date_sent).label('last_message_date')
     ).join(
         groupchat_users,
         GroupChat.id == groupchat_users.c.groupchat_id
     ).outerjoin(
         File, 
         GroupChat.image_id == File.id
+    ).outerjoin(
+        ChatLog, ChatLog.groupchat_id == GroupChat.id
     ).filter(
         groupchat_users.c.user_id == user_id
+    ).group_by(
+        GroupChat.id, GroupChat.chat_name, File.route
+    ).order_by(
+        func.max(ChatLog.date_sent).desc().nullslast()
     ).all()
     
-    # Add group chats to the list
+    # Add group chats to the list with last message_date
     chats.extend([
         {
             'chat_id': chat.chat_id,
@@ -70,10 +86,14 @@ def chats_page(request):
             'last_name': '',
             'username': 'group',
             'image_route': chat.image_route,
-            'is_group': True
+            'is_group': True,
+            'last_message_date': chat.last_message_date
         }
         for chat in group_chats
     ])
+
+    # Sort all chats by last_message_date (most recent first, None values last)
+    chats.sort(key=lambda x: x['last_message_date'] or datetime.min, reverse=True)
 
     return {'chats': chats, 'current_chat_id': current_chat_id}
 
@@ -190,75 +210,6 @@ def send_message(request):
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         return {"error_ping": "An unexpected error occurred."}
-
-@view_config(route_name='search_users_global', renderer='json')
-@verify_session
-def search_users_global(request):
-    query = request.params.get('q', '').strip()
-    user_id = request.session.get('user_id')
-
-    if len(query) < 2:
-        return []
-
-    # Search for users
-    user_results = request.dbsession.query(
-        User.id,
-        User.username,
-        User.first_name,
-        User.last_name,
-        File.route.label('image_route')
-    ).outerjoin(File, User.user_image_id == File.id) \
-     .filter(
-        or_(
-            User.username.ilike(f'%{query}%'),
-            User.first_name.ilike(f'%{query}%'),
-            User.last_name.ilike(f'%{query}%')
-        )
-    ).limit(5).all()
-    
-    # Search for projects the user is part of
-    project_results = request.dbsession.query(
-        Project.id,
-        Project.name.label('project_name'),
-        Project.description,
-        File.route.label('image_route')
-    ).outerjoin(File, Project.project_image_id == File.id) \
-     .join(ProjectsUser, Project.id == ProjectsUser.project_id) \
-     .filter(
-        ProjectsUser.user_id == user_id,
-        Project.name.ilike(f'%{query}%'),
-        Project.active == True
-    ).limit(5).all()
-        
-    # Format results with type indicators
-    results = []
-    
-    # Add users with 'user' type
-    results.extend([
-        {
-            "id": u.id,
-            "username": u.username,
-            "first_name": u.first_name,
-            "last_name": u.last_name,
-            "image_route": u.image_route,
-            "type": "user"
-        }
-        for u in user_results
-    ])
-    
-    # Add projects with 'project' type
-    results.extend([
-        {
-            "id": p.id,
-            "name": p.project_name,
-            "description": p.description[:50] + "..." if p.description and len(p.description) > 50 else (p.description or ""),
-            "image_route": p.image_route,
-            "type": "project"
-        }
-        for p in project_results
-    ])
-    
-    return results
 
 @view_config(route_name='create_group_chat', request_method='POST')
 @verify_session

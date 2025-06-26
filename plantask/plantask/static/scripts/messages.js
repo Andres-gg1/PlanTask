@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (value.length < 2) return;
 
     try {
-      const res = await fetch(`/search-users-global?q=${encodeURIComponent(value)}`);
+      const res = await fetch(`/search-global?q=${encodeURIComponent(value)}`);
       const users = await res.json();
 
       groupUserResults.textContent = '';
