@@ -2,6 +2,7 @@ from pyramid.view import view_config
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import asc, desc
 from datetime import datetime
 from plantask.models.project import Project
 from plantask.models.file import File
@@ -17,6 +18,8 @@ def serialize_activity_log(log, request):
         if image_route:
             project_image = image_route.route
 
+
+    formatted_timestamp = log.timestamp.strftime("%d-%m-%Y %H:%M")
 
     return {
         "id": log.id,
@@ -36,7 +39,7 @@ def serialize_activity_log(log, request):
         "microtask_id": log.microtask_id,
         "file_id": log.file_id,
         "groupchat_id": log.groupchat_id,
-        "timestamp": log.timestamp.isoformat(',' , "milliseconds"),
+        "timestamp": formatted_timestamp,
         "action": log.action,
         "changes": log.changes,
     }
@@ -49,12 +52,12 @@ def history_page(request):
     role = request.session['role']
 
     if role == 'admin':
-        actions = request.dbsession.query(ActivityLog).all()
+        actions = request.dbsession.query(ActivityLog).order_by(desc(ActivityLog.timestamp)).all()
         actions = [serialize_activity_log(action, request) for action in actions]  # Serialize objects
     else:
         actions = []
 
-    my_actions = request.dbsession.query(ActivityLog).filter_by(user_id=user_id).all()
+    my_actions = request.dbsession.query(ActivityLog).filter_by(user_id=user_id).order_by(desc(ActivityLog.timestamp)).all()
     my_actions = [serialize_activity_log(action, request) for action in my_actions]  # Serialize objects
 
     return {
