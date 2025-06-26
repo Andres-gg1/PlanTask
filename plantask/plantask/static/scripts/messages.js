@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     submit.disabled = groupSelected.length < 2;
   }
 
-  // ========== CHAT SECTION ==========
+    // ========== CHAT SECTION ==========
 
   const scrollToBottom = () => {
     messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
@@ -180,6 +180,14 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (isGroup) {
         renderGroupMessages(data.messages || [], data.chat_name || 'Group Chat');
+        // Populate sidebar with group data
+        populateGroupSidebar({
+          chat_name: data.chat_name,
+          description: data.description,
+          image_route: data.image_route,
+          creation_date: data.creation_date,
+          members: data.members
+        });
       } else {
         renderMessages(data.messages || []);
       }
@@ -189,7 +197,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Update chat item click handler
+  // Sidebar functionality
+  const groupOptionsBtn = document.getElementById('group-options-btn');
+  const groupInfoSidebar = document.getElementById('group-info-sidebar');
+  const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+  const groupMembersList = document.getElementById('group-members-list');
+
+  const showGroupSidebar = () => {
+    groupInfoSidebar.classList.remove('d-none');
+    groupInfoSidebar.classList.add('show');
+    messagesContainer.classList.add('sidebar-open');
+  };
+
+  const hideGroupSidebar = () => {
+    groupInfoSidebar.classList.remove('show');
+    messagesContainer.classList.remove('sidebar-open');
+    setTimeout(() => {
+      groupInfoSidebar.classList.add('d-none');
+    }, 300);
+  };
+
+  groupOptionsBtn.addEventListener('click', showGroupSidebar);
+  closeSidebarBtn.addEventListener('click', hideGroupSidebar);
+
+  // Close sidebar when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!groupInfoSidebar.contains(e.target) && 
+        !groupOptionsBtn.contains(e.target) && 
+        groupInfoSidebar.classList.contains('show')) {
+      hideGroupSidebar();
+    }
+  });
+
+  const populateGroupSidebar = (groupData) => {
+    // Update group info
+    document.querySelector('.group-avatar').src = groupData.image_route || '/static/default_pfp.svg';
+    document.querySelector('.group-name').textContent = groupData.chat_name || 'Group Chat';
+    document.querySelector('.group-description').textContent = groupData.description || 'No description available';
+    document.getElementById('group-creation-date').textContent = new Date(groupData.creation_date).toLocaleDateString();
+
+    // Clear and populate members list
+    groupMembersList.innerHTML = '';
+    
+    if (groupData.members && groupData.members.length > 0) {
+      groupData.members.forEach(member => {
+        const memberItem = document.createElement('div');
+        memberItem.className = 'member-item';
+        memberItem.style.cursor = 'pointer'; // Add cursor pointer to indicate clickable
+        memberItem.innerHTML = `
+          <img src="${member.pfp_route || '/static/default_pfp.svg'}" 
+               alt="${member.first_name} ${member.last_name}" 
+               class="member-avatar">
+          <div class="member-info">
+            <p class="member-name">${member.first_name} ${member.last_name}</p>
+            <p class="member-username">@${member.username}</p>
+          </div>
+        `;
+        
+        // Add click event listener to redirect to user profile
+        memberItem.addEventListener('click', () => {
+          window.location.href = `/user/${member.user_id}`;
+        });
+        
+        groupMembersList.appendChild(memberItem);
+      });
+    } else {
+      groupMembersList.innerHTML = '<p class="text-muted text-center">No members found</p>';
+    }
+  };
+
+  // Update chat item click handler to show/hide group options
   chatItems.forEach(item => {
     item.addEventListener('click', async () => {
       chatItems.forEach(el => el.classList.remove('active'));
@@ -203,18 +280,35 @@ document.addEventListener('DOMContentLoaded', () => {
       chatIdField.value = chatId;
       isPersonalField.value = isGroup ? 'false' : 'true';
       
+      // Hide sidebar when switching chats
+      hideGroupSidebar();
+      
       // Clear existing messages
       messagesContainer.innerHTML = '<p class="text-center">Loading messages...</p>';
 
       if (isGroup) {
+        // Show group options button
+        document.querySelector('.group-options-btn').classList.remove('d-none');
+        document.querySelector('.group-indicator').classList.remove('d-none');
+        document.querySelector('.user-profile-link').style.display = 'none';
+        
         // Group chat display
         chatInfo.querySelector('.chatinfo-pfp').src = imageRoute || "/static/default_pfp.svg";
         chatInfo.querySelector('h4').textContent = firstName;
-        chatInfo.querySelector('a').textContent = "Group Chat";
+        
+        // Remove click handlers for group chats
+        ['.chatinfo-pfp', 'h4'].forEach(selector => {
+          chatInfo.querySelector(selector).onclick = null;
+        });
         
         // Fetch group messages using unified function
         await fetchAndRenderMessages(chatId, true);
       } else {
+        // Hide group options button
+        document.querySelector('.group-options-btn').classList.add('d-none');
+        document.querySelector('.group-indicator').classList.add('d-none');
+        document.querySelector('.user-profile-link').style.display = 'inline';
+        
         // Personal chat display
         const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
         chatInfo.querySelector('.chatinfo-pfp').src = imageRoute || "/static/default_pfp.svg";
@@ -266,12 +360,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const senderInfo = msg.sender_id === userId ? '' : 
         `<small class="sender-name text-muted">${msg.sender_name}</small>`;
 
-      msgWrapper.innerHTML = `
-        <p class="message-info">${hora}</p>
-        ${senderInfo}
-        <p class="${msg.sender_id === userId ? 'mymessagebubble' : 'amessagebubble'}">${msg.message_cont}</p>
-        ${msg.sender_id === userId ? `<i class="bi ${msg.state === 'read' ? 'bi-check2-all' : 'bi-check2'}"></i>` : ''}
-      `;
+      if (msg.sender_id === userId) {
+        msgWrapper.innerHTML = `
+          <p class="message-info text-end">${hora}</p>
+          <p class="mymessagebubble">${msg.message_cont}</p>
+          <i class="bi ${msg.state === 'read' ? 'bi-check2-all' : 'bi-check2'}"></i>
+        `;
+      } else {
+        msgWrapper.innerHTML = `
+          <div class="text-center">
+            <div class="text-muted small mt-1">${hora}</div>
+            <div class="message-block d-flex align-items-center justify-content-center">
+              <img src="${msg.sender_pfp || '/static/default_pfp.svg'}" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+              <div class="amessagebubble">${msg.message_cont}</div>
+            </div>
+            <div class="text-muted small">${msg.sender_name}</div>
+          </div>
+        `;
+      }
 
       messagesContainer.appendChild(msgWrapper);
     });

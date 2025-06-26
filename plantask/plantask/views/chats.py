@@ -271,30 +271,64 @@ def get_group_chat_messages(request):
         if not is_member:
             return Response(json.dumps({"error": "Not authorized"}), status=403)
         
-        # Get messages for this group chat
+        # Get messages for this group chat with sender info and profile pictures
         messages = request.dbsession.query(
             ChatLog,
             User.first_name,
-            User.last_name
+            User.last_name,
+            User.id.label('sender_user_id'),
+            File.route.label('sender_pfp')
         ).join(
             User, 
             ChatLog.sender_id == User.id
+        ).outerjoin(
+            File,
+            User.user_image_id == File.id
         ).filter(
             ChatLog.groupchat_id == chat_id
         ).order_by(ChatLog.date_sent.asc()).all()
         
-        # Convert to JSON-serializable format
+        # Get all group members with their profile pictures
+        members = request.dbsession.query(
+            User.id,
+            User.first_name,
+            User.last_name,
+            User.username,
+            File.route.label('pfp_route')
+        ).join(
+            groupchat_users,
+            User.id == groupchat_users.c.user_id
+        ).outerjoin(
+            File,
+            User.user_image_id == File.id
+        ).filter(
+            groupchat_users.c.groupchat_id == chat_id
+        ).all()
+        
+        # Convert messages to JSON-serializable format
         messages_data = [{
             "sender_id": msg.ChatLog.sender_id,
             "sender_name": f"{msg.first_name} {msg.last_name}",
+            "sender_pfp": msg.sender_pfp,
             "date_sent": msg.ChatLog.date_sent.strftime('%Y-%m-%d %H:%M'),
             "message_cont": msg.ChatLog.message_cont,
             "state": msg.ChatLog.state
         } for msg in messages]
 
-        # Get group chat details
+        # Convert members to JSON-serializable format
+        members_data = [{
+            "user_id": member.id,
+            "first_name": member.first_name,
+            "last_name": member.last_name,
+            "username": member.username,
+            "pfp_route": member.pfp_route
+        } for member in members]
+
+        # Get group chat details including creation date
         group_info = request.dbsession.query(
             GroupChat.chat_name,
+            GroupChat.description,
+            GroupChat.creation_date,
             GroupChat.image_id,
             File.route.label('image_route')
         ).outerjoin(
@@ -303,20 +337,18 @@ def get_group_chat_messages(request):
         ).filter(
             GroupChat.id == chat_id
         ).first()
-        
-        # Get member count
-        member_count = request.dbsession.query(groupchat_users).filter(
-            groupchat_users.c.groupchat_id == chat_id
-        ).count()
 
         return Response(
             json.dumps({
                 "messages": messages_data,
+                "members": members_data,
                 "is_personal_chat": False,
                 "chat_id": chat_id,
                 "chat_name": group_info.chat_name if group_info else "Group Chat",
+                "description": group_info.description if group_info else None,
+                "creation_date": group_info.creation_date.strftime('%Y-%m-%d') if group_info and group_info.creation_date else None,
                 "image_route": group_info.image_route if group_info else None,
-                "member_count": member_count
+                "member_count": len(members_data)
             }).encode('utf-8'),
             content_type='application/json; charset=utf-8',
         )

@@ -69,11 +69,43 @@
           <span class="text-muted group-indicator d-none">Group Chat</span>
           <a class="text-muted user-profile-link">@username</a>
         </div>
-        <i class="bi-three-dots-vertical fs-1 ms-auto me-2 d-none group-options-btn"></i>
+        <i class="bi-three-dots-vertical fs-1 ms-auto group-options-btn" id="group-options-btn"></i>
       </div>
 
-      <div class="messages text-center text-muted">
-        <p class="empty-message-hint">Select a chat to view messages</p>
+      <div class="chat-content-wrapper d-flex flex-grow-1" style="min-height: 0;">
+        <div class="messages text-center text-muted">
+          <p class="empty-message-hint">Select a chat to view messages</p>
+        </div>
+
+        <!-- Group Chat Info Sidebar -->
+        <div class="group-info-sidebar d-none" id="group-info-sidebar">
+          <div class="group-info-header">
+            <h5 class="group-info-title">Group Info</h5>
+            <i class="bi-x-lg close-sidebar-btn" id="close-sidebar-btn"></i>
+          </div>
+          
+          <div class="group-info-content">
+            <div class="group-basic-info">
+              <div class="group-avatar-section">
+                <img class="group-avatar" src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+                     alt="Group Avatar">
+              </div>
+              <h6 class="group-name">Group Name</h6>
+              <p class="group-description">Group Description</p>
+            </div>
+
+            <div class="group-members-section">
+              <h6 class="section-title">Chat Members</h6>
+              <div class="group-members-list" id="group-members-list">
+                <!-- Members will be populated by JavaScript -->
+              </div>
+            </div>
+
+            <div class="group-creation-info">
+              <span class="creation-date">Created on: <span id="group-creation-date">Date</span></span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <button id="scroll-to-bottom-btn" class="scroll-to-bottom-btn">
