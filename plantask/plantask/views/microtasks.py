@@ -7,6 +7,7 @@ from plantask.models.project import Project
 from plantask.auth.verifysession import verify_session
 from plantask.models.task import Task
 from plantask.models.microtask import Microtask
+from plantask.models.activity_log import ActivityLog
 from datetime import date
 
 @view_config(route_name='create_microtask', renderer='plantask:templates/create_microtask.jinja2', request_method='GET', permission="admin")
@@ -69,6 +70,19 @@ def create_microtask(request):
         )
 
         request.dbsession.add(new_microtask)
+        request.dbsession.flush()
+
+        activity_log_microtask_created = ActivityLog(
+                        user_id = request.session['user_id'],
+                        project_id = new_microtask.task.project_id,
+                        task_id = new_microtask.task_id,
+                        microtask_id = new_microtask.id,
+                        timestamp = datetime.now(),
+                        action = 'microtask_created',
+                        changes = f"{new_microtask.name}"
+        )
+        request.dbsession.add(activity_log_microtask_created)
+
         request.dbsession.flush()
 
         return HTTPFound(location=request.route_url('task_by_id', id=task_id))

@@ -10,7 +10,7 @@ from plantask.models.task import Task, TasksFile, TaskComment
 from plantask.models.label import Label, LabelsTask
 from plantask.models.microtask import Microtask, MicrotaskComment
 from plantask.models.file import File
-from datetime import date
+from datetime import datetime, date
 
 @view_config(route_name='create_task', renderer='plantask:templates/create_task.jinja2', request_method='GET', permission="admin")
 @verify_session
@@ -243,6 +243,14 @@ def add_label(request):
        
         label = Label(project_id = project_id, label_name = label_name, label_hex_color = hex_color)
         request.dbsession.add(label)
+        label_added_log = ActivityLog(
+            user_id=request.session['user_id'],
+            project_id=project_id,
+            timestamp=datetime.now(),
+            action='project_added_label',
+            changes=f"{label.label_name}",
+        )
+        request.dbsession.add(label_added_log)
         request.dbsession.flush()
         if relation:
             task_id = int(request.POST.get('task_id'))
@@ -274,7 +282,6 @@ def assign_label(request):
         if not label_id:
             return HTTPBadRequest("Label ID is required")
  
-        # Assuming you have a LabelsTask model to handle the many-to-many relationship
         labels_task = LabelsTask(
             labels_id=label_id,
             tasks_id=task.id
@@ -297,11 +304,37 @@ def toggle_label_for_task(request):
         labels_task = request.dbsession.query(LabelsTask).filter_by(labels_id=label_id, tasks_id=task_id).first()
         if labels_task:
             request.dbsession.delete(labels_task)
+
+            label = request.dbsession.query(Label).filter_by(id = label_id).first()
+
+            log_removed_label_task = ActivityLog(
+                user_id=request.session['user_id'],
+                task_id = task_id,
+                project_id = label.project_id,
+                timestamp=datetime.now(),
+                action='project_task_removed_label',
+                changes=f"{label.label_name}"
+            )
+            request.dbsession.add(log_removed_label_task)
+
             request.dbsession.flush()
             return Response('unassigned', status=200)
         else:
             new_labels_task = LabelsTask(labels_id=label_id, tasks_id=task_id)
             request.dbsession.add(new_labels_task)
+            
+            label = request.dbsession.query(Label).filter_by(id = label_id).first()
+
+            log_assigned_label_task = ActivityLog(
+                user_id=request.session['user_id'],
+                task_id = task_id,
+                project_id = label.project_id,
+                timestamp=datetime.now(),
+                action='project_task_assigned_label',
+                changes=f"{label.label_name}"
+            )
+            request.dbsession.add(log_assigned_label_task)
+            
             request.dbsession.flush()
             return Response('assigned', status=200)
     except Exception as e:
@@ -352,6 +385,18 @@ def update_microtask_status(request):
         if previous_status == new_status:
             return {"message": "No status change"}
         microtask.status = new_status
+
+        log_updated_microtask_status = ActivityLog(
+                user_id=request.session['user_id'],
+                project_id = microtask.task.project_id,
+                task_id = microtask.task_id,
+                microtask_id = microtask.id,
+                timestamp=datetime.now(),
+                action='microtask_edited_status',
+                changes=f"{microtask.status}"
+            )
+        request.dbsession.add(log_updated_microtask_status)
+
         request.dbsession.flush()
 
         return {"message": "Status updated"}
@@ -381,6 +426,18 @@ def add_microtask_comment(request):
             content=content
         )
         request.dbsession.add(new_comment)
+
+        microtask_comment_added_log = ActivityLog(
+            user_id = request.session['user_id'],
+            microtask_id = microtask.id,
+            task_id = microtask.task_id,
+            project_id = microtask.task.project_id,
+            timestamp = datetime.now(),
+            action = "microtask_added_comment",
+            changes = content
+        )
+        request.dbsession.add(microtask_comment_added_log)        
+
         request.dbsession.flush()
 
         # Return the new comment data
@@ -451,6 +508,17 @@ def add_task_comment(request):
             content=content
         )
         request.dbsession.add(new_comment)
+
+        comment_added_log = ActivityLog(
+            user_id = request.session['user_id'],
+            task_id = task_id,
+            project_id = task.project_id,
+            timestamp = datetime.now(),
+            action = "task_added_comment",
+            changes = content
+        )
+        request.dbsession.add(comment_added_log)
+
         request.dbsession.flush()
         return {
             "message": "Comment added successfully",

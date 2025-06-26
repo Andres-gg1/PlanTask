@@ -452,13 +452,30 @@ def edit_member(request):
             project_user.role = new_role
             request.dbsession.flush()
 
-        # Delete all previous label associations
-        request.dbsession.query(LabelsProjectsUser).filter_by(
-            projects_users_id=project_user.id
-        ).delete()
-
-        # Add updated labels
-        for label_id in label_ids:
+        # Get current label associations
+        current_labels = set(
+            label_id for (label_id,) in 
+            request.dbsession.query(LabelsProjectsUser.labels_id)
+            .filter_by(projects_users_id=project_user.id)
+            .all()
+        )
+        
+        # Convert new label_ids to set of integers
+        new_labels = set(int(label_id) for label_id in label_ids)
+        
+        # Calculate differences
+        labels_to_add = new_labels - current_labels
+        labels_to_remove = current_labels - new_labels
+        
+        # Remove only necessary labels
+        if labels_to_remove:
+            request.dbsession.query(LabelsProjectsUser).filter(
+                LabelsProjectsUser.projects_users_id == project_user.id,
+                LabelsProjectsUser.labels_id.in_(labels_to_remove)
+            ).delete(synchronize_session=False)
+        
+        # Add only new labels
+        for label_id in labels_to_add:
             try:
                 label_link = LabelsProjectsUser(
                     labels_id=label_id,
@@ -467,6 +484,42 @@ def edit_member(request):
                 request.dbsession.add(label_link)
             except ValueError:
                 continue
+
+        # Log changes if any labels were added or removed
+        if labels_to_add or labels_to_remove:
+            # Get label names for logging
+            label_names = {
+                id: name for (id, name) in 
+                request.dbsession.query(Label.id, Label.label_name)
+                .filter(Label.id.in_(labels_to_add | labels_to_remove))
+                .all()
+            }
+            
+            if labels_to_add:
+                added_names = [label_names[lid] for lid in labels_to_add]
+                activity_log_added_labels = ActivityLog(
+                    user_id=request.session['user_id'],
+                    project_id=project_id,
+                    object_user_id=user_id,
+                    timestamp=datetime.now(),
+                    action='project_user_assigned_label',
+                    changes=f"{', '.join(added_names)}"
+                )
+                request.dbsession.add(activity_log_added_labels)
+            
+            if labels_to_remove:
+                removed_names = [label_names[lid] for lid in labels_to_remove]
+                activity_log_removed_labels = ActivityLog(
+                    user_id=request.session['user_id'],
+                    project_id=project_id,
+                    object_user_id=user_id,
+                    timestamp=datetime.now(),
+                    action='project_user_removed_label',
+                    changes=f"{', '.join(removed_names)}"
+                )
+                request.dbsession.add(activity_log_removed_labels)
+
+        request.dbsession.flush()
 
         request.dbsession.flush()
 
@@ -531,13 +584,24 @@ def update_task_status(request):
         if not task:
             return {"error": "Task not found"}
 
-        prevous_status = task.status
-        if prevous_status == new_status:
+        previous_status = task.status
+        if previous_status == new_status:
             return {"message": "No status change"}
         task.status = new_status
+
+        log_updated_task_status = ActivityLog(
+                user_id=request.session['user_id'],
+                task_id = task_id,
+                project_id = task.project_id,
+                timestamp=datetime.now(),
+                action='task_edited_status',
+                changes=f"{task.status}"
+            )
+        request.dbsession.add(log_updated_task_status)
+
         request.dbsession.flush()
 
-        if new_status == 'under_review' and prevous_status != 'under_review':  
+        if new_status == 'under_review' and previous_status != 'under_review':  
             request.registry.notify(TaskReadyForReviewEvent(request, task_id))
         return {"success": True, "message": "Status updated"}
     except Exception as e:

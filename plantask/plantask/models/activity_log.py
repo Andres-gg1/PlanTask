@@ -10,53 +10,50 @@ from .base import Base
 from sqlalchemy.dialects.postgresql import ENUM
 
 log_actions = (
+    #ACTIONS MARKED WITH A COMMENT "x" ALREADY HAVE A FUNCTION FOR MAKING ActLog OBJECT
+
+
     # Project Actions
-    'project_added',
-    'project_removed',
-    'project_added_image',
-    'project_removed_image',
-    'project_edited_title',
-    'project_edited_description',
-    'project_added_user',
-    'project_removed_user',
-    'project_added_label',
-    'project_removed_label',
-    'project_user_assigned_label',
-    'project_user_removed_label',
-    'project_task_assigned_label',
-    'project_task_removed_label',
+    'project_added', #x
+    'project_removed', #x
+    'project_added_image', #x
+    'project_edited_title', #x
+    'project_edited_description', #x
+    'project_added_user', #x
+    'project_removed_user', #x
+    'project_added_label', #x
+    'project_removed_label', #no button
+    'project_user_assigned_label', #x
+    'project_user_removed_label', #x
+    'project_task_assigned_label', #x
+    'project_task_removed_label', #x
 
     # Task Actions
-    'task_created',
-    'task_removed',
-    'task_edited_title',
-    'task_edited_description',
-    'task_edited_status',
-    'task_edited_duedate',
-    'task_added_file',
-    'task_removed_file',
-    'task_added_comment',
-    'task_removed_comment',
-    'task_comment_added_file',
-    'task_comment_removed_file',
+    'task_created', #x
+    'task_removed', #x 
+    'task_edited_title', #x
+    'task_edited_description', #x 
+    'task_edited_status', #x
+    'task_edited_duedate', #x 
+    'task_added_file', #x
+    'task_removed_file', #na
+    'task_added_comment', #x
+    'task_removed_comment', #na
+    'task_comment_added_file', #na
+    'task_comment_removed_file', #na
 
     # Microtask Actions
-    'microtask_created',
-    'microtask_removed',
-    'microtask_edited_name',
-    'microtask_edited_description',
-    'microtask_edited_percentage',
-    'microtask_edited_status',
-    'microtask_assigned_user',
-    'microtask_removed_user',
-    'microtask_added_comment',
-    'microtask_removed_comment',
-    'microtask_comment_added_file',
-    'microtask_comment_removed_file',
-    'microtask_added_file',
-    'microtask_removed_file',
-    'microtask_added_duedate',
-    'microtask_removed_duedate',
+    'microtask_created',#x 
+    'microtask_removed', #na
+    'microtask_edited_name', #na
+    'microtask_edited_description', #na
+    'microtask_edited_percentage', #na
+    'microtask_edited_status', #x
+    'microtask_added_comment', #x
+    'microtask_comment_added_file', #na
+    'microtask_comment_removed_file', #na
+    'microtask_added_file', #
+    'microtask_removed_file', #
 
     # Group Chat Actions
     'message_group_created',
@@ -71,7 +68,7 @@ log_actions = (
     'message_group_removed_description',
 
     # Login Actions
-    'login_several_failed_attempts',
+    'login_several_failed_attempts', #x
     'login_user_successful',
 
     # Registration Actions
