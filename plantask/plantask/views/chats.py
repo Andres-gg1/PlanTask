@@ -2,7 +2,7 @@ from pyramid.view import view_config
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, select
 from datetime import datetime
 from plantask.models.user import User
 from plantask.models.chat import PersonalChat, ChatLog, GroupChat, groupchat_users
@@ -104,7 +104,7 @@ def create_message_relation(request):
     user_id = request.session.get('user_id')
     recipient_id = request.params.get('recipient_id')
 
-    # Verifica si ya existe un chat personal entre estos dos usuarios (sin importar el orden)
+    # Check if a personal chat already exists between these two users
     existing_chat = request.dbsession.query(PersonalChat).filter(
         or_(
             and_(PersonalChat.user1_id == user_id, PersonalChat.user2_id == recipient_id),
@@ -123,7 +123,7 @@ def create_message_relation(request):
     else:
         chat_id = existing_chat.id
 
-    # Redirige a la vista de chats, pasando el chat_id como parámetro para JS
+    # Redirect to chats view, passing chat_id as parameter for JS
     return HTTPFound(location=request.route_url('chats', _query={'currentChatId': chat_id}))
 
 @view_config(route_name='get_chat_messages', request_method='GET')
@@ -165,10 +165,8 @@ def get_chat_messages(request):
         )
     except SQLAlchemyError as e:
         request.dbsession.rollback()
-        print(f"Database error: {str(e)}")
         return {"error_ping": "An error occurred while fetching the project. Please try again."}
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
         return {"error_ping": "An unexpected error occurred."}
 
 @view_config(route_name='send_message', renderer='json', request_method='POST')
@@ -205,10 +203,8 @@ def send_message(request):
         return {"success": "Message sent successfully."}
     except SQLAlchemyError as e:
         request.dbsession.rollback()
-        print(f"Database error: {str(e)}")
         return {"error_ping": "An error occurred while sending the message. Please try again."}
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
         return {"error_ping": "An unexpected error occurred."}
 
 @view_config(route_name='create_group_chat', request_method='POST')
@@ -226,7 +222,7 @@ def create_group_chat(request):
 
         group = GroupChat(
             chat_name=group_name,
-            description=group_description,  # Make sure to save description
+            description=group_description,
             creation_date=datetime.now()
         )
         request.dbsession.add(group)
@@ -253,7 +249,6 @@ def create_group_chat(request):
         # Redirect to chats with the new group selected
         return HTTPFound(location=request.route_url('chats', _query={'currentChatId': group.id}))
     except Exception as e:
-        print("Error creating group:", e)
         request.session.flash({'message': 'Error creating group chat.', 'style': 'danger'})
         return HTTPFound(location=request.route_url('chats'))
 
@@ -356,10 +351,8 @@ def get_group_chat_messages(request):
         )
     except SQLAlchemyError as e:
         request.dbsession.rollback()
-        print(f"Database error: {str(e)}")
         return {"error": "An error occurred while fetching messages"}
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
         return {"error": "An unexpected error occurred"}
 
 @view_config(route_name='edit_group_name', request_method='POST', renderer='json')
@@ -397,7 +390,6 @@ def edit_group_name(request):
         
     except Exception as e:
         request.dbsession.rollback()
-        print(f"Error updating group name: {str(e)}")
         return {"error": "An error occurred while updating the group name"}
 
 
@@ -433,7 +425,6 @@ def edit_group_description(request):
         
     except Exception as e:
         request.dbsession.rollback()
-        print(f"Error updating group description: {str(e)}")
         return {"error": "An error occurred while updating the group description"}
 
 
@@ -466,6 +457,156 @@ def edit_group_image(request):
         
     except Exception as e:
         request.dbsession.rollback()
-        print(f"Error updating group image: {str(e)}")
         return {"error": "An error occurred while updating the group image"}
+    
+@view_config(route_name='search_group_users', renderer='json', request_method='POST')
+def search_group_users(request):
+    try:
+        group_id = int(request.POST.get('group_id'))
+        term = request.POST.get('term', '').strip()
+        
+        # Get IDs of users already in the group
+        users_in_group = request.dbsession.execute(
+            select(groupchat_users.c.user_id).where(groupchat_users.c.groupchat_id == group_id)
+        ).scalars().all()
 
+        # Buscar usuarios que no están en el grupo y que coinciden con el término de búsqueda
+        users = request.dbsession.query(
+            User.id,
+            User.first_name,
+            User.last_name,
+            User.username,
+            File.route.label('image_route')
+        ).outerjoin(
+            File, User.user_image_id == File.id
+        ).filter(
+            ~User.id.in_(users_in_group),  # Excluir usuarios ya en el grupo
+            or_(
+                User.first_name.ilike(f'%{term}%'),
+                User.last_name.ilike(f'%{term}%'),
+                User.username.ilike(f'%{term}%'),
+                func.concat(User.first_name, ' ', User.last_name).ilike(f'%{term}%')
+            )
+        ).limit(10).all()
+
+        users_data = [{
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'username': user.username,
+            'image_route': user.image_route
+        } for user in users]
+
+        return {'users': users_data}
+
+    except Exception as e:
+        return {'users': [], 'error': str(e)}
+
+
+@view_config(route_name='add_group_members', request_method='POST', renderer='json')
+@verify_session
+def add_group_members(request):
+    try:
+        group_id = request.POST.get('group_id')
+        user_ids = request.POST.getall('user_ids')
+
+        if not group_id or not user_ids:
+            return {'success': False, 'error': 'Missing group ID or users'}
+
+        group_id = int(group_id)
+        user_ids = list(map(int, user_ids))
+
+        # Query existing users in the group
+        existing_user_ids = request.dbsession.execute(
+            select(groupchat_users.c.user_id).where(groupchat_users.c.groupchat_id == group_id)
+        ).scalars().all()
+
+        # Filter to avoid duplicates
+        new_user_ids = [uid for uid in user_ids if uid not in existing_user_ids]
+
+        group = request.dbsession.get(GroupChat, group_id)
+        if not group:
+            return {'success': False, 'error': 'Group not found'}
+
+        for uid in new_user_ids:
+            user = request.dbsession.get(User, uid)
+            if user:
+                group.users.append(user)
+
+        request.dbsession.flush()
+
+        return {'success': True}
+    
+    except Exception as e:
+        return {'success': False, 'error': 'Server error'}
+    
+@view_config(route_name='remove_group_member', request_method='POST', renderer='json')
+@verify_session
+def remove_group_member(request):
+    try:
+        group_id_raw = request.POST.get('group_id')
+        user_id_raw = request.POST.get('user_id')
+
+        if not group_id_raw or not user_id_raw:
+            return {'success': False, 'error': 'Missing group_id or user_id'}
+
+        group_id = int(group_id_raw)
+        user_id = int(user_id_raw)
+
+        # Verify that the group exists
+        group = request.dbsession.get(GroupChat, group_id)
+        if not group:
+            return {'success': False, 'error': 'Group not found'}
+
+        # Verify that the user is in the group BEFORE removing
+        existing_member = request.dbsession.execute(
+            select(groupchat_users).where(
+                groupchat_users.c.groupchat_id == group_id,
+                groupchat_users.c.user_id == user_id
+            )
+        ).first()
+        
+        if not existing_member:
+            # If user is not in group, return success (already removed)
+            return {'success': True, 'message': 'User is already removed from the group'}
+
+        # Method 1: Use relationship (safer)
+        user_to_remove = request.dbsession.get(User, user_id)
+        if user_to_remove and user_to_remove in group.users:
+            group.users.remove(user_to_remove)
+            request.dbsession.flush()
+        else:
+            # Fallback: use direct delete
+            result = request.dbsession.execute(
+                groupchat_users.delete().where(
+                    and_(
+                        groupchat_users.c.groupchat_id == group_id,
+                        groupchat_users.c.user_id == user_id
+                    )
+                )
+            )
+            
+            if result.rowcount == 0:
+                return {'success': False, 'error': 'User is no longer in the group'}
+            
+            request.dbsession.flush()
+
+        # Verify that the user is no longer in the group
+        verification = request.dbsession.execute(
+            select(groupchat_users).where(
+                groupchat_users.c.groupchat_id == group_id,
+                groupchat_users.c.user_id == user_id
+            )
+        ).first()
+        
+        if verification:
+            return {'success': False, 'error': 'Failed to remove user from group'}
+        
+        return {'success': True, 'message': 'User removed from group successfully'}
+        
+    except ValueError as e:
+        request.dbsession.rollback()
+        return {'success': False, 'error': 'Invalid group_id or user_id format'}
+    except Exception as e:
+        request.dbsession.rollback()
+        return {'success': False, 'error': str(e)}

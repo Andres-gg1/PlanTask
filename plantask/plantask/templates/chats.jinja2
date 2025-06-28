@@ -63,7 +63,7 @@
       <div class="ChatInfo d-none align-items-center">
         <img class="chatinfo-pfp rounded-circle me-3"
              src="{{ request.static_url('plantask:static/default_pfp.svg') }}"
-             style="width: 3rem; height: 3rem; object-fit: cover; cursor: pointer;">
+             style="min-width: 3rem; min-height: 3rem; max-width: 3rem; max-height: 3rem; width: 3rem; height: 3rem; object-fit: cover; cursor: pointer;">
         <div class="cursor-pointer">
           <h4 class="mb-0 fw-bold">Full Name</h4>
           <span class="text-muted group-indicator d-none">Group Chat</span>
@@ -99,8 +99,8 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <input type="text" class="form-control form-control-sm" id="group-name-input" name="group_name" maxlength="100" required>
                 <div class="mt-2">
-                  <button type="submit" class="btn btn-success btn-sm">Save</button>
-                  <button type="button" class="btn btn-secondary btn-sm" id="cancel-name-edit">Cancel</button>
+                  <button type="submit" class="btn mybtn-blue">Save</button>
+                  <button type="button" class="btn mybtn-gray" id="cancel-name-edit">Cancel</button>
                 </div>
               </form>
               <i class="bi-pen-fill edit-icon ms-2" id="edit-group-name-btn" style="cursor: pointer; font-size: 0.8rem;"></i>
@@ -113,8 +113,8 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <textarea class="form-control form-control-sm" id="group-description-input" name="group_description" maxlength="255" rows="3" placeholder="Enter group description..."></textarea>
                 <div class="mt-2">
-                  <button type="submit" class="btn btn-success btn-sm">Save</button>
-                  <button type="button" class="btn btn-secondary btn-sm" id="cancel-description-edit">Cancel</button>
+                  <button type="submit" class="btn mybtn-blue btn-sm">Save</button>
+                  <button type="button" class="btn mybtn-gray btn-sm" id="cancel-description-edit">Cancel</button>
                 </div>
               </form>
               <i class="bi-pen-fill edit-icon ms-2" id="edit-group-description-btn" style="cursor: pointer; font-size: 0.8rem;"></i>
@@ -122,7 +122,12 @@
           </div>
 
           <div class="group-members-section">
-            <h6 class="section-title">Chat Members</h6>
+            <div class="d-flex align-items-center justify-content-between">
+              <h6 class="section-title mb-0">Chat Members</h6>
+              <button type="button" class="btn mybtn-green" id="addGroupMemberBtn" data-bs-toggle="modal" data-bs-target="#addGroupMemberModal">
+                Add<i class="bi-person-add"></i>
+              </button>
+            </div>
             <div class="group-members-list" id="group-members-list">
               <!-- Members will be populated by JavaScript -->
             </div>
@@ -159,21 +164,24 @@
 </div>
 
 <!-- Attach File Modal -->
-<div class="modal fade" id="attachFileModal" tabindex="-1" aria-labelledby="attachFileModalLabel" aria-hidden="true">
+<div class="modal fade show-modal" id="attachFileModal" tabindex="-1" aria-labelledby="attachFileModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <form id="file-upload-form" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <div class="modal-header">
-          <h5 class="modal-title" id="attachFileModalLabel">Attach File to Message</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title" id="attachFileModalLabel">Attach File to Message <i class="bi-paperclip"></i></h5>
         </div>
         <div class="modal-body">
-          <input type="file" name="file" id="file-input" class="form-control" required>
+          <div class="mb-3">
+            <label for="file-input" class="form-label">Choose File</label>
+            <input type="file" name="file" id="file-input" class="form-control" required>
+            <small class="form-text text-muted">Select a file to attach to your message</small>
+          </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer border-0">
           <button type="button" class="btn mybtn-gray" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn mybtn-green">Attach</button>
+          <button type="submit" class="btn mybtn-green">Attach File</button>
         </div>
       </form>
     </div>
@@ -230,7 +238,7 @@
 </div>
 
 <!-- Group Image Upload Modal -->
-<div class="modal fade" id="groupImageModal" tabindex="-1" aria-labelledby="groupImageModalLabel" aria-hidden="true">
+<div class="modal fade show-modal" id="groupImageModal" tabindex="-1" aria-labelledby="groupImageModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <form id="group-image-form" method="POST" action="{{ request.route_url('file_upload_page') }}" enctype="multipart/form-data">
@@ -238,35 +246,92 @@
         <input type="hidden" name="entity_type" value="group_chat">
         <input type="hidden" name="entity_id" id="group-entity-id" value="">
         <div class="modal-header">
-          <h5 class="modal-title" id="groupImageModalLabel">Change Group Image</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title" id="groupImageModalLabel">Change Group Image <i class="bi-image"></i></h5>
         </div>
-        <div class="modal-body text-center">
+        <div class="modal-body">
           <!-- Current Image Preview -->
-          <div class="mb-3">
-            <img id="current-group-image" src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
-                 class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+          <div class="mb-3 text-center">
+            <label class="form-label">Current Image</label>
+            <div>
+              <img id="current-group-image" src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+                   class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 2px solid #dee2e6;">
+            </div>
           </div>
           
           <!-- File Input -->
           <div class="mb-3">
+            <label for="group-image-input" class="form-label">Choose New Image</label>
             <input type="file" class="form-control" id="group-image-input" name="file" accept="image/*" required>
-            <div class="form-text">Choose a new image for the group (JPEG, PNG, GIF)</div>
+            <small class="form-text text-muted">Choose a new image for the group (JPEG, PNG, GIF)</small>
           </div>
           
           <!-- Image Preview -->
           <div class="mb-3 d-none" id="group-image-preview-container">
-            <label class="form-label">Preview:</label>
-            <div>
-              <img id="group-image-preview" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+            <label class="form-label">Preview</label>
+            <div class="text-center">
+              <img id="group-image-preview" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #dee2e6;">
             </div>
           </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer border-0">
           <button type="button" class="btn mybtn-gray" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn mybtn-green" id="group-image-submit">Upload Image</button>
+          <button type="submit" class="btn mybtn-yellow" id="group-image-submit">Upload Image</button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Group Member Modal -->
+<div class="modal fade show-modal" id="addGroupMemberModal" tabindex="-1" aria-labelledby="addGroupMemberModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="addGroupMemberForm" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" id="currentGroupIdInput" name="group_id" value="">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addGroupMemberModalLabel">Add Members to Group</h5>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="groupMemberSearch" class="form-label">Search for users</label>
+            <div class="input-group">
+              <input type="text" id="groupMemberSearch" class="form-control" placeholder="Search by username or name...">
+            </div>
+            <small class="form-text text-muted">Type at least 2 characters to search</small>
+          </div>
+          <div id="groupMemberSearchResults" class="mt-2"></div>
+          <div class="mb-3">
+            <h6>Selected Users</h6>
+            <ul id="groupSelectedUsersList" class="list-group"></ul>
+          </div>
+          <div id="groupHiddenInputsContainer"></div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn mybtn-gray" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn mybtn-green" id="addGroupMembersBtn">Add Members</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para confirmar eliminación de miembro -->
+<div class="modal fade show-modal" id="confirmRemoveMemberModal" tabindex="-1" aria-labelledby="confirmRemoveMemberLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <input type="hidden" id="removeMemberUserId">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmRemoveMemberLabel">Confirm Remove</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="confirmRemoveMemberText">
+        Are you sure you want to remove User Full Name from the Groupchat Groupchatname?
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn mybtn-gray" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn mybtn-red" id="confirmRemoveMemberBtn">Remove</button>
+      </div>
     </div>
   </div>
 </div>
