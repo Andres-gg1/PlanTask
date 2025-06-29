@@ -36,19 +36,53 @@ def my_projects_page(request):
     
     return {'projects': projects}
 
-@view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='GET', permission="admin")
+@view_config(route_name='create_project', renderer='/templates/create_item.jinja2', request_method='GET', permission="admin")
 @verify_session
 def create_project_page(request):
-    return {}
+    user = request.dbsession.query(User).filter_by(id=request.session['user_id']).first()
+    
+    form_config = {
+        'title': 'Create New Project',
+        'subtitle': f'As {user.username if user else "User"}',
+        'icon': 'bi bi-kanban',
+        'gradient': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'accent_color': '#f093fb',
+        'name_label': 'Project Name',
+        'name_placeholder': 'Enter your project name...',
+        'description_placeholder': 'Describe your project goals and objectives...',
+        'button_text': 'Create Project',
+        'action': '/create-project',
+        'show_date': False,
+        'max_date': None
+    }
+    
+    return {'form_config': form_config}
 
-@view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='POST', permission="admin")
+@view_config(route_name='create_project', renderer='/templates/create_item.jinja2', request_method='POST', permission="admin")
 @verify_session
 def create_project(request):
+    user = request.dbsession.query(User).filter_by(id=request.session['user_id']).first()
+    
+    form_config = {
+        'title': 'Create New Project',
+        'subtitle': f'As {user.username if user else "User"}',
+        'icon': 'bi bi-folder-plus',
+        'gradient': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'accent_color': '#f093fb',
+        'name_label': 'Project Name',
+        'name_placeholder': 'Enter your project name...',
+        'description_placeholder': 'Describe your project goals and objectives...',
+        'button_text': 'Create Project',
+        'action': '/create-project',
+        'show_date': False,
+        'max_date': None
+    }
+    
     try:
         name = request.POST.get('name', '').strip()
         description = request.POST.get('description', '').strip()
         if not name or not description:
-            return {"error_ping": "Please provide a name and a description for the project."}
+            return {"form_config": form_config, "error_ping": "Please provide a name and a description for the project."}
 
         new_project = Project(name=name, description=description, creation_datetime=datetime.now())
         request.dbsession.add(new_project)
@@ -75,7 +109,7 @@ def create_project(request):
 
     except SQLAlchemyError:
         request.dbsession.rollback()
-        return {"error_ping": "An error occurred while creating the project. Please try again."}
+        return {"form_config": form_config, "error_ping": "An error occurred while creating the project. Please try again."}
 
 @view_config(route_name='project_by_id', request_method='GET', renderer='/templates/project.jinja2')
 @verify_session

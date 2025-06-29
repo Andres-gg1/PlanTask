@@ -12,7 +12,7 @@ from plantask.models.microtask import Microtask, MicrotaskComment
 from plantask.models.file import File
 from datetime import datetime, date
 
-@view_config(route_name='create_task', renderer='plantask:templates/create_task.jinja2', request_method='GET', permission="admin")
+@view_config(route_name='create_task', renderer='plantask:templates/create_item.jinja2', request_method='GET', permission="admin")
 @verify_session
 def create_task_page(request):
     project_id = request.matchdict.get('project_id')
@@ -20,13 +20,29 @@ def create_task_page(request):
     if not project:
         return HTTPFound(location=request.route_url('my_projects')) 
     
+    form_config = {
+        'title': 'Create New Task',
+        'subtitle': f'For project: {project.name}',
+        'icon': 'bi bi-file-post',
+        'gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'accent_color': '#667eea',
+        'name_label': 'Task Name',
+        'name_placeholder': 'Enter a descriptive task name...',
+        'description_placeholder': 'Describe what needs to be accomplished...',
+        'button_text': 'Create Task',
+        'action': request.route_url('create_task', project_id=project.id),
+        'show_date': True,
+        'max_date': None
+    }
+    
     return {
         'project': project,
-        'current_date': date.today().isoformat()
+        'current_date': date.today().isoformat(),
+        'form_config': form_config
     }
 
 
-@view_config(route_name='create_task', renderer='plantask:templates/create_task.jinja2', request_method='POST', permission="admin")
+@view_config(route_name='create_task', renderer='plantask:templates/create_item.jinja2', request_method='POST', permission="admin")
 @verify_session
 def create_task(request):
     project_id = request.matchdict.get('project_id')
@@ -38,10 +54,26 @@ def create_task(request):
     task_description = request.params.get('description')
     due_date = request.params.get('due_date')
 
+    form_config = {
+        'title': 'Create New Task',
+        'subtitle': f'For project: {project.name}',
+        'icon': 'bi bi-list-check',
+        'gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'accent_color': '#667eea',
+        'name_label': 'Task Name',
+        'name_placeholder': 'Enter a descriptive task name...',
+        'description_placeholder': 'Describe what needs to be accomplished...',
+        'button_text': 'Create Task',
+        'action': request.route_url('create_task', project_id=project.id),
+        'show_date': True,
+        'max_date': None
+    }
+
     if not task_name or not task_description or not due_date:       #check if all field are complete
         return {
             'project': project,
             'current_date': date.today().isoformat(),
+            'form_config': form_config,
             'error_ping': 'All fields are required.'
         }
 
@@ -77,6 +109,7 @@ def create_task(request):
         return {
             'project': project,
             'current_date': date.today().isoformat(),
+            'form_config': form_config,
             'error_ping': 'An error occurred while creating the task. Please try again.'
         }
 
