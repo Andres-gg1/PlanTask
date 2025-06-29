@@ -56,7 +56,7 @@
                                 <div class="label" style="flex: 1; background-color: {{ label_hex_color }}; padding: 0.5rem 0.5rem; border-radius: 0.5rem; color: #fff; font-weight: 600; font-family: 'Proxima Nova', sans-serif;">
                                     {{ label_name }}
                                 </div>
-                                <button type="button" class="btn mybtn-edit-label edit-label-btn" data-bs-target="#editLabel" data-label-id="{{ label_id }}">
+                                <button type="button" class="btn mybtn-edit-label" data-bs-target="#editLabel" data-label-id="{{ label_id }}">
                                     <i class="bi-pencil-square"></i>
                                 </button>
                             </div>
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    document.querySelectorAll('.btn-info').forEach(function(editBtn) {
+    document.querySelectorAll('.mybtn-edit-label').forEach(function(editBtn) {
         editBtn.addEventListener('click', function(event) {
             // Find label data from surrounding elements
             const labelDiv = event.target.closest('div').querySelector('.label');

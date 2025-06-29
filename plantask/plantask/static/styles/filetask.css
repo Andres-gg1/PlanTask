@@ -45,14 +45,23 @@
     justify-content: center;
     align-items: center;
     min-width: 2.5rem;
+    flex-shrink: 0;
 }
 
 .file-item .btn {
     align-self: center;
-    display: flex;
+    display: flex !important;
     justify-content: center;
     align-items: center;
     height: 100%;
+    opacity: 1 !important;
+    visibility: visible !important;
+    flex-shrink: 0;
+}
+
+.download-btn {
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 @media(max-width: 87.5rem){
@@ -61,17 +70,44 @@
     }
 }
 
-@media (max-width: 56.25rem) { 
+@media (max-width: 62rem) { 
     .main-layout {
         flex-direction: column;
     }
     .right-sidebar {
-        margin-left: 4.5rem;
-        width: 100%;
+        margin-left: 6rem;
+        width: calc(100% - 6rem);
         margin-top: 1.5rem; 
         height: auto;
         max-height: 60vh;
         position: static;
         overflow-y: auto;
+    }
+    
+    .file-item {
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .file-item > div {
+        flex: 1;
+        min-width: 0;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .file-item strong {
+        display: block;
+        word-break: break-word;
+        white-space: normal !important;
+        line-height: 1.2;
+    }
+    
+    .file-item .btn {
+        flex-shrink: 0;
+        min-width: 2.5rem;
+        width: 2.5rem;
+        height: 2.5rem;
     }
 }

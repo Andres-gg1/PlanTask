@@ -542,25 +542,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const message = messageInput.value.trim();
     if (!message || isCurrentlyFetching) return;
 
-    // Show optimistic message immediately
-    const tempMessage = {
-      sender_id: userId,
-      date_sent: new Date().toISOString(),
-      message_cont: message,
-      state: 'sent'
-    };
-    
-    // Temporarily add message to UI for instant feedback
-    const tempWrapper = document.createElement('div');
-    tempWrapper.className = 'mymessage temp-message';
-    tempWrapper.innerHTML = `
-      <p class="message-info text-end">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-      <p class="mymessagebubble">${message}</p>
-      <i class="bi bi-clock text-muted"></i>
-    `;
-    messagesContainer.appendChild(tempWrapper);
-    scrollToBottom();
-    
     // Clear input immediately for better UX
     messageInput.value = '';
 
@@ -578,8 +559,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const data = await res.json();
 
-      tempWrapper.remove();
-
       if (data.success) {
         await fetchAndRenderMessages(currentChatId, currentChatIsGroup, false);
       } else {
@@ -596,7 +575,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => errorMsg.remove(), 3000);
       }
     } catch (err) {
-      tempWrapper.remove();
       messageInput.value = message;
       
       const errorMsg = document.createElement('div');

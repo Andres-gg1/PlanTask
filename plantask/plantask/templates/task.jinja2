@@ -13,9 +13,9 @@
     <main class="mycontainer">
             <div style="display: flex; align-items: center; justify-content: space-between;">
                 <h1 style="margin: 0;">{{ task.task_title }}</h1>
-                <div class="label-list">
+                <div class="label-list-scrollable">
                     {% for label_id, label_name, label_hex_color in labels %}
-                        <div class="label" style="background-color: {{ label_hex_color }};">
+                        <div class="label" style="background-color: {{ label_hex_color }}; white-space: nowrap;">
                             {{ label_name }}
                         </div>
                     {% endfor %}
@@ -127,9 +127,7 @@
                 {% endif %}
                 </div>
                 <input type="text" id="taskCommentInput" class="form-control" name="content" placeholder="Write a comment" style="border: none; box-shadow: none; font-size: 1.1rem;">
-                <button type="submit" id="submitTaskCommentButton" class="btn btn-info" style="border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <i class="bi-send fs-5"></i>
-                </button>
+                <button type="submit" id="submitTaskCommentButton" class="send-button"><i class="bi-send"></i></button>
             </form>
             </div>
         </div>
