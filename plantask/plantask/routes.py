@@ -1,3 +1,6 @@
+from logging import config
+
+
 def includeme(config):
     # Static files
     config.add_static_view('static', 'static', cache_max_age=3600)
@@ -6,7 +9,6 @@ def includeme(config):
     config.add_route('home', '/')
     config.add_route('dashboard', '/dashboard')
     config.add_route('history', '/history')
-    config.add_route('calendar', '/calendar')
     
     # Authentication routes
     config.add_route('login', '/login')
@@ -84,4 +86,12 @@ def includeme(config):
     # Charts and analytics routes
     config.add_route('tasks_charts', '/project/dashboard/{project_id}')
     config.add_route('tasks_completed', '/tasks-completed/{project_id}')
-    
+
+    config.add_route('calendar', '/calendar')
+    config.add_route('api_tasks', '/api/tasks')
+    config.add_route('api_update_task_status', '/api/update_task_status')
+    config.add_route('api_user_tasks', '/api/user_tasks')
+    config.add_route('api_update_task_due_date', '/api/update_task_due_date')
+
+
+
