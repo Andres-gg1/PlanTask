@@ -149,9 +149,13 @@
                             {{ f.creation_date.strftime('%Y-%m-%d %H:%M') }}
                             </span>
                         </div>
-                        <a href="" class="btn p-0 ms-auto download-btn" style="border:none; background:none;" title="Download">
+                        <button class="btn p-0 ms-auto download-btn" 
+                                style="border:none; background:none; color:black;" 
+                                title="Download"
+                                data-filename="{{ f.filename }}"
+                                data-file-id="{{ f.id }}">
                             <i class="bi-download fs-1"></i>
-                        </a>
+                        </button>
                     </div>
                 </li>
                 {% endfor %}
@@ -329,14 +333,14 @@
 </div>
 
 <!-- Custom Download Reason Modal -->
-<div id="downloadReasonModal" class="custom-modal" aria-hidden="true" role="dialog" aria-labelledby="downloadReasonModalLabel" aria-modal="true" tabindex="-1" style="display:none;">
-  <div class="custom-modal-dialog" role="document">
+<div id="downloadReasonModal" class="custom-modal">
+  <div class="custom-modal-dialog">
     <div class="custom-modal-content">
       <div class="custom-modal-header">
-        <h5 id="downloadReasonModalLabel" class="custom-modal-title">Generate Download Ticket</h5>
-        <button type="button" class="custom-modal-close" aria-label="Close"><i class="bi-x-lg"></i></button>
+        <h5 class="custom-modal-title">Generate Download Ticket</h5>
+        <button type="button" class="custom-modal-close"><i class="bi-x-lg"></i></button>
       </div>
-      <form id="downloadReasonForm" class="custom-modal-body" autocomplete="off">
+      <form id="downloadReasonForm" class="custom-modal-body">
         <dl class="file-details">
           <dt>File</dt>
           <dd id="downloadFileName"></dd>
@@ -345,14 +349,14 @@
         </dl>
         <div class="mb-3">
           <label for="downloadReason" class="form-label">Why would you like to download this file?</label>
-          <textarea class="form-control" id="downloadReason" name="reason" required rows="3" style="resize:vertical; max-height:7rem; min-height:3rem; width:100%;"></textarea>
+          <textarea class="form-control" id="downloadReason" name="reason" required></textarea>
         </div>
-        <div style="gap:0.5rem;">
+        <div class="d-flex gap-2">
           <button type="button" class="btn btn-secondary" id="cancelDownloadReason">Cancel</button>
-          <button type="submit" class="btn btn-info">Send & Request Download</button>
+          <button type="submit" class="btn btn-primary">Download File</button>
         </div>
-        <div id="downloadReasonSuccess" style="display:none; color:green; margin-top:1rem; justify-content:center; text-align: center;">
-          Your reason was submitted! (Simulated)<br>Download will start...
+        <div id="downloadReasonSuccess" style="display:none; color:green; margin-top:1rem; text-align:center;">
+          Your reason was submitted!<br>Download will start...
         </div>
       </form>
     </div>
@@ -363,19 +367,78 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-        var fileInput = document.getElementById('fileInput');
-        var filenameInput = document.getElementById('filename');
-        if (fileInput && filenameInput) {
-                fileInput.addEventListener('change', function() {
-                        if (fileInput.files.length > 0) {
-                                filenameInput.value = fileInput.files[0].name;
-                        }
-                });
-        }
-});
+const userRole = "{{ role }}"
 
 document.addEventListener('DOMContentLoaded', function() {
+    var fileInput = document.getElementById('fileInput');
+    var filenameInput = document.getElementById('filename');
+    if (fileInput && filenameInput) {
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length > 0) {
+                    filenameInput.value = fileInput.files[0].name;
+            }
+        });
+    }
+
+
+    // Download functionality
+    const downloadButtons = document.querySelectorAll('.download-btn');
+    const downloadReasonModal = document.getElementById('downloadReasonModal');
+    const downloadFileName = document.getElementById('downloadFileName');
+    const downloadReasonForm = document.getElementById('downloadReasonForm');
+    const downloadReasonSuccess = document.getElementById('downloadReasonSuccess');
+    const cancelDownloadButton = document.getElementById('cancelDownloadReason');
+    const modalClose = downloadReasonModal.querySelector('.custom-modal-close');
+    let currentFileId = null;
+
+    function openDownloadReasonModal(filename, fileId) {
+        downloadFileName.textContent = filename;
+        currentFileId = fileId;
+        downloadReasonModal.classList.add('show');
+        downloadReasonSuccess.style.display = 'none';
+        downloadReasonForm.reset();
+        document.body.style.overflow = 'hidden';
+    }
+    function closeDownloadReasonModal() {
+        downloadReasonModal.classList.remove('show');
+        downloadReasonForm.reset();
+        document.body.style.overflow = '';
+    }
+
+    // Add click handlers for download buttons
+    downloadButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const filename = button.dataset.filename;
+            const fileId = button.dataset.fileId;
+            if (userRole === 'admin') {
+                // Direct download for admin
+                window.location.href = `{{ request.route_url('file_crud') }}?action=download&file_id=${fileId}&entity_type=task&entity_id=${taskId}`;
+            } else {
+                // Show modal for non-admins
+                openDownloadReasonModal(filename, fileId);
+            }
+        });
+    });
+
+    // Close modal handlers
+    modalClose.addEventListener('click', closeDownloadReasonModal);
+    cancelDownloadButton.addEventListener('click', closeDownloadReasonModal);
+
+    // Handle form submission
+    downloadReasonForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Show success message
+        downloadReasonSuccess.style.display = 'flex';
+        
+        // Start download after a brief delay
+        setTimeout(() => {
+            window.location.href = `{{ request.route_url('file_crud') }}?action=download&file_id=${currentFileId}&entity_type=task&entity_id=${taskId}`;
+            closeDownloadReasonModal();
+        }, 1500);
+    });
+
     // Task status update functionality
     function updateStatus(newStatus) {
         fetch("{{ request.route_url('update_task_status') }}", {
