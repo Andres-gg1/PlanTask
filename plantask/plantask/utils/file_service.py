@@ -13,7 +13,7 @@ import zipfile
 import tempfile
 
 
-ALLOWED_FILES = {'pdf', 'png', 'jpg', 'jpeg', 'jfif'}
+ALLOWED_FILES = {'pdf', 'png', 'jpg', 'jpeg', 'jfif', 'txt', 'docx', 'doc', 'xlsx', 'ppt', 'pptx'}
 
 class FileUploadService:
     def __init__(self, upload_dir: str, dbsession, user_id: int):
@@ -206,12 +206,18 @@ class FileUploadService:
             if not file_record:
                 return {"bool": False, "msg": "File not found or is inactive."}
             
-            if not os.path.exists(file_record.route):
+            # If route is a URL, convert to absolute path
+            file_path = file_record.route
+            if not os.path.isabs(file_path):
+                # Assuming all files are in self.upload_dir
+                file_path = os.path.join(self.upload_dir, os.path.basename(file_path))
+            
+            if not os.path.exists(file_path):
                 return {"bool": False, "msg": "File does not exist on the server."}
 
             return {
                 "bool": True,
-                "file_path": file_record.route,
+                "file_path": file_path,
                 "filename": file_record.filename
             }
         except Exception as e:
