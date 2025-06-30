@@ -73,7 +73,7 @@
 }
 
 /* ---------- BUTTONS ---------- */
-.btn {
+.mybtn {
     border-radius: 0.6rem;
     font-weight: 600;
     transition: all 0.2s ease;
@@ -85,12 +85,11 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    color: white;
 }
-.btn:hover {
+.mybtn:hover {
     transform: translateY(-1px);
 }
-.btn:active {
+.mybtn:active {
     transform: scale(0.95);
 }
 

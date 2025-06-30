@@ -4,51 +4,48 @@
 
 {% block styles %}
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Try CDN first, fallback to local if it fails -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='{{ request.static_url('plantask:static/styles/fullcalendar.min.css') }}';">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="{{ request.static_url('plantask:static/styles/mycalendar.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<main class="mycontainer">
-  <div class="container my-5"> 
-    <h2>My Tasks</h2>
-  <div id="calendar"></div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Update Status</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <form id="statusForm">
-              <input type="hidden" id="taskId">
-              <div class="mb-3">
-                <label for="taskStatus">New Status:</label>
-                <select id="taskStatus" class="form-select">
-                  <option value="assigned">Assigned</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="under_review">Under Review</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary">Save</button>
-            </form>
-          </div>
+<div class="calendar-container">
+  <div class="mycontainer">
+    <div class="calendar-card">
+      <div class="calendar-header">
+        <h1>
+          My Task Calendar
+        </h1>
+      </div>
+      
+      <div id="calendar"></div>
+      
+      <div class="task-legend">
+        <div class="legend-item">
+          <div class="legend-color legend-assigned"></div>
+          <span>Assigned</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color legend-in_progress"></div>
+          <span>In Progress</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color legend-under_review"></div>
+          <span>Under Review</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color legend-completed"></div>
+          <span>Completed</span>
         </div>
       </div>
     </div>
-
-</main>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/multimonth@6.1.10/index.global.min.js"></script>
-  
   <script src="{{ request.static_url('plantask:static/scripts/calendar.js') }}"></script>
-
 {% endblock %}

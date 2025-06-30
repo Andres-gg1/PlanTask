@@ -41,45 +41,6 @@ def api_tasks(request):
         })
     return events
 
-@view_config(route_name='api_update_task_status', request_method='POST', renderer='json')
-@verify_session
-def api_update_task_status(request):
-    user_id = request.session.get('user_id')
-    data = request.json_body
-    if not data or 'id' not in data or 'status' not in data:
-        return {'status': 'error', 'message': 'Missing id or status'}
-    try:
-        task_id = int(data['id'])
-    except (ValueError, TypeError):
-        return {'status': 'error', 'message': 'Invalid task id'}
-    new_status = data['status']
-    if new_status not in ('assigned', 'in_progress', 'under_review', 'completed'):
-        return {'status': 'error', 'message': 'Invalid status'}
-    try:
-        task = request.dbsession.query(Task).filter_by(id=task_id, active=True).first()
-        if not task:
-            return {'status': 'error', 'message': 'Task not found'}
-        # Check if user shares a label with the task
-        # Get user's labels for this project
-        user_labels = set(
-            l.labels_id for l in request.dbsession.query(LabelsProjectsUser)
-            .join(ProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id)
-            .filter(ProjectsUser.user_id == user_id, ProjectsUser.project_id == task.project_id)
-        )
-        # Get task's labels
-        task_labels = set(
-            l.labels_id for l in request.dbsession.query(LabelsTask)
-            .filter(LabelsTask.tasks_id == task.id)
-        )
-        if not (user_labels & task_labels):
-            return {'status': 'error', 'message': 'You do not have permission to update this task'}
-        task.status = new_status
-        request.dbsession.commit()
-        return {'status': 'ok'}
-    except SQLAlchemyError:
-        request.dbsession.rollback()
-        return {'status': 'error', 'message': 'Database error'}
-
 @view_config(route_name='api_user_tasks', renderer='json', request_method='GET')
 @verify_session
 def api_user_tasks(request):

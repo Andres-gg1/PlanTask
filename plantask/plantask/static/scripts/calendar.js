@@ -4,21 +4,33 @@ document.addEventListener('DOMContentLoaded', function() {
   const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
     locale: 'en',
-    height: 'auto', // or a number like 400
+    height: 'auto',
+    displayEventTime: false, // Remove time display
+    displayEventEnd: false,  // Remove end time display
     events: function(fetchInfo, successCallback, failureCallback) {
       fetch('/api/user_tasks')
         .then(res => res.json())
         .then(data => {
-          successCallback(data.tasks || []);
+          // Transform the data to include CSS classes based on status
+          const transformedEvents = (data.tasks || []).map(task => ({
+            id: task.id,
+            title: task.title,
+            start: task.start,
+            extendedProps: {
+              project_id: task.project_id,
+              status: task.status
+            },
+            className: `status-${task.status}` // Add status-based CSS class
+          }));
+          successCallback(transformedEvents);
         })
         .catch(failureCallback);
     },
     editable: true, // Enable dragging
     eventClick: function(info) {
-      const modal = new bootstrap.Modal(document.getElementById('statusModal'));
-      document.getElementById('taskId').value = info.event.id;
-      document.getElementById('taskStatus').value = info.event.extendedProps.status;
-      modal.show();
+      const taskId = info.event.id;
+      const projectId = info.event.extendedProps.project_id;
+      window.location.href = `/task/${taskId}`;
     },
     eventDrop: function(info) {
       // Send the new date to the backend
@@ -42,25 +54,4 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   calendar.render();
-
-  document.getElementById('statusForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const taskId = document.getElementById('taskId').value;
-    const newStatus = document.getElementById('taskStatus').value;
-
-    fetch('/api/update_task_status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: taskId, status: newStatus })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.status === 'ok') {
-        bootstrap.Modal.getInstance(document.getElementById('statusModal')).hide();
-        calendar.refetchEvents();
-      } else {
-        alert('Error updating status.');
-      }
-    });
-  });
 });

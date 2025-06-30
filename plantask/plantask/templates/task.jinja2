@@ -21,7 +21,7 @@
                     {% endfor %}
                 </div>
                 {% if role == 'admin' %}
-                <button class="btn mybtn-gray" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">
+                <button class="mybtn mybtn-gray" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">
                     Labels <i class="bi-plus-lg"></i>
                 </button>
             {% endif %}
@@ -35,13 +35,13 @@
 
             {% if role == 'admin' %}
                 <div class="admin-actions">
-                    <button type="button" class="btn mybtn-blue" data-bs-toggle="modal" data-bs-target="#editTaskModal">
+                    <button type="button" class="mybtn mybtn-blue" data-bs-toggle="modal" data-bs-target="#editTaskModal">
                         Edit Task <i class="bi-pencil-square"></i>
                     </button>
-                    <button type="button" class="btn mybtn-red" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
+                    <button type="button" class="mybtn mybtn-red" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
                         Delete Task <i class="bi-trash3"></i>
                     </button>
-                    <button class="btn mybtn-green" type="button" data-bs-toggle="modal" data-bs-target="#attachFileModal">
+                    <button class="mybtn mybtn-green" type="button" data-bs-toggle="modal" data-bs-target="#attachFileModal">
                         Attach File <i class="bi-paperclip"></i>
                     </button>
                 </div>
@@ -49,25 +49,25 @@
 
             <div class="status-actions">
                 {% if task.status == 'assigned' %}
-                    <button class="btn mybtn-purple" type="button" id="movestatusbutton">
+                    <button class="mybtn mybtn-purple" type="button" id="movestatusbutton">
                         Move to In Progress <i class="bi-box-arrow-right"></i><i class="bi-pen-fill"></i>
                     </button>
                 {% elif task.status == 'in_progress' %}
-                    <button class="btn mybtn-purple" type="button" id="backtoassigned">
+                    <button class="mybtn mybtn-purple" type="button" id="backtoassigned">
                         Back to Assigned <i class="bi-pin-angle-fill"></i><i class="bi-box-arrow-left"></i>
                     </button>
-                    <button class="btn mybtn-purple" type="button" id="sendforreview">
+                    <button class="mybtn mybtn-purple" type="button" id="sendforreview">
                         Send for Review <i class="bi-box-arrow-right"></i><i class="bi-eye-fill"></i>
                     </button>
                 {% elif task.status == 'under_review' %}
-                    <button class="btn mybtn-purple" type="button" id="backtoinprogress">
+                    <button class="mybtn mybtn-purple" type="button" id="backtoinprogress">
                         Back to In Progress <i class="bi-pen-fill"></i><i class="bi-box-arrow-left"></i>
                     </button>
-                    <button class="btn mybtn-purple" type="button" id="completetask">
+                    <button class="mybtn mybtn-purple" type="button" id="completetask">
                         Complete Task <i class="bi-box-arrow-right"></i><i class="bi-check-circle-fill"></i>
                     </button>
                 {% elif task.status == 'completed' %}
-                    <button class="btn mybtn-purple" type="button" id="backtoreview">
+                    <button class="mybtn mybtn-purple" type="button" id="backtoreview">
                         Back to In Review <i class="bi-eye-fill"></i><i class="bi-box-arrow-left"></i>
                     </button>
                 {% endif %}
@@ -291,9 +291,7 @@
                   {% endif %}
               </div>
               <input type="text" id="microtaskCommentInput" class="form-control" name="content" placeholder="Write a comment" style="border: none; box-shadow: none; font-size: 1.1rem;">
-              <button type="button" id="submitCommentButton" class="btn btn-info" style="border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <i class="bi-send fs-5"></i>
-              </button>
+              <button type="button" id="submitCommentButton" class="send-button"><i class="bi-send"></i></button>
           </form>
         </div>
       </div>
@@ -709,6 +707,9 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
+        
+        // Remove active class from all microtask items
+        microtaskItems.forEach(i => i.classList.remove('active'));
         
         setTimeout(() => {
             modal.style.display = 'none';
