@@ -14,7 +14,6 @@ function showNotification(msg, type = "info") {
     `;
     document.body.appendChild(container);
   }
-
   // Create the notification
   const notification = document.createElement('div');
   const iconMap = {

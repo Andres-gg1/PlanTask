@@ -30,8 +30,6 @@ def forbidden_view(request):
         # User is auth but does not have permission -> permissions invalid 
         return HTTPFound(location=request.route_url('invalid_permissions'))
 
-from pyramid.events import subscriber, BeforeRender
-
 @subscriber(BeforeRender)
 def add_global_template_variables(event):
     request = event['request']

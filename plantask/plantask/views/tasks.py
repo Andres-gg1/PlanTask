@@ -3,7 +3,7 @@ from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound, HTTPBadRequest, HTTPNotFound
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
-from plantask.models.project import Project
+from plantask.models.project import Project, ProjectsUser
 from plantask.models.activity_log import ActivityLog
 from plantask.auth.verifysession import verify_session
 from plantask.models.task import Task, TasksFile, TaskComment
@@ -11,14 +11,17 @@ from plantask.models.label import Label, LabelsTask
 from plantask.models.microtask import Microtask, MicrotaskComment
 from plantask.models.file import File
 from datetime import datetime, date
+from sqlalchemy import and_
 
 @view_config(route_name='create_task', renderer='plantask:templates/create_item.jinja2', request_method='GET', permission="admin")
 @verify_session
 def create_task_page(request):
     project_id = request.matchdict.get('project_id')
+
     project = request.dbsession.query(Project).get(project_id)
     if not project:
-        return HTTPFound(location=request.route_url('my_projects')) 
+        raise HTTPNotFound()
+
     
     form_config = {
         'title': 'Create New Task',
@@ -46,9 +49,10 @@ def create_task_page(request):
 @verify_session
 def create_task(request):
     project_id = request.matchdict.get('project_id')
+    
     project = request.dbsession.query(Project).get(project_id)
     if not project:
-        return HTTPFound(location=request.route_url('my_projects')) 
+        raise HTTPNotFound()
 
     task_name = request.params.get('name')
     task_description = request.params.get('description')
@@ -119,9 +123,26 @@ def create_task(request):
 def task_by_id(request):
     try:
         task_id = int(request.matchdict.get('id'))
+        user_id = request.session.get('user_id')
+        
         task = request.dbsession.query(Task).filter_by(id=task_id).first()
         if not task:
-            return HTTPNotFound("Task not found")
+            raise HTTPNotFound()
+            
+        # Check if user is a member of the project
+        current_user_assoc = (
+            request.dbsession.query(ProjectsUser)
+            .filter(
+                ProjectsUser.project_id == task.project_id,
+                ProjectsUser.user_id == user_id,
+                ProjectsUser.active == True
+            )
+            .first()
+        )
+
+        if not current_user_assoc:
+            return HTTPFound(location=request.route_url('invalid_permissions'))
+            
         project = request.dbsession.query(Project).filter_by(id=task.project_id).first()
         microtasks = request.dbsession.query(Microtask).filter_by(task_id=task.id, active=True).all()
         tasks_files = request.dbsession.query(TasksFile).filter_by(tasks_id=task.id).all()
@@ -158,7 +179,7 @@ def task_by_id(request):
             'task_id': task_id
         }
     except Exception:
-        return HTTPNotFound("Task not found")
+        return HTTPFound(location=request.route_url('invalid_permissions'))
 
     
 
@@ -167,9 +188,25 @@ def task_by_id(request):
 def edit_task(request):
     try:
         task_id = int(request.matchdict.get('id'))
+        user_id = request.session.get('user_id')
+        
         task = request.dbsession.query(Task).filter_by(id=task_id).first()
         if not task:
-            return HTTPNotFound("Task not found")
+            raise HTTPNotFound()
+
+        # Check if user is a member of the project
+        current_user_assoc = (
+            request.dbsession.query(ProjectsUser)
+            .filter(
+                ProjectsUser.project_id == task.project_id,
+                ProjectsUser.user_id == user_id,
+                ProjectsUser.active == True
+            )
+            .first()
+        )
+
+        if not current_user_assoc:
+            return HTTPFound(location=request.route_url('invalid_permissions'))
 
         # Get form data
         name = request.POST.get('name', '').strip()
@@ -232,16 +269,33 @@ def edit_task(request):
         return HTTPFound(location=request.route_url('task_by_id', id=task.id))
     except Exception as e:
         request.dbsession.rollback()
-        return HTTPBadRequest(f"Error editing task: {str(e)}")
+        return HTTPFound(location=request.route_url('invalid_permissions'))
 
 @view_config(route_name='delete_task', request_method='POST', permission="admin")
 @verify_session
 def delete_task(request):
     try:
         task_id = int(request.matchdict.get('id'))
+        user_id = request.session.get('user_id')
+        
         task = request.dbsession.query(Task).filter_by(id=task_id).first()
         if not task:
-            return HTTPNotFound("Task not found")
+            raise HTTPNotFound()
+
+        # Check if user is a member of the project
+        current_user_assoc = (
+            request.dbsession.query(ProjectsUser)
+            .filter(
+                ProjectsUser.project_id == task.project_id,
+                ProjectsUser.user_id == user_id,
+                ProjectsUser.active == True
+            )
+            .first()
+        )
+
+        if not current_user_assoc:
+            return HTTPFound(location=request.route_url('invalid_permissions'))
+            
         project_id = task.project_id
 
         if task.active:    
@@ -259,7 +313,7 @@ def delete_task(request):
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
     except Exception as e:
         request.dbsession.rollback()
-        return HTTPBadRequest(f"Error deleting task: {str(e)}")
+        return HTTPFound(location=request.route_url('invalid_permissions'))
 
 
 @view_config(route_name='add_label', request_method='POST', permission="admin", require_csrf = True)
@@ -272,7 +326,7 @@ def add_label(request):
         relation = bool(request.POST.get('relation'))
         project = request.dbsession.query(Project).filter_by(id = project_id).first()
         if not project:
-            return HTTPNotFound("Project not found")
+            raise HTTPNotFound("Project not found")
        
         label = Label(project_id = project_id, label_name = label_name, label_hex_color = hex_color)
         request.dbsession.add(label)
@@ -308,9 +362,8 @@ def assign_label(request):
         task_id = int(request.matchdict.get('id'))
         task = request.dbsession.query(Task).filter_by(id=task_id).first()
         if not task:
-            return HTTPNotFound("Task not found")
-        project_id = task.project_id
- 
+            raise HTTPNotFound("Task not found")
+        
         label_id = request.POST.get('label_id')
         if not label_id:
             return HTTPBadRequest("Label ID is required")
@@ -384,7 +437,7 @@ def edit_label(request):
         
         label = request.dbsession.query(Label).filter_by(id=label_id).first()
         if not label:
-            return HTTPNotFound("Label not found")
+            raise HTTPNotFound("Label not found")
 
         label.label_name = label_name
         label.label_hex_color = hex_color

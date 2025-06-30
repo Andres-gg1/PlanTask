@@ -20,6 +20,7 @@ from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEve
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
 @verify_session
 def my_projects_page(request):
+        
     projects = request.dbsession.query(
         Project.id,
         Project.name,
@@ -117,8 +118,23 @@ def project_page(request):
     try:
         user_id = request.session.get('user_id')
         project_id = int(request.matchdict.get('id'))
+               
+        # Check if user is a member of the project first
+        current_user_assoc = (
+            request.dbsession.query(ProjectsUser)
+            .filter(
+                ProjectsUser.project_id == project_id,
+                ProjectsUser.user_id == user_id,
+                ProjectsUser.active == True
+            )
+            .first()
+        )
 
-        # Load project with members using a better query structure
+        if not current_user_assoc:
+            # Redirect to invalid permissions page
+            return HTTPFound(location=request.route_url('invalid_permissions'))
+
+        # Load project
         project = (
             request.dbsession.query(Project)
             .filter(and_(Project.id == project_id, Project.active == True))
@@ -126,7 +142,8 @@ def project_page(request):
         )
 
         if not project:
-            return {"error_ping": "Project not found or is inactive."}
+            # Redirect to invalid permissions page
+            return HTTPFound(location=request.route_url('invalid_permissions'))
 
         # Get project image if exists
         project_image = (
@@ -147,19 +164,6 @@ def project_page(request):
             .filter(ProjectsUser.project_id == project_id, ProjectsUser.active == True)
             .all()
         )
-
-        # Check user's access
-        current_user_assoc = (
-            request.dbsession.query(ProjectsUser)
-            .filter(
-                ProjectsUser.project_id == project_id,
-                ProjectsUser.user_id == user_id
-            )
-            .first()
-        )
-
-        if not current_user_assoc:
-            return {"error_ping": "You don't have access to this project."}
 
         role_map = {
             'admin': 'Administrator',

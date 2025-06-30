@@ -26,11 +26,11 @@ def api_tasks(request):
     try:
         project_id = int(request.GET.get('project_id', 0))
     except (ValueError, TypeError):
-        return []
+        raise HTTPNotFound()
     try:
         tasks = request.dbsession.query(Task).filter_by(project_id=project_id, active=True).all()
     except SQLAlchemyError:
-        return []
+        raise HTTPNotFound()
     events = []
     for task in tasks:
         events.append({

@@ -1,9 +1,10 @@
 from logging import config
-
+from plantask.views.notfound import notfound_view
 
 def includeme(config):
     # Static files
     config.add_static_view('static', 'static', cache_max_age=3600)
+    config.add_notfound_view(notfound_view, renderer='plantask:templates/404.jinja2')
     
     # Core application routes
     config.add_route('home', '/')

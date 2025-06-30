@@ -136,7 +136,7 @@ def edit_user(request):
     user = request.dbsession.query(User).filter_by(id=user_id).first()
 
     if not user:
-        return HTTPNotFound("User not found.")
+        raise HTTPNotFound("User not found.")
 
     if request.session.get('role') != 'admin' and request.session.get('user_id') != user_id:
         return HTTPForbidden()
