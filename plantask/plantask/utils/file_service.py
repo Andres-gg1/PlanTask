@@ -7,6 +7,8 @@ from plantask.models.task import TasksFile, TaskCommentsFile
 from plantask.models.microtask import MicrotasksFile, MicrotaskCommentsFile
 from plantask.models.project import Project
 from plantask.models.user import User
+from pyramid.httpexceptions import HTTPFound
+from plantask.models.chat import GroupChat
 import zipfile
 import tempfile
 
@@ -116,6 +118,12 @@ class FileUploadService:
             elif entity_type == "profile_picture":
                 user = self.dbsession.query(User).filter_by(id = entity_id).first()
                 user.user_image_id = new_file.id
+                changes = new_file.route
+                self.dbsession.flush()
+            elif entity_type == 'group_chat':
+                group_chat = self.dbsession.query(GroupChat).filter_by(id=entity_id).first()
+                group_chat.image_id = new_file.id
+                log_action = "group_chat_added_image"
                 changes = new_file.route
                 self.dbsession.flush()
 

@@ -25,7 +25,7 @@ requires = [
     'pytest',
     'allure-pytest',
     'WebTest',
-    
+    'python-dateutil',
     'email-validator',       
     'secure-smtplib',        
 ]

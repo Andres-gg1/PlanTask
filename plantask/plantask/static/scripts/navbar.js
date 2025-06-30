@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const toggleBtn = document.getElementById('navbarToggle');
   const navbarContent = document.getElementById('navbarContent');
   const profileBtn = document.getElementById('profileDropdown');
-  const profileMenu = document.getElementById('profileDropdownMenu');
+  const profileMenu = document.querySelector('.mydropdown-menu.mydropdown-profile');
 
   toggleBtn?.addEventListener('click', function (e) {
     e.preventDefault();

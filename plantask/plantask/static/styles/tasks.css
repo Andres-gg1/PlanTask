@@ -1,3 +1,35 @@
+/* ---------- SCROLLABLE LABEL LIST FOR TASK VIEW ---------- */
+.label-list-scrollable {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    max-width: 350px;
+    padding-bottom: 0.2rem;
+    scrollbar-width: thin;
+    scrollbar-color: #bdbdbd #f6f7f8;
+    margin-right: 1rem;
+}
+.label-list-scrollable::-webkit-scrollbar {
+    height: 8px;
+}
+.label-list-scrollable::-webkit-scrollbar-thumb {
+    background: #bdbdbd;
+    border-radius: 4px;
+}
+.label-list-scrollable::-webkit-scrollbar-track {
+    background: #f6f7f8;
+}
+.label-list-scrollable .label {
+    flex: 0 0 auto;
+    padding: 0.2rem 0.8rem;
+    border-radius: 0.7rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
 /* ---------- MODALS ---------- */
 .modal.fade .modal-dialog {
     transition: transform 0.3s ease-out, opacity 0.3s ease-out;
@@ -138,7 +170,7 @@
 }
 
 /* ---------- BUTTONS ---------- */
-.btn {
+.mybtn {
     border-radius: 0.6rem;
     font-weight: 600;
     transition: all 0.2s ease;
@@ -150,12 +182,11 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    color: white;
 }
-.btn:hover {
+.mybtn:hover {
     transform: translateY(-1px);
 }
-.btn:active {
+.mybtn:active {
     transform: scale(0.95);
 }
 
@@ -164,6 +195,14 @@
     background-color: #3b82f6; 
     max-width: 2.5rem;
     justify-content: center;
+    border-radius: 0.6rem;
+    transition: all 0.2s ease;
+    padding: 0.5rem 1.2rem;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
 }
 .mybtn-edit-label:hover { background-color: #2563eb; }
 
@@ -251,8 +290,35 @@
     flex-wrap: wrap;
 }
 
+.send-button {
+  display: flex;
+  align-items: center;
+  height: 2.5rem;
+  gap: 0.25rem;
+  background-color: #5175B9;
+  color: white;
+  border: #1E4998 1.5px solid;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  font-size: 1rem;
+  cursor: pointer;
+  font-family: "Proxima Nova", sans-serif;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+.send-button:hover {
+  background-color: #4c70b4;
+  transform: scale(1.05);
+}
+.send-button:active {
+  background-color: rgb(76, 112, 180);
+  transform: scale(0.95);
+}
+.send-button i {
+  font-size: 1.2rem;
+}
+
 /* ---------- RESPONSIVE POSITIONING ---------- */
-@media (min-width: 56.25rem) {
+@media (min-width: 62rem) {
     .create-microtask-button {
         right: 23rem;
     }

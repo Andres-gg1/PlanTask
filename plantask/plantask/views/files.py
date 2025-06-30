@@ -47,6 +47,8 @@ def file_upload_page(request):
             return HTTPFound(location=request.route_url('project_by_id', id=entity_id))
         elif entity_type == 'profile_picture':
             return HTTPFound(location=request.route_url('user', id=entity_id))
+        elif entity_type == 'group_chat':
+            return HTTPFound(location=request.route_url('chats', _query={'currentChatId': entity_id}))
         else:
             return HTTPFound(location=request.route_url('file_list_page'))  # Default fallback
     except Exception as e:

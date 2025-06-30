@@ -1,0 +1,284 @@
+.calendar-container {
+    background: rgb(244, 244, 244);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.calendar-card {
+    background: rgba(255, 255, 255, 1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 2rem;
+    margin: 0 1rem;
+}
+
+.calendar-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.calendar-title {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-subtitle {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+/* FullCalendar Customization */
+.fc-col-header-cell-cushion {
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #2c3e50;
+}
+
+.fc {
+    font-family: "Proxima Nova" sans-serif;
+}
+
+.fc-header-toolbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.fc-toolbar-title {
+    color: white !important;
+    font-weight: 600 !important;
+    font-size: 1.5rem !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.fc-button-primary {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+}
+
+.fc-button-primary:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.fc-button-primary:not(:disabled):active,
+.fc-button-primary:not(:disabled).fc-button-active {
+    background: rgba(255, 255, 255, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.fc-daygrid-day {
+    transition: all 0.3s ease;
+}
+
+.fc-daygrid-day:hover {
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.fc-daygrid-day-number {
+    color: #2c3e50;
+    font-weight: 600;
+    padding: 0.5rem;
+}
+
+.fc-day-today {
+    background: rgba(102, 126, 234, 0.1) !important;
+    border: 2px solid #667eea !important;
+}
+
+.fc-day-today .fc-daygrid-day-number {
+    color: #667eea !important;
+    font-weight: 700;
+}
+
+/* Hide event dots and time elements */
+.fc-daygrid-event-dot {
+    display: none !important;
+}
+
+.fc-event-time {
+    display: none !important;
+}
+
+/* Task Event Styling */
+.fc-event {
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 4px 8px !important;
+    margin: 2px 0 !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.fc-event:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.fc-event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Status-based colors */
+.fc-event.status-assigned {
+    background: linear-gradient(135deg, #3498db, #2980b9) !important;
+    color: white !important;
+}
+
+.fc-event.status-in_progress {
+    background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+    color: white !important;
+}
+
+.fc-event.status-under_review {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad) !important;
+    color: white !important;
+}
+
+.fc-event.status-completed {
+    background: linear-gradient(135deg, #27ae60, #229954) !important;
+    color: white !important;
+}
+
+/* Modal Styling */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+    border-bottom: none;
+}
+
+.modal-title {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-close {
+    filter: invert(1);
+}
+
+/* Legend */
+.task-legend {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.legend-assigned { background: linear-gradient(135deg, #3498db, #2980b9); }
+.legend-in_progress { background: linear-gradient(135deg, #f39c12, #e67e22); }
+.legend-under_review { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+.legend-completed { background: linear-gradient(135deg, #27ae60, #229954); }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .calendar-container {
+    padding: 1rem 0;
+    }
+    
+    .calendar-card {
+    margin: 0 0.5rem;
+    padding: 1rem;
+    }
+    
+    .calendar-title {
+    font-size: 2rem;
+    }
+    
+    .task-legend {
+    gap: 1rem;
+    }
+    
+    .fc-toolbar {
+    flex-direction: column;
+    gap: 0.5rem;
+    }
+    
+    .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    }
+}
