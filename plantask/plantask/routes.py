@@ -71,7 +71,10 @@ def includeme(config):
     config.add_route('edit_group_name', '/edit-group-name/{group_id}')
     config.add_route('edit_group_description', '/edit-group-description/{group_id}')
     config.add_route('edit_group_image', '/edit-group-image/{group_id}')
-    
+    config.add_route('add_group_members', '/add-group-members')
+    config.add_route('search_group_users', '/search-group-users')
+    config.add_route('remove_group_member', '/remove-group-member')
+
     # Notification routes
     config.add_route('get_notifications', '/get-notifications')
     
