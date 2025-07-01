@@ -10,7 +10,6 @@ from ..auth.network import is_ip_trusted, is_valid_ping_code
 from re import search 
 from random import randint
 from pyramid.security import forget
-from . import get_client_ip
 
 
 def validate_password(password):
@@ -33,7 +32,7 @@ def validate_password(password):
 
 @view_config(route_name='login', renderer='/templates/login.jinja2', request_method='GET')
 def login_page(request):
-    ip_address = get_client_ip(request)
+    ip_address = request.remote_addr
     print(ip_address)
     show_modal = not is_ip_trusted(ip_address) and not request.session.get("pingid_ok", False)
     return {"show_modal": show_modal}
@@ -42,7 +41,7 @@ def login_page(request):
 @view_config(route_name='login', renderer='/templates/login.jinja2', request_method='POST', require_csrf=True)
 def login_user(request):
     try:
-        ip_address = get_client_ip(request)
+        ip_address = request.remote_addr
         ping_code = request.POST.get("pingCode")
         email = request.POST.get("loginEmail")
         password = request.POST.get("loginPassword")
@@ -125,7 +124,7 @@ def logout_user(request):
 
 @view_config(route_name='register', renderer='/templates/register.jinja2', request_method='GET', permission="admin")
 def register_user_page(request):
-    ip_address = get_client_ip(request)
+    ip_address = request.remote_addr
     show_modal = not is_ip_trusted(ip_address) and not request.session.get("pingid_ok", False)
     return {"show_modal": show_modal}
 
@@ -133,7 +132,7 @@ def register_user_page(request):
 
 @view_config(route_name='register', renderer='/templates/register.jinja2', request_method='POST', permission="admin", require_csrf=True)
 def register_user(request):
-    ip_address = get_client_ip(request)
+    ip_address = request.remote_addr
     ping_code = request.POST.get("pingCode")
 
     # IP verification for untrusted networks
