@@ -237,8 +237,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (createGroupForm) {
     createGroupForm.addEventListener('submit', function (e) {
-      const groupName = document.querySelector('input[name="group_name"]').value.trim();
-      const selectedUsers = document.querySelectorAll('#groupSelectedUsers .list-group-item');
+      const groupNameInput = this.querySelector('input[name="group_name"]');
+      const groupName = groupNameInput ? groupNameInput.value.trim() : '';
+      const selectedUsers = this.querySelectorAll('#groupSelectedUsers .list-group-item');
 
       if (!groupName) {
         e.preventDefault();
