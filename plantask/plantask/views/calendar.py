@@ -62,9 +62,9 @@ def api_user_tasks(request):
     for label_id, project_id in labels_user_query.all():
         user_labels_by_project.setdefault(project_id, set()).add(label_id)
 
-    # Get user's projects
+    # Get user's projects and roles
     projects_query = (
-        request.dbsession.query(Project.id)
+        request.dbsession.query(Project.id, ProjectsUser.role)
         .join(ProjectsUser, Project.id == ProjectsUser.project_id)
         .filter(
             ProjectsUser.user_id == user_id,
@@ -75,9 +75,11 @@ def api_user_tasks(request):
 
     user_tasks = []
     for project in projects_query.all():
+        project_id = project.id
+        user_role = project.role
         tasks = (
             request.dbsession.query(Task)
-            .filter(Task.project_id == project.id, Task.active.is_(True))
+            .filter(Task.project_id == project_id, Task.active.is_(True))
             .all()
         )
         for task in tasks:
@@ -88,7 +90,7 @@ def api_user_tasks(request):
                 .all()
             )
             task_label_ids = {l.id for l in labels}
-            user_label_ids = user_labels_by_project.get(project.id, set())
+            user_label_ids = user_labels_by_project.get(project_id, set())
             if user_label_ids & task_label_ids:
                 user_tasks.append({
                     "id": task.id,
@@ -97,6 +99,7 @@ def api_user_tasks(request):
                     "start": task.due_date.isoformat() if task.due_date else None,
                     "status": task.status,
                     "project_id": task.project_id,
+                    "is_project_manager": user_role == 'project_manager',
                 })
 
     return {"tasks": user_tasks}
@@ -113,34 +116,27 @@ def api_update_task_due_date(request):
     except (ValueError, TypeError):
         return {'status': 'error', 'message': 'Invalid task id'}
 
+    # Get the task and its project
+    task = request.dbsession.query(Task).filter_by(id=task_id, active=True).first()
+    if not task:
+        return {'status': 'error', 'message': 'Task not found'}
+
+    # Check if user is project_manager in the project
+    user_project = request.dbsession.query(ProjectsUser).filter_by(user_id=user_id, project_id=task.project_id, active=True).first()
+    if not user_project or user_project.role != 'project_manager':
+        return {'status': 'error', 'message': 'You do not have permission to update this task'}
+
     new_due_date = data['due_date']
+    try:
+        from dateutil.parser import parse as parse_date
+        parsed_due_date = parse_date(new_due_date)
+    except Exception:
+        return {'status': 'error', 'message': 'Invalid date format'}
 
     try:
-        task = request.dbsession.query(Task).filter_by(id=task_id, active=True).first()
-        if not task:
-            return {'status': 'error', 'message': 'Task not found'}
-
-        # Check permission
-        user_labels = set(
-            l.labels_id for l in request.dbsession.query(LabelsProjectsUser)
-            .join(ProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id)
-            .filter(ProjectsUser.user_id == user_id, ProjectsUser.project_id == task.project_id)
-        )
-        task_labels = set(
-            l.labels_id for l in request.dbsession.query(LabelsTask)
-            .filter(LabelsTask.tasks_id == task.id)
-        )
-        if not (user_labels & task_labels):
-            return {'status': 'error', 'message': 'You do not have permission to update this task'}
-        try:
-            parsed_due_date = parse_date(new_due_date)
-        except ValueError:
-            return {'status': 'error', 'message': 'Invalid date format'}
-
         task.due_date = parsed_due_date
         request.dbsession.flush()
         return {'status': 'ok'}
-
     except SQLAlchemyError:
         request.dbsession.rollback()
         return {'status': 'error', 'message': 'Database error'}
