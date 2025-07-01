@@ -3,14 +3,1487 @@
 {% block title %}History{% endblock %}
 
 {% block styles %}
-
+<link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/history.css') }}">
 {% endblock %}
 
 {% block content %}
 <main class="mycontainer">
   <h1 style="margin-bottom: 1rem;">History</h1>
+
+
+  {% if role == "admin" %}
+  <ul class="navtasks nav nav-underline">
+    <li class="nav-item">
+      <a class="nav-link active" id="your-actions-tab" href="#">Your actions</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="everyones-actions-tab" href="#">Everyone's actions</a>
+    </li>
+  </ul>
+  {% else %}
+  <ul class="navtasks nav nav-underline" style="display: none;">
+    <li class="nav-item">
+      <a class="nav-link active" id="your-actions-tab" href="#">Your actions</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="everyones-actions-tab" href="#">Everyone's actions</a>
+    </li>
+  </ul>
+  {% endif %}
+  
+  
+  <div id="your-actions-container">
+    <!--Action cards will be replaced here-->
+  </div>
+
+
+  {% if role == "admin" %}
+  <div id="everyone-actions-container" style="display: none;">
+    <!--Action cards will be replaced here-->
+  </div>
+  {% endif %}
+
+
 </main>
 {% endblock %}
 
 {% block scripts %}
+<script>
+
+//TEMPLATE DEFINITION
+const actionTemplates = {
+    // Project related templates
+    project_added: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-window-plus"></i>
+                            <h5 class="card-title mb-0">
+                                New project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`} 
+                                was created by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+    project_removed: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-trash"></i>
+                            <h5 class="card-title mb-0">
+                                Project <span class="text-muted">${data.changes}</span> was removed by 
+                                <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+    project_added_image: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-image"></i>
+                            <h5 class="card-title mb-0">
+                                Image added to project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+    project_removed_image: (data) => `
+        <div class="action-item project-action">
+            <i class="fas fa-image"></i>
+            <span>Removed image from project: ${data.changes}</span>
+        </div>
+    `,
+    project_edited_title: (data) => {
+    const [old_title, new_title] = data.changes.split(', ').map(item => item.trim());
+    return `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-pencil"></i>
+                            <h5 class="card-title mb-0">
+                                Project title changed from "${old_title}" to ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">"${new_title}"</a>` : 
+                                    `<span class="text-muted">"${new_title}"</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `},
+
+    project_edited_description: (data) => { 
+    const [old_description, new_description] = data.changes.split(', ').map(item => item.trim());
+    return `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-text-left"></i>
+                            <h5 class="card-title mb-0">
+                                Description edited for project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                from "${old_description}" to "${new_description}"
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `},
+
+    project_added_user: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-person-plus"></i>
+                            <h5 class="card-title mb-0">
+                                <a href="/user/${data.object_user_id}" class="user-link">${data.object_user_first_name} ${data.object_user_last_name}</a>
+                                was added to project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    project_removed_user: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-person-dash"></i>
+                            <h5 class="card-title mb-0">
+                                <a href="/user/${data.object_user_id}" class="user-link">${data.object_user_first_name} ${data.object_user_last_name}</a>
+                                was removed from project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    project_added_label: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-tag"></i>
+                            <h5 class="card-title mb-0">
+                                Label "${data.changes}" was added to project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    project_removed_label: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-tag"></i>
+                            <h5 class="card-title mb-0">
+                                Label "${data.changes}" was removed from project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    project_user_assigned_label: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-person-badge"></i>
+                            <h5 class="card-title mb-0">
+                                Label(s) "${data.changes}" was/were assigned to 
+                                <a href="/user/${data.object_user_id}" class="user-link">${data.object_user_first_name} ${data.object_user_last_name}</a>
+                                in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    project_user_removed_label: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-person-badge"></i>
+                            <h5 class="card-title mb-0">
+                                Label(s) "${data.changes}" was/were removed from 
+                                <a href="/user/${data.object_user_id}" class="user-link">${data.object_user_first_name} ${data.object_user_last_name}</a>
+                                in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    project_task_assigned_label: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-bookmark-plus"></i>
+                            <h5 class="card-title mb-0">
+                                Label "${data.changes}" was assigned to task <a href="/task/${data.task_id}" class="user-link">${data.task_name}</a> in project 
+                                ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    project_task_removed_label: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-bookmark-dash"></i>
+                            <h5 class="card-title mb-0">
+                                Label "${data.changes}" was removed from task in project 
+                                ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+    // Task related templates
+    task_created: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-list-task"></i>
+                            <h5 class="card-title mb-0">
+                                New task "${data.changes}" was created in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    task_removed: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-trash"></i>
+                            <h5 class="card-title mb-0">
+                                Task "${data.changes}" was removed from project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    task_edited_title: (data) => {
+        const [old_title, new_title] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-pencil"></i>
+                                <h5 class="card-title mb-0">
+                                    Task title changed from "${old_title}" to "${new_title}" in project ${data.project_is_active ? 
+                                        `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                        `<span class="text-muted">${data.project_name}</span>`}
+                                    by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                        ${data.project_image ? `
+                            <div class="project-image-container">
+                                <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    task_edited_description: (data) => {
+        const [old_description, new_description] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-text-left"></i>
+                                <h5 class="card-title mb-0">
+                                    Task description changed in project ${data.project_is_active ? 
+                                        `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                        `<span class="text-muted">${data.project_name}</span>`}
+                                    by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                    from "${old_description}" to "${new_description}"
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                        ${data.project_image ? `
+                            <div class="project-image-container">
+                                <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    task_edited_status: (data) => {
+        const [old_status, new_status] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-arrow-left-right"></i>
+                                <h5 class="card-title mb-0">
+                                    Task status changed from "${old_status}" to "${new_status}" in project ${data.project_is_active ? 
+                                        `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                        `<span class="text-muted">${data.project_name}</span>`}
+                                    by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                        ${data.project_image ? `
+                            <div class="project-image-container">
+                                <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    task_edited_duedate: (data) => {
+        const [old_date, new_date] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-calendar"></i>
+                                <h5 class="card-title mb-0">
+                                    Task due date changed from "${old_date}" to "${new_date}" in project ${data.project_is_active ? 
+                                        `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                        `<span class="text-muted">${data.project_name}</span>`}
+                                    by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                        ${data.project_image ? `
+                            <div class="project-image-container">
+                                <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
+task_added_file: (data) => `
+    <div class="action-card">
+        <div class="card">
+            <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                <div class="card-content flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi-file-earmark-arrow-up"></i>
+                        <h5 class="card-title mb-0">
+                            File "${data.changes}" was added to task in project ${data.project_is_active ? 
+                                `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                `<span class="text-muted">${data.project_name}</span>`}
+                            by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                        </h5>
+                    </div>
+                    <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                </div>
+                ${data.project_image ? `
+                    <div class="project-image-container">
+                        <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    </div>
+`,
+
+    task_removed_file: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-file-earmark-x"></i>
+                            <h5 class="card-title mb-0">
+                                File "${data.changes}" was removed from task in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    task_added_comment: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-chat-dots"></i>
+                            <h5 class="card-title mb-0">
+                                Comment "${data.changes}" added to task in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    task_removed_comment: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-chat-dots"></i>
+                            <h5 class="card-title mb-0">
+                                Comment removed from task in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    task_comment_added_file: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-file-earmark-plus"></i>
+                            <h5 class="card-title mb-0">
+                                File "${data.changes}" was added to task comment in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    task_comment_removed_file: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-file-earmark-x"></i>
+                            <h5 class="card-title mb-0">
+                                File "${data.changes}" was removed from task comment in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_created: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-list-check"></i>
+                            <h5 class="card-title mb-0">
+                                New microtask "${data.changes}" was created in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_removed: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-trash"></i>
+                            <h5 class="card-title mb-0">
+                                Microtask "${data.changes}" was removed from project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_edited_name: (data) => {
+        const [old_name, new_name] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-pencil"></i>
+                                <h5 class="card-title mb-0">
+                                    Microtask name changed from "${old_name}" to "${new_name}" in project ${data.project_is_active ? 
+                                        `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                        `<span class="text-muted">${data.project_name}</span>`}
+                                    by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                        ${data.project_image ? `
+                            <div class="project-image-container">
+                                <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    microtask_edited_description: (data) => {
+        const [old_description, new_description] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-text-left"></i>
+                                <h5 class="card-title mb-0">
+                                    Microtask description changed in project ${data.project_is_active ? 
+                                        `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                        `<span class="text-muted">${data.project_name}</span>`}
+                                    by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                    from "${old_description}" to "${new_description}"
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                        ${data.project_image ? `
+                            <div class="project-image-container">
+                                <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    microtask_edited_percentage: (data) => {
+        const [old_percentage, new_percentage] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-percent"></i>
+                                <h5 class="card-title mb-0">
+                                    Microtask percentage changed from ${old_percentage}% to ${new_percentage}% in project ${data.project_is_active ? 
+                                        `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                        `<span class="text-muted">${data.project_name}</span>`}
+                                    by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                        ${data.project_image ? `
+                            <div class="project-image-container">
+                                <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    microtask_edited_status: (data) => {
+        const [old_status, new_status] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-arrow-left-right"></i>
+                                <h5 class="card-title mb-0">
+                                    Microtask ${data.microtask_name} status changed from "${old_status}" to "${new_status}" in project ${data.project_is_active ? 
+                                        `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                        `<span class="text-muted">${data.project_name}</span>`}
+                                    by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                        ${data.project_image ? `
+                            <div class="project-image-container">
+                                <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    microtask_assigned_user: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-person-plus"></i>
+                            <h5 class="card-title mb-0">
+                                <a href="/user/${data.object_user_id}" class="user-link">${data.object_user_first_name} ${data.object_user_last_name}</a>
+                                was assigned to microtask in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_removed_user: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-person-dash"></i>
+                            <h5 class="card-title mb-0">
+                                <a href="/user/${data.object_user_id}" class="user-link">${data.object_user_first_name} ${data.object_user_last_name}</a>
+                                was removed from microtask in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+    microtask_added_comment: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-chat-dots"></i>
+                            <h5 class="card-title mb-0">
+                                Comment "${data.changes}" added to microtask ${data.microtask_name} in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_removed_comment: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-chat-dots-fill"></i>
+                            <h5 class="card-title mb-0">
+                                Comment removed from microtask in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_comment_added_file: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-file-earmark-plus"></i>
+                            <h5 class="card-title mb-0">
+                                File "${data.changes}" was added to microtask comment in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_comment_removed_file: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-file-earmark-x"></i>
+                            <h5 class="card-title mb-0">
+                                File "${data.changes}" was removed from microtask comment in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_added_file: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-file-earmark-arrow-up"></i>
+                            <h5 class="card-title mb-0">
+                                File "${data.changes}" was added to microtask in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_removed_file: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-file-earmark-x"></i>
+                            <h5 class="card-title mb-0">
+                                File "${data.changes}" was removed from microtask in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_added_duedate: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-calendar-plus"></i>
+                            <h5 class="card-title mb-0">
+                                Due date "${data.changes}" was added to microtask in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    microtask_removed_duedate: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-calendar-x"></i>
+                            <h5 class="card-title mb-0">
+                                Due date was removed from microtask in project ${data.project_is_active ? 
+                                    `<a href="/project/${data.project_id}" class="user-link">${data.project_name}</a>` : 
+                                    `<span class="text-muted">${data.project_name}</span>`}
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                    ${data.project_image ? `
+                        <div class="project-image-container">
+                            <img src="${data.project_image}" class="project-thumbnail" alt="Project thumbnail">
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `,
+
+    // Group Chat related templates
+    message_group_created: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-chat-dots"></i>
+                            <h5 class="card-title mb-0">
+                                New message group "${data.changes}" was created
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    message_group_deleted: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-trash"></i>
+                            <h5 class="card-title mb-0">
+                                Message group "${data.changes}" was deleted
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    message_group_edited_name: (data) => {
+        const [old_name, new_name] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-pencil"></i>
+                                <h5 class="card-title mb-0">
+                                    Message group name changed from "${old_name}" to "${new_name}"
+                                    by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    message_group_added_image: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-image"></i>
+                            <h5 class="card-title mb-0">
+                                Image was added to message group "${data.changes}"
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    message_group_removed_image: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-image-x"></i>
+                            <h5 class="card-title mb-0">
+                                Image was removed from message group "${data.changes}"
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    message_group_added_member: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-person-plus"></i>
+                            <h5 class="card-title mb-0">
+                                <a href="/user/${data.object_user_id}" class="user-link">${data.object_user_first_name} ${data.object_user_last_name}</a>
+                                was added to message group "${data.changes}"
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    message_group_removed_member: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-person-dash"></i>
+                            <h5 class="card-title mb-0">
+                                <a href="/user/${data.object_user_id}" class="user-link">${data.object_user_first_name} ${data.object_user_last_name}</a>
+                                was removed from message group "${data.changes}"
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    message_group_added_description: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-text-left"></i>
+                            <h5 class="card-title mb-0">
+                                Description "${data.changes}" was added to message group
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    message_group_edited_description: (data) => {
+        const [old_description, new_description] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-text-left"></i>
+                                <h5 class="card-title mb-0">
+                                    Message group description changed from "${old_description}" to "${new_description}"
+                                    by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    message_group_removed_description: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-text-left"></i>
+                            <h5 class="card-title mb-0">
+                                Description was removed from message group "${data.changes}"
+                                by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    // Login related templates
+    login_several_failed_attempts: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-exclamation-triangle"></i>
+                            <h5 class="card-title mb-0">
+                                Several failed login attempts detected for user 
+                                <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                            </h5>
+                        </div>
+                        <p class="card-text text-danger">Attempts: ${data.changes}</p>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+    login_user_successful: (data) => `
+        <div class="action-card">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                    <div class="card-content flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi-box-arrow-in-right"></i>
+                            <h5 class="card-title mb-0">
+                                User <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a> 
+                                logged in successfully
+                            </h5>
+                        </div>
+                        <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    // Registration related templates
+    registration_new_user: (data) => {
+        const [fullName, email] = data.changes.split(', ').map(item => item.trim());
+        return `
+            <div class="action-card">
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div class="card-content flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi-box-arrow-in-right"></i>
+                                <h5 class="card-title mb-0">
+                                    New user <a href="/user/${data.object_user_id}" class="user-link">${fullName}</a> 
+                                    was registered by <a href="/user/${data.user_id}" class="user-link">${data.first_name} ${data.last_name}</a>
+                                </h5>
+                            </div>
+                            <p class="card-text"><small class="text-body-secondary">${data.timestamp}</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+};
+
+function renderActionCard(action) {
+    // Get the template function for this action type or use a default template
+    const template = actionTemplates[action.action] || ((data) => `
+    <div class="action-card">
+        <div class="card">
+            <div class="card-body">
+            <h5 class="card-title">${data.action } -- ${ data.changes }</h5>
+            <p class="card-text"><small class="text-body-secondary">${ data.timestamp }</small></p>
+            </div>
+        </div>
+    </div>
+    `);
+
+    return template(action);
+}
+
+//Serialize actions and myactions to json to be used in js
+const actions = {{ actions | tojson }};
+const myActions = {{ my_actions | tojson }};
+
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    //functionality for the buttons on top
+    const yourActionsTab = document.getElementById('your-actions-tab');
+    const everyonesActionsTab = document.getElementById('everyones-actions-tab');
+    const yourActionsContainer = document.getElementById('your-actions-container');
+    const everyonesActionsContainer = document.getElementById('everyone-actions-container');
+
+    // Function to render actions into a container
+    function renderActions(actions, container) {
+
+        const sortedActions = [...actions].sort((a, b) => {
+            const dateA = new Date(a.timestamp);
+            const dateB = new Date(b.timestamp);
+            return dateB - dateA;  // Newest first
+        }); 
+
+        container.innerHTML = '';
+        actions.forEach(action => {
+            const card = document.createElement('div');
+            card.className = 'action-card';
+            card.innerHTML = renderActionCard(action);
+            container.appendChild(card);
+        });
+    }
+
+    renderActions(myActions, yourActionsContainer);
+    
+    yourActionsTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        yourActionsTab.classList.add('active');
+        everyonesActionsTab.classList.remove('active');
+        yourActionsContainer.style.display = 'block';
+        everyonesActionsContainer.style.display = 'none';
+        renderActions(myActions, yourActionsContainer);
+    });
+
+    everyonesActionsTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        yourActionsTab.classList.remove('active');
+        everyonesActionsTab.classList.add('active');
+        yourActionsContainer.style.display = 'none';
+        everyonesActionsContainer.style.display = 'block';
+        renderActions(actions, everyonesActionsContainer);
+    });
+    
+});
+</script>
 {% endblock %}

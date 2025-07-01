@@ -20,6 +20,7 @@ from plantask.utils.events import UserAddedToProjectEvent, TaskReadyForReviewEve
 @view_config(route_name='my_projects', renderer='/templates/my_projects.jinja2', request_method='GET')
 @verify_session
 def my_projects_page(request):
+        
     projects = request.dbsession.query(
         Project.id,
         Project.name,
@@ -36,19 +37,53 @@ def my_projects_page(request):
     
     return {'projects': projects}
 
-@view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='GET', permission="admin")
+@view_config(route_name='create_project', renderer='/templates/create_item.jinja2', request_method='GET', permission="admin")
 @verify_session
 def create_project_page(request):
-    return {}
+    user = request.dbsession.query(User).filter_by(id=request.session['user_id']).first()
+    
+    form_config = {
+        'title': 'Create New Project',
+        'subtitle': f'As {user.username if user else "User"}',
+        'icon': 'bi bi-kanban',
+        'gradient': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'accent_color': '#f093fb',
+        'name_label': 'Project Name',
+        'name_placeholder': 'Enter your project name...',
+        'description_placeholder': 'Describe your project goals and objectives...',
+        'button_text': 'Create Project',
+        'action': '/create-project',
+        'show_date': False,
+        'max_date': None
+    }
+    
+    return {'form_config': form_config}
 
-@view_config(route_name='create_project', renderer='/templates/create_project.jinja2', request_method='POST', permission="admin")
+@view_config(route_name='create_project', renderer='/templates/create_item.jinja2', request_method='POST', permission="admin")
 @verify_session
 def create_project(request):
+    user = request.dbsession.query(User).filter_by(id=request.session['user_id']).first()
+    
+    form_config = {
+        'title': 'Create New Project',
+        'subtitle': f'As {user.username if user else "User"}',
+        'icon': 'bi bi-folder-plus',
+        'gradient': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'accent_color': '#f093fb',
+        'name_label': 'Project Name',
+        'name_placeholder': 'Enter your project name...',
+        'description_placeholder': 'Describe your project goals and objectives...',
+        'button_text': 'Create Project',
+        'action': '/create-project',
+        'show_date': False,
+        'max_date': None
+    }
+    
     try:
         name = request.POST.get('name', '').strip()
         description = request.POST.get('description', '').strip()
         if not name or not description:
-            return {"error_ping": "Please provide a name and a description for the project."}
+            return {"form_config": form_config, "error_ping": "Please provide a name and a description for the project."}
 
         new_project = Project(name=name, description=description, creation_datetime=datetime.now())
         request.dbsession.add(new_project)
@@ -58,7 +93,7 @@ def create_project(request):
             project_id=new_project.id,  # Added project.id
             timestamp=datetime.now(),
             action='project_added',
-            changes=f"{new_project.__repr__()}",
+            changes=f"{new_project.name}",
         )
         request.dbsession.add(activity_log_new_project)
         request.dbsession.flush()
@@ -75,7 +110,7 @@ def create_project(request):
 
     except SQLAlchemyError:
         request.dbsession.rollback()
-        return {"error_ping": "An error occurred while creating the project. Please try again."}
+        return {"form_config": form_config, "error_ping": "An error occurred while creating the project. Please try again."}
 
 @view_config(route_name='project_by_id', request_method='GET', renderer='/templates/project.jinja2')
 @verify_session
@@ -83,16 +118,32 @@ def project_page(request):
     try:
         user_id = request.session.get('user_id')
         project_id = int(request.matchdict.get('id'))
+               
+        # Check if user is a member of the project first
+        current_user_assoc = (
+            request.dbsession.query(ProjectsUser)
+            .filter(
+                ProjectsUser.project_id == project_id,
+                ProjectsUser.user_id == user_id,
+                ProjectsUser.active == True
+            )
+            .first()
+        )
 
-        # Load project with members using a better query structure
+        if not current_user_assoc:
+            # Redirect to invalid permissions page
+            return HTTPFound(location=request.route_url('invalid_permissions'))
+
+        # Load project
         project = (
             request.dbsession.query(Project)
-            .filter(Project.id == project_id, Project.active == True)
+            .filter(and_(Project.id == project_id, Project.active == True))
             .first()
         )
 
         if not project:
-            return {"error_ping": "Project not found or is inactive."}
+            # Redirect to invalid permissions page
+            return HTTPFound(location=request.route_url('invalid_permissions'))
 
         # Get project image if exists
         project_image = (
@@ -113,19 +164,6 @@ def project_page(request):
             .filter(ProjectsUser.project_id == project_id, ProjectsUser.active == True)
             .all()
         )
-
-        # Check user's access
-        current_user_assoc = (
-            request.dbsession.query(ProjectsUser)
-            .filter(
-                ProjectsUser.project_id == project_id,
-                ProjectsUser.user_id == user_id
-            )
-            .first()
-        )
-
-        if not current_user_assoc:
-            return {"error_ping": "You don't have access to this project."}
 
         role_map = {
             'admin': 'Administrator',
@@ -158,13 +196,20 @@ def project_page(request):
 
         # Get member labels
         member_labels = defaultdict(list)
-        member_labels_query = (
-            request.dbsession.query(ProjectsUser.user_id, LabelsProjectsUser.labels_id)
+
+        label_assignments = (
+            request.dbsession.query(
+                ProjectsUser.user_id,
+                LabelsProjectsUser.labels_id
+            )
             .join(LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id)
             .filter(ProjectsUser.project_id == project_id)
+            .all()
         )
-        for user_id, label_id in member_labels_query:
+
+        for user_id, label_id in label_assignments:
             member_labels[user_id].append(label_id)
+
 
         # Get task labels
         labels_by_task = defaultdict(list)
@@ -176,20 +221,20 @@ def project_page(request):
         for task_id, label_id in task_labels_query:
             labels_by_task[task_id].append(label_id)
 
-        member_labels = {}
-        label_assignments = request.dbsession.query(
-            ProjectsUser.user_id, 
-            LabelsProjectsUser.labels_id
-        ).join(
-            LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id
-        ).filter(
-            ProjectsUser.project_id == project_id
-        ).all()
+        member_labels = defaultdict(list)
+
+        label_assignments = (
+            request.dbsession.query(
+                ProjectsUser.user_id,
+                LabelsProjectsUser.labels_id
+            )
+            .join(LabelsProjectsUser, ProjectsUser.id == LabelsProjectsUser.projects_users_id)
+            .filter(ProjectsUser.project_id == project_id)
+            .all()
+        )
 
         for user_id, label_id in label_assignments:
-            if user_id not in member_labels:
-                member_labels[user_id] = []
-
+            member_labels[user_id].append(label_id)
 
 
         for task_list in tasks_by_status.values():
@@ -261,7 +306,7 @@ def edit_project(request):
             project_id=project.id,  # Added project.id
             timestamp=datetime.now(),
             action='project_edited_title',
-            changes=f"old: {old_name} --> new: {request.POST.get('name', project.name)}"
+            changes=f"{old_name}, {project.name}"  # Changed to use project.name directly
         )
         request.dbsession.add(activity_log_project_name_changed)
         request.dbsession.flush()
@@ -274,7 +319,7 @@ def edit_project(request):
             project_id=project.id,  # Added project.id
             timestamp=datetime.now(),
             action='project_edited_description',
-            changes=f"old: {old_description} --> new: {request.POST.get('description', project.description)}"
+            changes=f"{old_description}, {request.POST.get('description', project.description)}"
         )
         request.dbsession.add(activity_log_project_description_changed)
         request.dbsession.flush()
@@ -293,10 +338,10 @@ def delete_project(request):
         project.active = False
         activity_log_removed_project = ActivityLog(
             user_id=request.session['user_id'],
-            project_id=project.id,  # Added project.id
+            project_id=project.id,  
             timestamp=datetime.now(),
             action='project_removed',
-            changes=f"Project: {project.name} set to inactive"
+            changes=f"{project.name}"
         )
         request.dbsession.add(activity_log_removed_project)
         request.dbsession.flush()
@@ -391,7 +436,7 @@ def add_member(request):
                                 object_user_id=user.id,
                                 timestamp=datetime.now(),
                                 action='project_added_user',
-                                changes=f"User: {user.username} added to Project: {project.name}"
+                                changes=f"{user.username}, {project.name}"
                             )
                             request.dbsession.add(project_user)
                             request.dbsession.add(activity_log_added_user)
@@ -445,13 +490,30 @@ def edit_member(request):
             project_user.role = new_role
             request.dbsession.flush()
 
-        # Delete all previous label associations
-        request.dbsession.query(LabelsProjectsUser).filter_by(
-            projects_users_id=project_user.id
-        ).delete()
-
-        # Add updated labels
-        for label_id in label_ids:
+        # Get current label associations
+        current_labels = set(
+            label_id for (label_id,) in 
+            request.dbsession.query(LabelsProjectsUser.labels_id)
+            .filter_by(projects_users_id=project_user.id)
+            .all()
+        )
+        
+        # Convert new label_ids to set of integers
+        new_labels = set(int(label_id) for label_id in label_ids)
+        
+        # Calculate differences
+        labels_to_add = new_labels - current_labels
+        labels_to_remove = current_labels - new_labels
+        
+        # Remove only necessary labels
+        if labels_to_remove:
+            request.dbsession.query(LabelsProjectsUser).filter(
+                LabelsProjectsUser.projects_users_id == project_user.id,
+                LabelsProjectsUser.labels_id.in_(labels_to_remove)
+            ).delete(synchronize_session=False)
+        
+        # Add only new labels
+        for label_id in labels_to_add:
             try:
                 label_link = LabelsProjectsUser(
                     labels_id=label_id,
@@ -460,6 +522,42 @@ def edit_member(request):
                 request.dbsession.add(label_link)
             except ValueError:
                 continue
+
+        # Log changes if any labels were added or removed
+        if labels_to_add or labels_to_remove:
+            # Get label names for logging
+            label_names = {
+                id: name for (id, name) in 
+                request.dbsession.query(Label.id, Label.label_name)
+                .filter(Label.id.in_(labels_to_add | labels_to_remove))
+                .all()
+            }
+            
+            if labels_to_add:
+                added_names = [label_names[lid] for lid in labels_to_add]
+                activity_log_added_labels = ActivityLog(
+                    user_id=request.session['user_id'],
+                    project_id=project_id,
+                    object_user_id=user_id,
+                    timestamp=datetime.now(),
+                    action='project_user_assigned_label',
+                    changes=f"{', '.join(added_names)}"
+                )
+                request.dbsession.add(activity_log_added_labels)
+            
+            if labels_to_remove:
+                removed_names = [label_names[lid] for lid in labels_to_remove]
+                activity_log_removed_labels = ActivityLog(
+                    user_id=request.session['user_id'],
+                    project_id=project_id,
+                    object_user_id=user_id,
+                    timestamp=datetime.now(),
+                    action='project_user_removed_label',
+                    changes=f"{', '.join(removed_names)}"
+                )
+                request.dbsession.add(activity_log_removed_labels)
+
+        request.dbsession.flush()
 
         request.dbsession.flush()
 
@@ -495,7 +593,7 @@ def remove_member(request):
                 object_user_id=user_id,
                 timestamp=datetime.now(),
                 action='project_removed_user',
-                changes=f"User removed from Project: {project.name}"
+                changes=f"{project.name}"
             )
             request.dbsession.add(activity_log_removed_user)
             request.dbsession.flush()
@@ -524,15 +622,26 @@ def update_task_status(request):
         if not task:
             return {"error": "Task not found"}
 
-        prevous_status = task.status
-        if prevous_status == new_status:
+        previous_status = task.status
+        if previous_status == new_status:
             return {"message": "No status change"}
         task.status = new_status
+
+        log_updated_task_status = ActivityLog(
+                user_id=request.session['user_id'],
+                task_id = task_id,
+                project_id = task.project_id,
+                timestamp=datetime.now(),
+                action='task_edited_status',
+                changes=f"{task.status}"
+            )
+        request.dbsession.add(log_updated_task_status)
+
         request.dbsession.flush()
 
-        if new_status == 'under_review' and prevous_status != 'under_review':  
+        if new_status == 'under_review' and previous_status != 'under_review':  
             request.registry.notify(TaskReadyForReviewEvent(request, task_id))
-        return {"message": "Status updated"}
+        return {"success": True, "message": "Status updated"}
     except Exception as e:
         return {"error": str(e)}
     

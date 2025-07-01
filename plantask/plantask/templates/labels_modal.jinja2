@@ -6,11 +6,9 @@
             <form method="POST" id="labelForm" action="{{ request.route_url('add_label', project_id=project.id) }}" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <input type="hidden" name="label_id" id="labelIdInput" value="">
-
                 <div class="modal-header">
                     <h5 class="modal-title" id="addLabelModalLabel">Add a New Label</h5>
                 </div>
-
                 <div class="modal-body">
                     <!-- Label Name Input -->
                     <div class="mb-3">
@@ -21,7 +19,6 @@
                             <input type="hidden" name="task_id" value="{{ task_id }}">
                         {% endif %}
                     </div>
-
                     <!-- Color Picker -->
                     <div class="mb-3">
                         <label class="form-label">Label Color</label>
@@ -35,15 +32,15 @@
                             {% endfor %}
                         </div>
                     </div>
-
-                    <button type="submit" class="btn btn-info" id="submitLabelBtn">Create Label</button>
+                    <button type="submit" class="btn mybtn-blue" id="submitLabelBtn">Create Label</button>
+                    {% if project_labels %}
                     <!-- Existing Labels List -->
                     <div class="content-row mt-4" style="background-color: #f6f7f8; border-radius: 0.5rem; padding: 1rem;">
                         {% for label_id, label_name, label_hex_color in project_labels %}
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                                 {% if task_id %}
                                     <button 
-                                        class="checktaskbtn addlbbtn btn {% if label_id in assigned_label_ids %}assigned{% endif %}" 
+                                        class="checktaskbtn addlbbtn {% if label_id in assigned_label_ids %}assigned{% endif %}" 
                                         style="margin-right:0.5rem; {% if label_id in assigned_label_ids %}background-color: #28a745; color: #fff;{% else %}background-color: #FAFAFA;{% endif %}" 
                                         type="button" 
                                         data-label-id="{{ label_id }}" 
@@ -56,17 +53,17 @@
                                         {% endif %}
                                     </button>
                                 {% endif %}
-                                <div class="label" style="flex: 1; background-color: {{ label_hex_color }}; padding: 0.5rem 0.5rem; border-radius: 0.5rem; color: #fff; font-weight: 500;">
+                                <div class="label" style="flex: 1; background-color: {{ label_hex_color }}; padding: 0.5rem 0.5rem; border-radius: 0.5rem; color: #fff; font-weight: 600; font-family: 'Proxima Nova', sans-serif;">
                                     {{ label_name }}
                                 </div>
-                                <button type="button" class="btn btn-info edit-label-btn" data-bs-target="#editLabel" data-label-id="{{ label_id }}">
+                                <button type="button" class="btn mybtn-edit-label" data-bs-target="#editLabel" data-label-id="{{ label_id }}">
                                     <i class="bi-pencil-square"></i>
                                 </button>
                             </div>
                         {% endfor %}
                     </div>
+                    {% endif%}
                 </div>
-
                 <div class="modal-footer border-0">
                 </div>
             </form>
@@ -131,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    document.querySelectorAll('.btn-info').forEach(function(editBtn) {
+    document.querySelectorAll('.mybtn-edit-label').forEach(function(editBtn) {
         editBtn.addEventListener('click', function(event) {
             // Find label data from surrounding elements
             const labelDiv = event.target.closest('div').querySelector('.label');

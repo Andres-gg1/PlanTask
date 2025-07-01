@@ -1,5 +1,6 @@
-/* Sidebar container */
-.sidebar {
+/* Sidebar container - More specific selector */
+.main-navbar + * .sidebar,
+body .sidebar {
     position: fixed;
     top: 3.125rem;
     left: 0;
@@ -14,8 +15,9 @@
     z-index: 999;
 }
 
-.sidebar .nav-link,
-.sidebar .nav-active {
+/* More specific selectors for nav links */
+body .sidebar .nav-link,
+body .sidebar .nav-active {
     margin-top: 1.25rem;
     color: white;
     text-align: center;
@@ -28,27 +30,52 @@
     border-radius: 50%;
     font-size: 1.875rem;
     transition: background-color 0.3s ease, transform 0.3s ease, border-radius 0.3s ease;
+    text-decoration: none;
+    border: none;
+    padding: 0;
 }
 
-.sidebar .nav-active {
+body .sidebar .nav-active {
     background-color: black;
     border: 3px solid white;
 }
 
-.sidebar .nav-link:hover,
-.sidebar .nav-active:hover {
+body .sidebar .nav-link:hover,
+body .sidebar .nav-active:hover {
     transform: scale(1.25);
     border-radius: 30%;
+    color: white;
+    text-decoration: none;
 }
 
-.sidebar .nav-link:hover {
+body .sidebar .nav-link:hover {
     background-color: #5a56a6;
+}
+
+/* More specific selector for nav pills in sidebar */
+body .sidebar .nav-pills {
+    margin-bottom: auto;
+}
+
+body .sidebar .nav-pills .nav-item {
+    list-style: none;
+}
+
+/* Ensure sidebar nav items don't get affected by other CSS */
+body .sidebar ul.nav {
+    padding-left: 0;
+    margin-bottom: auto;
+    flex-direction: column;
+}
+
+body .sidebar .nav-item {
+    width: auto;
+    margin: 0;
 }
 
 :root {
     --box-shadow-navbar: 0px 8px 8px -6px rgba(0, 0, 0, 0.5);
 }
-
 
 .mycontainer {
     margin-top: 4.7rem;
@@ -80,13 +107,13 @@
 }
 
 .addlbbtn {
-    min-width: 2.25rem !important;
-    min-height: 2.25rem !important;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
     align-items: center;
+    border-radius: .4rem;
     justify-content: center;
     background-color: #FAFAFA;
-    border: 2px solid #ACACAC;
-    color: #212529;
+    border: 2px solid #c6c6c6;
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
@@ -97,7 +124,7 @@
 }
 .addlbbtn:active{
     border: 0;
-    background-color: #9b9b9b !important;
+    background-color: #9b9b9b;
     transform: scale(0.98);
     color: #212529;
 }
@@ -169,6 +196,21 @@
     border-radius: 0.25rem;
 }
 
+.task-labels {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.task-labels::-webkit-scrollbar {
+  height: 0.25rem;
+}
+
+.task-labels::-webkit-scrollbar-thumb {
+  background: #aaa;
+  border-radius: 1rem;
+}
 
 #pomodoro-wrapper {
   position: fixed;
@@ -184,4 +226,87 @@
 #pomodoro-wrapper.visible {
   opacity: 1;
   pointer-events: auto;
+}
+/* Alerts */
+.alert {
+    padding: 1rem 1.25rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    margin-top: 1rem;
+}
+.alert-info {
+    background-color: #eef4fb;
+    color: #2f5d84;
+    border-left: 4px solid #2f5d84;
+}
+.alert-success {
+    background-color: #e7f7ed;
+    color: #276749;
+    border-left: 4px solid #276749;
+}
+.alert-danger {
+    background-color: #fdecea;
+    color: #a94442;
+    border-left: 4px solid #a94442;
+}
+
+/* ---------- BUTTON VARIANTS ---------- */
+
+.mybtn-blue { background-color: #3b82f6; color: white; }
+.mybtn-blue:hover { background-color: #2563eb; }
+
+.mybtn-red { background-color: #ef4444; color: white; }
+.mybtn-red:hover { background-color: #dc2626; }
+
+.mybtn-yellow { background-color: #facc15; color: white; }
+.mybtn-yellow:hover { background-color: #eab308; }
+
+.mybtn-green { background-color: #45a079; color: white; }
+.mybtn-green:hover { background-color: #3b8c68; }
+
+.mybtn-purple { background-color: #6c63ff; color: white; }
+.mybtn-purple:hover { background-color: #554fd1; }
+
+.mybtn-gray {
+    background-color: #d8d8d8;
+    color: #3a3a3a;
+}
+.mybtn-gray:hover {
+    background-color: #dadada;
+}
+
+/* Styling for search dropdown */
+#navbarUserSearchResults {
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 0.5rem;
+}
+
+#navbarUserSearchResults .dropdown-header {
+  color: #7574C7;
+  font-weight: bold;
+  padding-left: 1rem;
+  padding-top: 0.75rem;
+}
+
+#navbarUserSearchResults .dropdown-item {
+  padding: 0.5rem 1rem;
+  transition: background-color 0.2s ease;
+}
+
+#navbarUserSearchResults .dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+#navbarUserSearchResults .dropdown-divider {
+  margin: 0.25rem 0;
+}
+
+#navbarUserSearchResults::-webkit-scrollbar {
+  width: 0.5rem;
+}
+
+#navbarUserSearchResults::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 0.25rem;
 }

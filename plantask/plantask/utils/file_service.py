@@ -7,11 +7,13 @@ from plantask.models.task import TasksFile, TaskCommentsFile
 from plantask.models.microtask import MicrotasksFile, MicrotaskCommentsFile
 from plantask.models.project import Project
 from plantask.models.user import User
+from pyramid.httpexceptions import HTTPFound
+from plantask.models.chat import GroupChat
 import zipfile
 import tempfile
 
 
-ALLOWED_FILES = {'pdf', 'png', 'jpg', 'jpeg', 'jfif'}
+ALLOWED_FILES = {'pdf', 'png', 'jpg', 'jpeg', 'jfif', 'txt', 'docx', 'doc', 'xlsx', 'ppt', 'pptx'}
 
 class FileUploadService:
     def __init__(self, upload_dir: str, dbsession, user_id: int):
@@ -100,29 +102,39 @@ class FileUploadService:
             if entity_type == 'task':
                 tasks_file = TasksFile(tasks_id=entity_id, files_id=new_file.id)
                 log_action = "task_added_file"
+                changes = new_file.route
                 self.dbsession.add(tasks_file)
             elif entity_type == 'microtask':
                 microtasks_file = MicrotasksFile(microtasks_id=entity_id, files_id=new_file.id)
                 log_action = "microtask_added_file"
+                changes = new_file.route
                 self.dbsession.add(microtasks_file)
             elif entity_type == "project":
                 project = self.dbsession.query(Project).filter_by(id = entity_id).first()
                 project.project_image_id = new_file.id
                 log_action = "project_added_image"
+                changes = new_file.route
                 self.dbsession.flush()
             elif entity_type == "profile_picture":
                 user = self.dbsession.query(User).filter_by(id = entity_id).first()
                 user.user_image_id = new_file.id
+                changes = new_file.route
+                self.dbsession.flush()
+            elif entity_type == 'group_chat':
+                group_chat = self.dbsession.query(GroupChat).filter_by(id=entity_id).first()
+                group_chat.image_id = new_file.id
+                log_action = "group_chat_added_image"
+                changes = new_file.route
                 self.dbsession.flush()
 
             self.dbsession.flush()
-
-            changes = f"view: {view_name}" if view_name else log_action
+            
             if log_action:
                 log = ActivityLog(
                     user_id=self.user_id,
                     task_id=entity_id if entity_type == 'task' else None,
                     microtask_id = entity_id if entity_type == 'microtask' else None,
+                    project_id = project.id,
                     file_id=new_file.id,
                     timestamp=datetime.now(),
                     action=log_action,
@@ -155,15 +167,13 @@ class FileUploadService:
                 return {"bool": False, "msg": "File not found in the database."}
             if not file_record.active:
                 return {"bool": False, "msg": "File is already deleted (inactive)."}
-            print(f"[DEBUG] Deleting file: {file_record.filename} (ID: {file_id})")
-            print(file_record.active)
 
             file_record.active = False
 
             log_action = 'task_removed_file'
             if context and context.get('action') == 'task_removed_file':
                 log_action = context.get('action')
-            action_enum = f"task_removed_file"
+            action_enum = f"File_removed"
             if view_name:
                 action_enum += f" | view: {view_name}"
             log = ActivityLog(
@@ -172,7 +182,7 @@ class FileUploadService:
                 file_id=file_id,
                 timestamp=datetime.now(),
                 action=log_action,
-                changes=action_enum,
+                changes=file_record.filename,
             )
             self.dbsession.add(log)
 
@@ -196,12 +206,18 @@ class FileUploadService:
             if not file_record:
                 return {"bool": False, "msg": "File not found or is inactive."}
             
-            if not os.path.exists(file_record.route):
+            # If route is a URL, convert to absolute path
+            file_path = file_record.route
+            if not os.path.isabs(file_path):
+                # Assuming all files are in self.upload_dir
+                file_path = os.path.join(self.upload_dir, os.path.basename(file_path))
+            
+            if not os.path.exists(file_path):
                 return {"bool": False, "msg": "File does not exist on the server."}
 
             return {
                 "bool": True,
-                "file_path": file_record.route,
+                "file_path": file_path,
                 "filename": file_record.filename
             }
         except Exception as e:

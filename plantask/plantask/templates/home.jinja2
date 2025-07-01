@@ -3,6 +3,7 @@
 {% block title %}Home{% endblock %}
 
 {% block styles %}
+<link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/home.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -10,17 +11,151 @@
   <h1>Home</h1>
   <ul class="navtasks nav nav-underline">
     <li class="nav-item">
-      <a class="nav-link active" aria-current="page" href="#">Your tasks</a>
+      <a class="nav-link active" id="your-tasks-tab" href="#">Your tasks</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="#">Your team's tasks</a>
+      <a class="nav-link" id="team-tasks-tab" href="#">Your team's tasks</a>
     </li>
   </ul>
-  {%for noti in notifications %}
-  <p>{{noti.message}} se mando {{noti.created_at}}</p>
-  {%endfor%}
+
+  <div class="project-list">
+    <!-- Your tasks view -->
+    <div id="your-tasks-view">
+      {% for project in projects %}
+        {% if project.your_tasks %}
+        <div>
+          <h3 class="project-title">
+            <a href="{{ request.route_url('project_by_id', id=project.id) }}" class="project-link">
+              {{ project.name }}
+            </a>
+          </h3>
+          <div class="tasks-row">
+            {% for task in project.your_tasks %}
+              <a href="{{ request.route_url('task_by_id', id=task.id) }}" class="task-card">
+                <img src="{{ project.image_path if project.image_path else request.static_url('plantask:static/img_example.jpg') }}">
+                <h5>{{ task.title }}</h5>
+                <div class="task-details">
+                  <div class="task-status">
+                    {% if task.status == 'assigned' %}
+                    <i class="bi bi-pin-angle-fill me-1"></i> Assigned
+                    {% elif task.status == 'in_progress' %}
+                    <i class="bi bi-pen-fill me-1"></i> In progress
+                    {% elif task.status == 'under_review' %}
+                    <i class="bi bi-eye-fill me-1"></i> Under Review
+                    {% elif task.status == 'completed' %}
+                    <i class="bi bi-check-circle-fill me-1"></i> Completed
+                    {% endif %}
+                    {% if task.due_date %}
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 0.25rem;">
+                      <strong>Due:</strong> {{ task.due_date.strftime('%Y-%m-%d') }}
+                    </div>
+                    {% endif %}
+                  </div>
+                  <div class="task-labels">
+                    {% if task.labels %}
+                      {% for label in task.labels %}
+                      <span class="badge" style="background-color: {{ label.color }}">{{ label.name }}</span>
+                      {% endfor %}
+                    {% else %}
+                      <span class="badge bg-light text-dark">No labels</span>
+                    {% endif %}
+                  </div>
+                  <ul class="micro-task-list">
+                    {% if task.microtasks %}
+                      {% for microtask in task.microtasks %}
+                      <li class="microtask-listed">{{ microtask.name }}</li>
+                      {% endfor %}
+                    {% else %}
+                      <li class="no-microtasks">No microtasks</li>
+                    {% endif %}
+                  </ul>
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- Team tasks view -->
+    <div id="team-tasks-view" style="display: none;">
+      {% for project in projects %}
+        {% if project.all_tasks %}
+        <div>
+          <h3 class="project-title">
+            <a href="{{ request.route_url('project_by_id', id=project.id) }}" class="project-link">
+              {{ project.name }}
+            </a>
+          </h3>
+          <div class="tasks-row">
+            {% for task in project.all_tasks %}
+              <a href="{{ request.route_url('task_by_id', id=task.id) }}" class="task-card">
+                <img src="{{ project.image_path if project.image_path else request.static_url('plantask:static/img_example.jpg') }}">
+                <h5>{{ task.title }}</h5>
+                <div class="task-details">
+                  <div class="task-status">
+                    {% if task.status == 'assigned' %}
+                    <i class="bi bi-pin-angle-fill me-1"></i> Assigned
+                    {% elif task.status == 'in_progress' %}
+                    <i class="bi bi-pen-fill me-1"></i> In progress
+                    {% elif task.status == 'under_review' %}
+                    <i class="bi bi-eye-fill me-1"></i> Under Review
+                    {% elif task.status == 'completed' %}
+                    <i class="bi bi-check-circle-fill me-1"></i> Completed
+                    {% endif %}
+                    {% if task.due_date %}
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 0.25rem;">
+                      <strong>Due:</strong> {{ task.due_date.strftime('%Y-%m-%d') }}
+                    </div>
+                    {% endif %}
+                  </div>
+                  <div class="task-labels">
+                    {% if task.labels %}
+                      {% for label in task.labels %}
+                      <span class="badge" style="background-color: {{ label.color }}">{{ label.name }}</span>
+                      {% endfor %}
+                    {% else %}
+                      <span class="badge bg-light text-dark">No labels</span>
+                    {% endif %}
+                  </div>
+                  <ul class="micro-task-list">
+                    {% if task.microtasks %}
+                      {% for microtask in task.microtasks %}
+                      <li class="microtask-listed">{{ microtask.name }}</li>
+                      {% endfor %}
+                    {% else %}
+                      <li class="no-microtasks">No microtasks</li>
+                    {% endif %}
+                  </ul>
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
 </main>
-{% endblock content %}
+{% endblock %}
 
 {% block scripts %}
+<script>
+document.getElementById('your-tasks-tab').addEventListener('click', function(e) {
+  e.preventDefault();
+  document.getElementById('your-tasks-view').style.display = 'block';
+  document.getElementById('team-tasks-view').style.display = 'none';
+  this.classList.add('active');
+  document.getElementById('team-tasks-tab').classList.remove('active');
+});
+
+document.getElementById('team-tasks-tab').addEventListener('click', function(e) {
+  e.preventDefault();
+  document.getElementById('your-tasks-view').style.display = 'none';
+  document.getElementById('team-tasks-view').style.display = 'block';
+  this.classList.add('active');
+  document.getElementById('your-tasks-tab').classList.remove('active');
+});
+</script>
 {% endblock %}

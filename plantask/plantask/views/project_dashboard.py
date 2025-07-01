@@ -3,6 +3,7 @@ from pyramid.httpexceptions import HTTPNotFound
 from plantask.models.project import Project
 from plantask.models.task import Task
 from plantask.models.label import Label, LabelsTask
+from plantask.models.file import File  # Add this import
 from plantask.auth.verifysession import verify_session
 from collections import Counter
 
@@ -11,9 +12,20 @@ from collections import Counter
 @verify_session
 def show_tasks(request):
     project_id = request.matchdict.get('project_id')
-    project = request.dbsession.query(Project).get(project_id)
+    # Add join with File model
+    project = request.dbsession.query(Project).outerjoin(
+        File, Project.project_image_id == File.id
+    ).filter(Project.id == project_id).first()
+    
     if not project:
         raise HTTPNotFound("Project not found")
+    
+    # Get the image path if a file is associated
+    image_path = None
+    if project.project_image_id:
+        image_file = request.dbsession.query(File.route).filter_by(id=project.project_image_id).first()
+        if image_file:
+            image_path = image_file[0]
 
     statuses = ['assigned', 'in_progress', 'under_review', 'completed']
     chart_labels = ['Assigned', 'In Progress', 'Under Review', 'Completed']
@@ -67,6 +79,7 @@ def show_tasks(request):
 
     return {
         'project': project,
+        'image_path': image_path,
         'chart_labels': chart_labels,
         'chart_data': chart_data,
         'tasks_by_status_json': tasks_by_status,

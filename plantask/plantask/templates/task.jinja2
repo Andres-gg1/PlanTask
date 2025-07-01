@@ -10,81 +10,72 @@
 
 {% block content %}
 <div class="main-layout">
-    <main class="mycontainer"> 
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-            <h1 style="margin: 0;">{{ task.task_title }}</h1>
-            <div class="label-list">
-                {% for label_id, label_name, label_hex_color in labels %}
-                    <div class="label" style="background-color: {{ label_hex_color }};">
-                        {{ label_name }}
-                    </div>
-                {% endfor %}
-            </div>
-            {% if role == 'admin' %}
-                <button class="addlbbtn btn" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">Labels <i class="bi-plus-lg"></i></button>
+    <main class="mycontainer">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <h1 style="margin: 0;">{{ task.task_title }}</h1>
+                <div class="label-list-scrollable">
+                    {% for label_id, label_name, label_hex_color in labels %}
+                        <div class="label" style="background-color: {{ label_hex_color }}; white-space: nowrap;">
+                            {{ label_name }}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% if role == 'admin' %}
+                <button class="mybtn mybtn-gray" type="button" data-bs-toggle="modal" data-bs-target="#addLabelModal" aria-label="Add Label" title="Add Label">
+                    Labels <i class="bi-plus-lg"></i>
+                </button>
             {% endif %}
-        </div>
-        <h3>
-            <a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a>
-        </h3>
+            </div>
+
+        <h3><a class="project-name" href="{{ request.route_url('project_by_id', id=project.id) }}">{{ project.name }}</a></h3>
+
         <div class="info-row">
             <div class="info">Creation Date: {{ task.date_created.strftime('%Y-%m-%d') }}</div>
             <div class="info due-date">Due Date: {{ task.due_date.strftime('%Y-%m-%d') }}</div>
+
             {% if role == 'admin' %}
-            <div class="admin-actions">
-                <button type="button" class="btn btn-info btn-lg" data-bs-toggle="modal" data-bs-target="#editTaskModal">
-                    Edit Task <i class="bi-pencil-square"></i>
-                </button>
-                <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
-                    Delete Task <i class="bi-trash3"></i>
-                </button>
-            </div>
-            <button class="filebtn mybtn btn" type="button" data-bs-toggle="modal" data-bs-target="#attachFileModal">
-                Attach File
-                <i class="bi-paperclip"></i>
-            </button>
+                <div class="admin-actions">
+                    <button type="button" class="mybtn mybtn-blue" data-bs-toggle="modal" data-bs-target="#editTaskModal">
+                        Edit Task <i class="bi-pencil-square"></i>
+                    </button>
+                    <button type="button" class="mybtn mybtn-red" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
+                        Delete Task <i class="bi-trash3"></i>
+                    </button>
+                    <button class="mybtn mybtn-green" type="button" data-bs-toggle="modal" data-bs-target="#attachFileModal">
+                        Attach File <i class="bi-paperclip"></i>
+                    </button>
+                </div>
             {% endif %}
+
             <div class="status-actions">
                 {% if task.status == 'assigned' %}
-                    <button class="mybtn btn" type="button" id="movestatusbutton">
-                        Move to In Progress
-                        <i class="bi-box-arrow-right"></i>
-                        <i class="bi-pen-fill"></i>
+                    <button class="mybtn mybtn-purple" type="button" id="movestatusbutton">
+                        Move to In Progress <i class="bi-box-arrow-right"></i><i class="bi-pen-fill"></i>
                     </button>
                 {% elif task.status == 'in_progress' %}
-                    <button class="mybtn btn" type="button" id="backtoassigned">
-                        Back to Assigned
-                        <i class="bi-pin-angle-fill"></i>
-                        <i class="bi-box-arrow-left"></i>
+                    <button class="mybtn mybtn-purple" type="button" id="backtoassigned">
+                        Back to Assigned <i class="bi-pin-angle-fill"></i><i class="bi-box-arrow-left"></i>
                     </button>
-                    <button class="mybtn btn" type="button" id="sendforreview">
-                        Send for Review
-                        <i class="bi-box-arrow-right"></i>
-                        <i class="bi-eye-fill"></i>
+                    <button class="mybtn mybtn-purple" type="button" id="sendforreview">
+                        Send for Review <i class="bi-box-arrow-right"></i><i class="bi-eye-fill"></i>
                     </button>
                 {% elif task.status == 'under_review' %}
-                    <button class="mybtn btn" type="button" id="backtoinprogress">
-                        Back to In Progress
-                        <i class="bi-pen-fill"></i>
-                        <i class="bi-box-arrow-left"></i>
+                    <button class="mybtn mybtn-purple" type="button" id="backtoinprogress">
+                        Back to In Progress <i class="bi-pen-fill"></i><i class="bi-box-arrow-left"></i>
                     </button>
-                    <button class="mybtn btn" type="button" id="completetask">
-                        Complete Task
-                        <i class="bi-box-arrow-right"></i>
-                        <i class="bi-check-circle-fill"></i>
+                    <button class="mybtn mybtn-purple" type="button" id="completetask">
+                        Complete Task <i class="bi-box-arrow-right"></i><i class="bi-check-circle-fill"></i>
                     </button>
                 {% elif task.status == 'completed' %}
-                    <button class="mybtn btn" type="button" id="backtoreview">
-                        Back to In Review
-                        <i class="bi-eye-fill"></i>
-                        <i class="bi-box-arrow-left"></i>
+                    <button class="mybtn mybtn-purple" type="button" id="backtoreview">
+                        Back to In Review <i class="bi-eye-fill"></i><i class="bi-box-arrow-left"></i>
                     </button>
                 {% endif %}
             </div>
         </div>
+
         <p class="info">{{ task.task_description }}</p>
 
-        <!-- Microtasks List -->
         {% if microtasks %}
             <ul class="list-group mb-4">
                 {% for mt in microtasks %}
@@ -98,7 +89,7 @@
                             {% if mt.status == 'undone' %}
                                 <i class="bi-square"></i>
                             {% elif mt.status == 'under_review' %}
-                                <i class="bi-square-fill"></i>
+                                <i class="bi-eye-fill"></i>
                             {% elif mt.status == 'approved' %}
                                 <i class="bi-check-square-fill"></i>
                             {% endif %}
@@ -112,10 +103,34 @@
         {% endif %}
 
         {% if role == 'admin' %}
-            <a href="{{ request.route_url('create_microtask', task_id=task.id) }}" class="create-microtask-button">
+            <a href="{{ request.route_url('create_microtask', task_id=task_id) }}" class="create-microtask-button">
                 Create New MicroTask <i class="bi-plus-lg"></i>
             </a>
         {% endif %}
+
+        <div>
+            <!-- Task Comments Section -->
+            <div style="background-color: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <div id="taskComments" style="margin-bottom: 1.5rem; overflow-y: auto; max-height: 300px; flex-grow: 1; padding-right: 0.5rem;">
+                <!-- Comments will be loaded here -->
+            </div>
+            <!-- Comment Input -->
+            <form id="taskCommentForm" autocomplete="off" style="display: flex; align-items: center; gap: 1rem; border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem 1rem; background: white;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                {% if user.pfp %}
+                    <img src="{{ user.pfp }}" 
+                    style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+                {% else %}
+                    <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+                    style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+                {% endif %}
+                </div>
+                <input type="text" id="taskCommentInput" class="form-control" name="content" placeholder="Write a comment" style="border: none; box-shadow: none; font-size: 1.1rem;">
+                <button type="submit" id="submitTaskCommentButton" class="send-button"><i class="bi-send"></i></button>
+            </form>
+            </div>
+        </div>
     </main>
     <aside class="right-sidebar">
         <h3>Files</h3>
@@ -132,9 +147,13 @@
                             {{ f.creation_date.strftime('%Y-%m-%d %H:%M') }}
                             </span>
                         </div>
-                        <a href="" class="btn p-0 ms-auto download-btn" style="border:none; background:none;" title="Download">
+                        <button class="btn p-0 ms-auto download-btn" 
+                                style="border:none; background:none; color:black;" 
+                                title="Download"
+                                data-filename="{{ f.filename }}"
+                                data-file-id="{{ f.id }}">
                             <i class="bi-download fs-1"></i>
-                        </a>
+                        </button>
                     </div>
                 </li>
                 {% endfor %}
@@ -174,8 +193,8 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-info">Save Changes</button>
+                    <button type="button" class="btn mybtn-gray" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn mybtn-blue">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -195,8 +214,8 @@
                     Are you sure you want to delete the task "{{ task.task_title }}"?
                 </div>
                 <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="button" class="btn mybtn-gray" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn mybtn-red">Delete</button>
                 </div>
             </form>
         </div>
@@ -225,10 +244,19 @@
             </div>
           </div>
           <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; padding-right: 2rem !important;">
-            <span id="microtaskDueDate" style="font-size: 1.1rem; color: #666;" >Due Date</span>
-            <button class="btn btn-secondary" id="markReviewButton" style="background: #a6a6be; color: #fff; border: none; border-radius: 6px; padding: 0.4rem 1.2rem; font-size: 1.1rem; font-weight: 500;">
-              Mark for Review <i class="bi-eye"></i>
-            </button>
+            <span id="microtaskDueDate" style="font-size: 1.1rem; color: #666;">Due Date</span>
+            {% if role in ['admin', 'project_manager'] %}
+              <!-- Admin/PM can see all status options -->
+              <button class="btn btn-secondary" id="markReviewButton" style="background: rgb(118, 112, 151); color: #fff; border: none; border-radius: 6px; padding: 0.4rem 1.2rem; font-size: 1.1rem; font-weight: 500;">
+                Mark for Review <i class="bi-eye-fill"></i>
+              </button>
+            {% else %}
+              <!-- Regular users can only mark for review when status is undone -->
+              <button class="btn btn-secondary" id="markReviewButton" style="background: rgb(118, 112, 151); color: #fff; border: none; border-radius: 6px; padding: 0.4rem 1.2rem; font-size: 1.1rem; font-weight: 500;"
+                      {% if status != 'undone' %}style="display: none;"{% endif %}>
+                Mark for Review <i class="bi-eye-fill"></i>
+              </button>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -236,8 +264,7 @@
         <div id="microtaskDescription" class="info" style="font-size: 1.2rem; margin-bottom: 2rem; margin-top: 1rem; color: #222;"></div>
         <!-- Attached Files Section -->
         <div id="microtaskFiles" style="display: flex; gap: 1.5rem; margin-bottom: 2rem;">
-          <!-- Example file card, repeat for each file -->
-          <!--
+          
           <div class="file-card" style="border: 1px solid #ccc; border-radius: 8px; padding: 1rem 1.2rem; min-width: 180px; display: flex; flex-direction: column; align-items: flex-start; background: #fafbfc;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <i class="bi-file-earmark-pdf fs-2"></i>
@@ -249,33 +276,28 @@
               <i class="bi-download fs-3"></i>
             </button>
           </div>
-          -->
         </div>
         <!-- Comments Section -->
-        <div id="microtaskComments" style="margin-bottom: 1.5rem;">
-          <!-- Example comment, repeat for each comment -->
-          <!--
-          <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
-            <div style="width: 48px; height: 48px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center;">
-              <i class="bi-person-circle fs-2"></i>
-            </div>
-            <div>
-              <div style="font-weight: 600;">@username</div>
-              <div style="font-size: 1.05rem; color: #222;">Comment text goes here.</div>
-            </div>
+        <div style="background-color: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div id="microtaskComments" style="margin-bottom: 1.5rem; overflow-y: auto; max-height: 300px; flex-grow: 1; padding-right: 0.5rem;">
+            <!-- Comments will be dynamically loaded here -->
           </div>
-          -->
+          <!-- Comment Input -->
+          <form id="microtaskCommentForm" style="display: flex; align-items: center; gap: 1rem; border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem 1rem; background: white;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  {% if user.pfp %}
+                      <img src="{{ user.pfp }}" 
+                      style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+                  {% else %}
+                      <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
+                      style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; display: inline-block;">
+                  {% endif %}
+              </div>
+              <input type="text" id="microtaskCommentInput" class="form-control" name="content" placeholder="Write a comment" style="border: none; box-shadow: none; font-size: 1.1rem;">
+              <button type="button" id="submitCommentButton" class="send-button"><i class="bi-send"></i></button>
+          </form>
         </div>
-        <!-- Comment Input -->
-        <form id="microtaskCommentForm" style="display: flex; align-items: center; gap: 1rem; border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem 1rem;">
-          <div style="width: 36px; height: 36px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center;">
-            <i class="bi-person-circle fs-4"></i>
-          </div>
-          <input type="text" id="microtaskCommentInput" class="form-control" placeholder="Write a comment" style="border: none; box-shadow: none; font-size: 1.1rem;">
-          <button type="submit" class="btn btn-info" style="border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
-            <i class="bi-send fs-5"></i>
-          </button>
-        </form>
       </div>
     </div>
   </div>
@@ -298,8 +320,8 @@
           <input type="hidden" name="task_id" value="{{ task.id }}">
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-info">Upload</button>
+          <button type="button" class="btn mybtn-gray" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn mybtn-green">Upload</button>
         </div>
       </form>
     </div>
@@ -307,14 +329,14 @@
 </div>
 
 <!-- Custom Download Reason Modal -->
-<div id="downloadReasonModal" class="custom-modal" aria-hidden="true" role="dialog" aria-labelledby="downloadReasonModalLabel" aria-modal="true" tabindex="-1" style="display:none;">
-  <div class="custom-modal-dialog" role="document">
+<div id="downloadReasonModal" class="custom-modal">
+  <div class="custom-modal-dialog">
     <div class="custom-modal-content">
       <div class="custom-modal-header">
-        <h5 id="downloadReasonModalLabel" class="custom-modal-title">Generate Download Ticket</h5>
-        <button type="button" class="custom-modal-close" aria-label="Close"><i class="bi-x-lg"></i></button>
+        <h5 class="custom-modal-title">Generate Download Ticket</h5>
+        <button type="button" class="custom-modal-close"><i class="bi-x-lg"></i></button>
       </div>
-      <form id="downloadReasonForm" class="custom-modal-body" autocomplete="off">
+      <form id="downloadReasonForm" class="custom-modal-body">
         <dl class="file-details">
           <dt>File</dt>
           <dd id="downloadFileName"></dd>
@@ -323,14 +345,14 @@
         </dl>
         <div class="mb-3">
           <label for="downloadReason" class="form-label">Why would you like to download this file?</label>
-          <textarea class="form-control" id="downloadReason" name="reason" required rows="3" style="resize:vertical; max-height:7rem; min-height:3rem; width:100%;"></textarea>
+          <textarea class="form-control" id="downloadReason" name="reason" required></textarea>
         </div>
-        <div style="gap:0.5rem;">
+        <div class="d-flex gap-2">
           <button type="button" class="btn btn-secondary" id="cancelDownloadReason">Cancel</button>
-          <button type="submit" class="btn btn-info">Send & Request Download</button>
+          <button type="submit" class="btn btn-primary">Download File</button>
         </div>
-        <div id="downloadReasonSuccess" style="display:none; color:green; margin-top:1rem; justify-content:center; text-align: center;">
-          Your reason was submitted! (Simulated)<br>Download will start...
+        <div id="downloadReasonSuccess" style="display:none; color:green; margin-top:1rem; text-align:center;">
+          Your reason was submitted!<br>Download will start...
         </div>
       </form>
     </div>
@@ -341,19 +363,78 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-        var fileInput = document.getElementById('fileInput');
-        var filenameInput = document.getElementById('filename');
-        if (fileInput && filenameInput) {
-                fileInput.addEventListener('change', function() {
-                        if (fileInput.files.length > 0) {
-                                filenameInput.value = fileInput.files[0].name;
-                        }
-                });
-        }
-});
+const userRole = "{{ role }}"
 
 document.addEventListener('DOMContentLoaded', function() {
+    var fileInput = document.getElementById('fileInput');
+    var filenameInput = document.getElementById('filename');
+    if (fileInput && filenameInput) {
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length > 0) {
+                    filenameInput.value = fileInput.files[0].name;
+            }
+        });
+    }
+
+
+    // Download functionality
+    const downloadButtons = document.querySelectorAll('.download-btn');
+    const downloadReasonModal = document.getElementById('downloadReasonModal');
+    const downloadFileName = document.getElementById('downloadFileName');
+    const downloadReasonForm = document.getElementById('downloadReasonForm');
+    const downloadReasonSuccess = document.getElementById('downloadReasonSuccess');
+    const cancelDownloadButton = document.getElementById('cancelDownloadReason');
+    const modalClose = downloadReasonModal.querySelector('.custom-modal-close');
+    let currentFileId = null;
+
+    function openDownloadReasonModal(filename, fileId) {
+        downloadFileName.textContent = filename;
+        currentFileId = fileId;
+        downloadReasonModal.classList.add('show');
+        downloadReasonSuccess.style.display = 'none';
+        downloadReasonForm.reset();
+        document.body.style.overflow = 'hidden';
+    }
+    function closeDownloadReasonModal() {
+        downloadReasonModal.classList.remove('show');
+        downloadReasonForm.reset();
+        document.body.style.overflow = '';
+    }
+
+    // Add click handlers for download buttons
+    downloadButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const filename = button.dataset.filename;
+            const fileId = button.dataset.fileId;
+            if (userRole === 'admin') {
+                // Direct download for admin
+                window.location.href = `{{ request.route_url('file_crud') }}?action=download&file_id=${fileId}&entity_type=task&entity_id=${taskId}`;
+            } else {
+                // Show modal for non-admins
+                openDownloadReasonModal(filename, fileId);
+            }
+        });
+    });
+
+    // Close modal handlers
+    modalClose.addEventListener('click', closeDownloadReasonModal);
+    cancelDownloadButton.addEventListener('click', closeDownloadReasonModal);
+
+    // Handle form submission
+    downloadReasonForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Show success message
+        downloadReasonSuccess.style.display = 'flex';
+        
+        // Start download after a brief delay
+        setTimeout(() => {
+            window.location.href = `{{ request.route_url('file_crud') }}?action=download&file_id=${currentFileId}&entity_type=task&entity_id=${taskId}`;
+            closeDownloadReasonModal();
+        }, 1500);
+    });
+
     // Task status update functionality
     function updateStatus(newStatus) {
         fetch("{{ request.route_url('update_task_status') }}", {
@@ -367,7 +448,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 new_status: newStatus
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 window.location.reload();
@@ -375,7 +461,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert(data.error || "Failed to update status.");
             }
         })
-        .catch(() => alert("Failed to update status."));
+        .catch(error => {
+            console.error("Error updating status:", error);
+            alert("Failed to update status. Please try again.");
+        });
     }
 
     {% if task.status == 'assigned' %}
@@ -402,10 +491,89 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     {% endif %}
 
-    // Microtask modal functionality
     const modal = document.getElementById('microtaskDetailsModal');
     const closeBtn = modal.querySelector('.custom-modal-close');
     const microtaskItems = document.querySelectorAll('.microtask-list-item');
+    const markReviewButton = document.getElementById('markReviewButton');
+
+    const submitCommentButton = document.getElementById('submitCommentButton');
+    const commentInput = document.getElementById('microtaskCommentInput');
+    const commentsContainer = document.getElementById('microtaskComments');
+
+    const taskCommentsContainer = document.getElementById('taskComments');
+    const taskCommentForm = document.getElementById('taskCommentForm');
+    const taskCommentInput = document.getElementById('taskCommentInput');
+    const taskId = '{{ task_id }}';
+
+    function fetchTaskComments() {
+        fetch(`{{ request.route_url('get_task_comments') }}?task_id=${taskId}`)
+        .then(response => response.json())
+        .then(data => {
+            taskCommentsContainer.innerHTML = '';
+            if (data.comments) {
+                data.comments.forEach(comment => {
+                    const el = document.createElement('div');
+                    el.style.display = 'flex';
+                    el.style.alignItems = 'flex-start';
+                    el.style.gap = '1rem';
+                    el.style.marginBottom = '1rem';
+                    el.innerHTML = `
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            ${
+                                comment.profile_picture_url
+                                ? `<img src="${comment.profile_picture_url}" alt="${comment.username}" style="width: 100%; height: 100%; object-fit: cover;">`
+                                : `<i class="bi-person-circle fs-2"></i>`
+                            }
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;">${comment.username}</div>
+                            <div style="font-size: 1.05rem; color: #222;">${comment.content}</div>
+                            <div style="font-size: 0.85rem; color: #888;">${comment.time_posted}</div>
+                        </div>
+                    `;
+                    taskCommentsContainer.appendChild(el);
+                });
+                taskCommentsContainer.scrollTop = taskCommentsContainer.scrollHeight;
+            }
+        })
+        .catch(error => console.log('Error:', error));
+    }
+
+    taskCommentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const content = taskCommentInput.value.trim();
+        if (!content) return;
+        
+        fetch("{{ request.route_url('add_task_comment', task_id=task.id) }}", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                content: content,
+                csrf_token: "{{ csrf_token }}"
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                console.log('Server error:', data.error);
+                return;
+            }
+            taskCommentInput.value = '';
+            fetchTaskComments();
+        })
+        .catch(error => {
+            console.log('Error:', error);
+        });
+    });
+
+    fetchTaskComments();
 
     function openModal() {
         modal.style.display = 'flex';
@@ -417,116 +585,240 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 10);
     }
 
+    function fetchComments(microtaskId) {
+        fetch(`{{ request.route_url('get_microtask_comments') }}?microtask_id=${microtaskId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
 
+            // Clear existing comments
+            commentsContainer.innerHTML = '';
+
+            // Populate comments
+            data.comments.forEach(comment => {
+                const commentElement = document.createElement('div');
+                commentElement.style.display = 'flex';
+                commentElement.style.alignItems = 'flex-start';
+                commentElement.style.gap = '1rem';
+                commentElement.style.marginBottom = '1rem';
+
+                commentElement.innerHTML = `
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        ${
+                            comment.profile_picture_url
+                            ? `<img src="${comment.profile_picture_url}" alt="${comment.username}" style="width: 100%; height: 100%; object-fit: cover;">`
+                            : `<i class="bi-person-circle fs-2"></i>`
+                        }
+                    </div>
+                    <div>
+                        <div style="font-weight: 600;">${comment.username}</div>
+                        <div style="font-size: 1.05rem; color: #222;">${comment.content}</div>
+                        <div style="font-size: 0.85rem; color: #888;">${comment.time_posted}</div>
+                    </div>
+                `;
+
+                commentsContainer.appendChild(commentElement);
+            });
+            commentsContainer.scrollTop = commentsContainer.scrollHeight;
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function updateMarkReviewButton(status) {
+        const userRole = '{{ role }}';
+
+        if (userRole !== 'admin' && userRole !== 'project_manager') {
+        // Regular users can only mark for review from undone state
+            if (status === 'undone') {
+                markReviewButton.style.display = 'block';
+                markReviewButton.innerHTML = 'Mark for Review <i class="bi-eye-fill"></i>';
+                markReviewButton.style.background = '#a6a6be';
+            } else {
+                markReviewButton.style.display = 'none';
+            }
+        } else {
+            // Admin and PM can use all states
+            markReviewButton.style.display = 'block';
+            if (status === 'undone') {
+                markReviewButton.innerHTML = 'Mark for Review <i class="bi-eye-fill"></i>';
+                markReviewButton.style.background = 'rgb(118, 112, 151)';
+            } else if (status === 'under_review') {
+                markReviewButton.innerHTML = 'Mark as Approved <i class="bi-check-lg"></i>';
+                markReviewButton.style.background = '#28a745';
+            } else if (status === 'approved') {
+                markReviewButton.innerHTML = 'Mark as Undone <i class="bi-arrow-counterclockwise"></i>';
+                markReviewButton.style.background = '#6c757d';
+            }
+        }
+    }
+
+    function updateMicrotaskStatus(microtaskId, currentStatus) {
+        let newStatus;
+        if (currentStatus === 'undone') {
+            newStatus = 'under_review';
+        } else if (currentStatus === 'under_review') {
+            newStatus = 'approved';
+        } else if (currentStatus === 'approved') {
+            newStatus = 'undone';
+        }
+
+        fetch("{{ request.route_url('update_microtask_status') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"
+            },
+            body: JSON.stringify({
+                microtask_id: microtaskId,
+                new_status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+            // Update the list item
+            const microtaskItem = document.querySelector(`[data-mtid="${microtaskId}"]`);
+            if (microtaskItem) {
+                microtaskItem.dataset.status = newStatus;
+                const icon = microtaskItem.querySelector('i');
+                if (icon) {
+                    if (newStatus === 'undone') {
+                        icon.className = 'bi-square';
+                    } else if (newStatus === 'under_review') {
+                        icon.className = 'bi-eye-fill';
+                    } else if (newStatus === 'approved') {
+                        icon.className = 'bi-check-square-fill';
+                    }
+                }
+                
+                // Update modal immediately
+                document.getElementById('microtaskStatusIcon').innerHTML = `<i class="${icon.className}"></i>`;
+                let statusText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1).replace(/_/g, ' ');
+                document.getElementById('microtaskStatus').textContent = statusText;
+                
+                // Update button and its click handler
+                updateMarkReviewButton(newStatus);
+                markReviewButton.onclick = () => updateMicrotaskStatus(microtaskId, newStatus);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    submitCommentButton.addEventListener('click', submitComment);
+
+    commentInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent default form submission
+            submitComment();
+        }
+    });
+
+    function submitComment() {
+        const content = commentInput.value.trim();
+        if (!content) {
+            alert('Comment cannot be empty');
+            return;
+        }
+
+        // Get the microtask ID from the currently displayed microtask
+        const microtaskId = document.querySelector('.microtask-list-item.active')?.dataset.mtid;
+        if (!microtaskId) {
+            alert('No microtask selected');
+            return;
+        }
+
+         const url = "{{ request.route_url('add_microtask_comment', microtask_id='__id__') }}".replace('__id__', microtaskId);
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": "{{ request.session.get_csrf_token() }}"
+            },
+            body: JSON.stringify({
+                content: content
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+            // Clear input and refresh comments
+            commentInput.value = '';
+            fetchComments(microtaskId);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+      
     function closeModal() {
         modal.classList.add('animating-out');
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';  // Re-enable background scrolling
-
-        // Ocultar visualmente después de que termine la animación
+        document.body.style.overflow = '';
+        
+        // Remove active class from all microtask items
+        microtaskItems.forEach(i => i.classList.remove('active'));
+        
         setTimeout(() => {
-            modal.classList.remove('animating-out');
             modal.style.display = 'none';
+            modal.classList.remove('animating-out');
         }, 350);
     }
 
-    // Close modal when close button is clicked
+    // Event Listeners
     closeBtn.addEventListener('click', closeModal);
 
-    // Fill and open modal when clicking on a microtask
     microtaskItems.forEach(item => {
         item.addEventListener('click', () => {
-            // Get the status from the data attribute
+            // Remove active class from all items
+            microtaskItems.forEach(i => i.classList.remove('active'));
+            // Add active class to clicked item
+            item.classList.add('active');
+
             const status = item.dataset.status || 'undone';
+            const microtaskId = item.dataset.mtid;
+            const statusIcon = item.querySelector('i').outerHTML;
             
-            // Set the status icon based on status
-            let statusIcon = '';
-            if (status === 'undone') {
-                statusIcon = '<i class="bi-square"></i>';
-            } else if (status === 'under_review') {
-                statusIcon = '<i class="bi-square-fill"></i>';
-            } else if (status === 'approved') {
-                statusIcon = '<i class="bi-check-square-fill"></i>';
-            }
-            
+            // Update modal content
             document.getElementById('microtaskStatusIcon').innerHTML = statusIcon;
-            document.getElementById('microtaskName').textContent = item.dataset.name || 'N/A';
-            document.getElementById('microtaskDescription').textContent = item.dataset.description || 'N/A';
+            document.getElementById('microtaskName').textContent = item.dataset.name;
+            document.getElementById('microtaskDescription').textContent = item.dataset.description;
+            document.getElementById('microtaskDueDate').textContent = `Due Date: ${item.dataset.due}`;
             
             let statusText = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
             document.getElementById('microtaskStatus').textContent = statusText;
             
-            document.getElementById('microtaskDueDate').textContent = item.dataset.due || 'No due date';
-
+            // Update review button
+            updateMarkReviewButton(status);
+            markReviewButton.onclick = () => updateMicrotaskStatus(microtaskId, status);
+            
+            // Fetch comments
+            fetchComments(microtaskId);
+            
+            // Open modal
             openModal();
         });
     });
 
-    // Optional: close modal with ESC key
+    // ESC key to close modal
     document.addEventListener('keydown', (e) => {
         if (e.key === "Escape" && modal.classList.contains('show')) {
             closeModal();
-        }
-    });
-
-    // Modal for download reason
-    const downloadModal = document.getElementById('downloadReasonModal');
-    const downloadForm = document.getElementById('downloadReasonForm');
-    const downloadCloseBtn = downloadModal.querySelector('.custom-modal-close');
-    const cancelDownloadBtn = document.getElementById('cancelDownloadReason');
-    const downloadFileName = document.getElementById('downloadFileName');
-    const downloadReasonSuccess = document.getElementById('downloadReasonSuccess');
-
-    // Attach click event to all download buttons
-    document.querySelectorAll('.file-item .download-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            // Get file info from DOM
-            const fileItem = btn.closest('.file-item');
-            const fileName = fileItem.querySelector('strong')?.textContent || 'Unknown';
-            downloadFileName.textContent = fileName;
-            downloadReasonSuccess.style.display = 'none';
-            downloadForm.style.pointerEvents = '';
-            downloadForm.reset();
-            // Show modal
-            downloadModal.style.display = 'flex';
-            setTimeout(() => {
-                downloadModal.classList.add('show');
-                downloadModal.setAttribute('aria-hidden', 'false');
-                document.body.style.overflow = 'hidden';
-            }, 10);
-        });
-    });
-
-    // Close modal logic
-    function closeDownloadModal() {
-        downloadModal.classList.remove('show');
-        downloadModal.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-        setTimeout(() => {
-            downloadModal.style.display = 'none';
-        }, 350);
-    }
-    downloadCloseBtn.addEventListener('click', closeDownloadModal);
-    cancelDownloadBtn.addEventListener('click', closeDownloadModal);
-
-    // Simulate backend on submit
-    downloadForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        downloadForm.style.pointerEvents = 'none';
-        downloadReasonSuccess.style.display = 'block';
-        setTimeout(() => {
-            closeDownloadModal();
-            // Simulate download (replace with real download if needed)
-            // window.location.href = btn.href;
-        }, 1500);
-    });
-
-    // Optional: close modal with ESC key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === "Escape" && downloadModal.classList.contains('show')) {
-            closeDownloadModal();
         }
     });
 });

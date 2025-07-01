@@ -3,179 +3,122 @@
 {% block title %}@{{ user_viewing.username }}{% endblock %}
 
 {% block styles %}
-<style>
-  .profile-avatar i {
-    size: 4rem;
-    color: #6c757d;
-    transition: color 0.3s;
-  }
-
-  .profile-avatar:hover i {
-    color: #7d4ec4;
-  }
-
-  .text{
-    font-family: "Proxima Nova", sans-serif;
-  }
-  .modal-custom {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0;
-    visibility: hidden;
-    z-index: 1055;
-    background: white;
-    width: 100%;
-    max-width: 500px;
-    padding: 2rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
-    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-  }
-
-  .btn{
-    cursor: pointer;
-    font-family: "Proxima Nova", sans-serif;
-    font-weight: 600;
-  }
-  .modal-custom.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1050;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s;
-  }
-
-  .modal-overlay.active {
-    opacity: 1;
-    visibility: visible;
-  }
-  .btn-primary{
-    background-color: #4e8fd5;
-    border-color: #4e8fd5;
-    font-family: "Proxima Nova", sans-serif;
-  }
-</style>
+<link rel="stylesheet" href="{{ request.static_url('plantask:static/styles/profile.css') }}">
 {% endblock %}
 
 {% block content %}
 <main class="mycontainer">
-  <!-- Profile Card -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-body d-flex align-items-center gap-4">
-      <div class="profile-avatar" id="pfp-click" style="width: 8rem; aspect-ratio: 1 / 1;">
-        {% if user_image %}
-          <img src="{{ user_image }}" 
-               alt="Profile Picture"
-               style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-        {% else %}
-          <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" 
-               alt="Default Profile Picture" 
-               style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-        {% endif %}
-      </div>
-      <div>
-        <h3 class="text mb-0">{{ user_viewing.first_name }} {{ user_viewing.last_name }}</h3>
-        <p class="text text-muted">@{{ user_viewing.username }}</p>
-      </div>
+
+  <div class="profile-banner"></div>
+  <div class="profile-card">
+    <div class="profile-avatar" {% if user_viewing.id == user.id %}id="pfp-click"{% endif %} style="margin-top: -80px;">
+      {% if user_image %}
+        <img src="{{ user_image }}" alt="Profile Picture">
+      {% else %}
+        <img src="{{ request.static_url('plantask:static/default_pfp.svg') }}" alt="Default Profile Picture">
+      {% endif %}
+    </div>
+    <h3>{{ user_viewing.first_name }} {{ user_viewing.last_name }}</h3>
+    <p>@{{ user_viewing.username }}</p>
+
+    <div class="btn-group d-flex justify-content-center">
       {% if user_viewing.id != user.id %}
-      <form id="message-profile-form" action="{{ request.route_url('create_message_relation') }}" method="POST">
-        <input type="hidden" name="recipient_id" value="{{ user_viewing.id }}">
-        <button id="message-profile-btn" class="btn btn-success ms-auto">Send a Message</button>
-      </form>
+        <form id="message-profile-form" action="{{ request.route_url('create_message_relation') }}" method="POST">
+          <input type="hidden" name="recipient_id" value="{{ user_viewing.id }}">
+          <button id="message-profile-btn" class="btn mybtn-green">Send a Message</button>
+        </form>
       {% endif %}
       {% if user_viewing.id == user.id %}
-        <button id="edit-profile-btn" class="btn btn-primary ms-auto">Edit Profile</button>
+        <button id="edit-profile-btn" class="btn mybtn-blue">Edit Profile</button>
       {% endif %}
     </div>
   </div>
 
-  <!-- Account Info -->
-  <div class="card shadow-sm">
-    <div class="card-header">
-      <h5 class="mb-0">Account Info</h5>
-    </div>
-    <div class="card-body">
-      <p><strong>Email:</strong> {{ user_viewing.email }}</p>
-      <p><strong>Permission:</strong> {{ user_viewing.permission | capitalize }}</p>
-    </div>
+  <div class="card-info">
+    <h5>Account Information</h5>
+    <p><strong>Email:</strong> {{ user_viewing.email }}</p>
+    <p><strong>Permission:</strong> {{ user_viewing.permission | capitalize }}</p>
   </div>
 
-  <!-- Modal Overlay -->
   <div class="modal-overlay" id="modal-overlay"></div>
 
-  <!-- Edit Profile Modal -->
-  <div class="modal-custom" id="edit-modal">
-    <form method="POST" action="{{ request.route_url('edit_user', id=user_viewing.id) }}">
-      <h4>Edit Profile</h4>
-      <div class="mb-3">
-        <label class="form-label">First Name</label>
-        <input class="form-control" type="text" name="first_name" value="{{ user_viewing.first_name }}" required>
+  <div class="modal fade" id="edit-modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST" action="{{ request.route_url('edit_user', id=user_viewing.id) }}">
+          <div class="modal-header">
+            <h4 class="modal-title">Edit Profile</h4>
+          </div>          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <input class="form-control" type="text" name="username" value="{{ user_viewing.username }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">First Name</label>
+              <input class="form-control" type="text" name="first_name" value="{{ user_viewing.first_name }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Last Name</label>
+              <input class="form-control" type="text" name="last_name" value="{{ user_viewing.last_name }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input class="form-control" type="email" name="email" value="{{ user_viewing.email }}" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn mybtn-gray" id="close-modal-btn">Cancel</button>
+            <button type="submit" class="btn mybtn-blue">Save Changes</button>
+          </div>
+        </form>
       </div>
-      <div class="mb-3">
-        <label class="form-label">Last Name</label>
-        <input class="form-control" type="text" name="last_name" value="{{ user_viewing.last_name }}" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input class="form-control" type="email" name="email" value="{{ user_viewing.email }}" required>
-      </div>
-      <div class="d-flex justify-content-end gap-2">
-        <button type="submit" class="btn btn-success">Save Changes</button>
-        <button type="button" class="btn btn-outline-danger" id="close-modal-btn">Cancel</button>
-      </div>
-    </form>
+    </div>
   </div>
 
-  <!-- PFP Modal -->
-  <div class="modal-custom" id="pfp-modal">
-    <h4>Change Profile Picture</h4>
-    <form method="POST" action="{{ request.route_url('file_upload_page') }}" enctype="multipart/form-data">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <input type="hidden" name="entity_type" value="profile_picture">
-        <input type="hidden" name="entity_id" value="{{ user.id }}">
-        <div class="modal-body">
+  <div class="modal fade" id="pfp-modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST" action="{{ request.route_url('file_upload_page') }}" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="entity_type" value="profile_picture">
+          <input type="hidden" name="entity_id" value="{{ user.id }}">
+          <div class="modal-header">
+            <h4 class="modal-title">Change Profile Picture</h4>
+          </div>
+          <div class="modal-body">
             <div class="mb-3">
-                <label for="projectImage" class="form-label">Profile Picture</label>
-                <input type="file" name="file" class="form-control" id="projectImage" required>
+              <label for="projectImage" class="form-label">Profile Picture</label>
+              <input type="file" name="file" class="form-control" id="projectImage" required>
             </div>
-        </div>
-        <div class="modal-footer border-0">
-            <button type="submit" class="btn btn-success">Upload Image</button>
-        </div>
-    </form>
-    <button class="btn btn-outline-danger" onclick="closeModals()">Close</button>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn mybtn-gray" onclick="closeModals()">Close</button>
+            <button type="submit" class="btn mybtn-yellow">Upload Image</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </main>
 {% endblock %}
 
 {% block scripts %}
-<script>
-  const overlay = document.getElementById('modal-overlay');
-  const editModal = document.getElementById('edit-modal');
-  const pfpModal = document.getElementById('pfp-modal');
+<script>  const overlay = document.getElementById('modal-overlay');
+  const editModal = new bootstrap.Modal(document.getElementById('edit-modal'));
+  const pfpModal = new bootstrap.Modal(document.getElementById('pfp-modal'));
   const editBtn = document.getElementById('edit-profile-btn');
   const closeBtn = document.getElementById('close-modal-btn');
   const pfpBtn = document.getElementById('pfp-click');
 
   const closeModals = () => {
+    editModal.hide();
+    pfpModal.hide();
     overlay.classList.remove('active');
-    editModal.classList.remove('active');
-    pfpModal.classList.remove('active');
   };
 
   if (editBtn) {
     editBtn.addEventListener('click', () => {
-      editModal.classList.add('active');
+      editModal.show();
       overlay.classList.add('active');
     });
   }
@@ -186,12 +129,12 @@
 
   overlay.addEventListener('click', closeModals);
 
+  // Only add click event if the user is viewing their own profile
   if (pfpBtn) {
     pfpBtn.addEventListener('click', () => {
-      pfpModal.classList.add('active');
+      pfpModal.show();
       overlay.classList.add('active');
     });
   }
 </script>
-
 {% endblock %}

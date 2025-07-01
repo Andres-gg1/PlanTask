@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Optional: reset selectedUsers when modal opens
     const addMemberModal = document.getElementById('addMemberModal');
     if (addMemberModal) {
         addMemberModal.addEventListener('show.bs.modal', () => {
@@ -31,8 +30,66 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('userSearchResults').innerHTML = '';
         });
     }
-});
 
+    // Read more functionality for project description
+    const readMoreBtn = document.getElementById('readMoreBtn');
+    const projectDescription = document.getElementById('projectDescription');
+    
+    if (readMoreBtn && projectDescription) {
+        const fullText = projectDescription.textContent;
+        const truncatedText = fullText.length > 75 ? fullText.substring(0, 75) + '...' : fullText;
+        let isExpanded = false;
+
+        // Initially show truncated text
+        if (fullText.length > 75) {
+            projectDescription.textContent = truncatedText;
+        }
+
+        readMoreBtn.addEventListener('click', function() {
+            if (isExpanded) {
+                projectDescription.textContent = truncatedText;
+                readMoreBtn.textContent = 'Read More';
+                isExpanded = false;
+            } else {
+                projectDescription.textContent = fullText;
+                readMoreBtn.textContent = 'Read Less';
+                isExpanded = true;
+            }
+        });
+    }
+
+    // Remove member confirmation modal functionality
+    const confirmRemoveModal = new bootstrap.Modal(document.getElementById('confirmRemoveMemberModal'));
+    let formToSubmit = null;
+
+    document.querySelectorAll('.btn-remove-member').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            formToSubmit = btn.closest('form');
+            const memberName = formToSubmit.getAttribute('data-member-name') || 'this member';
+            document.getElementById('removeMemberMessage').textContent = `Are you sure you want to remove ${memberName} from the project?`;
+            confirmRemoveModal.show();
+        });
+    });
+
+    document.getElementById('confirmRemoveBtn').addEventListener('click', () => {
+        if (formToSubmit) {
+            formToSubmit.submit();
+            confirmRemoveModal.hide();
+        }
+    });
+
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert.announcement.show');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.classList.remove('show');
+            alert.classList.add('fade');    
+
+            setTimeout(() => alert.remove(), 500);
+        }, 5000);
+    });
+});
 function searchUsers() {
     const searchTerm = document.getElementById("usernameSearch").value.trim();
     const resultsContainer = document.getElementById("userSearchResults");
@@ -45,7 +102,7 @@ function searchUsers() {
     resultsContainer.innerHTML = "<p>Searching users...</p>";
     const projectId = document.getElementById("projectId").value;
 
-        fetch(`/search-users?q=${encodeURIComponent(searchTerm)}&project_id=${projectId}`)
+    fetch(`/search-users?q=${encodeURIComponent(searchTerm)}&project_id=${projectId}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Search error: ' + response.status);
@@ -55,29 +112,30 @@ function searchUsers() {
         .then(data => {
             resultsContainer.innerHTML = "";
 
-            if (data.length === 0) {
+            const filteredData = data.filter(user => !selectedUsers.some(sel => sel.id === user.id));
+
+            if (filteredData.length === 0) {
                 resultsContainer.innerHTML = "<p>No users found</p>";
                 return;
             }
 
-            data.forEach(user => {
-                if (selectedUsers.find(u => u.id === user.id)) return;
-
+            filteredData.forEach(user => {
                 const userItem = document.createElement("div");
                 userItem.classList.add("search-result-item", "d-flex", "justify-content-between", "align-items-center", "mb-2");
+
                 const pfp = user.image_route
-                ? `<img src="${user.image_route}" alt="PFP" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">`
-                : `<i class="bi bi-person-circle fs-4 text-secondary me-2"></i>`;
+                    ? `<img src="${user.image_route}" alt="PFP" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">`
+                    : `<i class="bi bi-person-circle fs-4 text-secondary me-2"></i>`;
 
                 userItem.innerHTML = `
-                <div class="d-flex align-items-center">
-                    ${pfp}
-                    <div>
-                    <strong>${user.first_name} ${user.last_name}</strong><br>
-                    <small class="text-muted">@${user.username}</small>
+                    <div class="d-flex align-items-center">
+                        ${pfp}
+                        <div>
+                            <strong>${user.first_name} ${user.last_name}</strong><br>
+                            <small class="text-muted">@${user.username}</small>
+                        </div>
                     </div>
-                </div>
-                <button type="button" class="btn btn-sm btn-primary" onclick="addUser('${user.id}', '${user.username}', '${user.first_name}', '${user.last_name}', '${user.image_route ?? ''}')">Add</button>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addUser('${user.id}', '${user.username}', '${user.first_name}', '${user.last_name}', '${user.image_route ?? ''}')">Add</button>
                 `;
 
                 resultsContainer.appendChild(userItem);
@@ -90,13 +148,14 @@ function searchUsers() {
         });
 }
 
-function addUser(userId, username, firstName, lastName) {
-    if (selectedUsers.find(u => u.id === userId)) {
-        alert("User already selected");
+function addUser(userId, username, firstName, lastName, imageRoute) {
+    const idNum = parseInt(userId);
+    if (selectedUsers.some(u => u.id === idNum)) {
         return;
     }
-    selectedUsers.push({ id: userId, username, first_name: firstName, last_name: lastName });
+    selectedUsers.push({ id: idNum, username, first_name: firstName, last_name: lastName });
     updateSelectedUsers();
+    searchUsers(); 
 }
 
 function removeUser(userId) {

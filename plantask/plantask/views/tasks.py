@@ -3,44 +3,81 @@ from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound, HTTPBadRequest, HTTPNotFound
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
-from plantask.models.project import Project
+from plantask.models.project import Project, ProjectsUser
 from plantask.models.activity_log import ActivityLog
 from plantask.auth.verifysession import verify_session
-from plantask.models.task import Task, TasksFile
+from plantask.models.task import Task, TasksFile, TaskComment
 from plantask.models.label import Label, LabelsTask
-from plantask.models.microtask import Microtask
-from datetime import date
+from plantask.models.microtask import Microtask, MicrotaskComment
+from plantask.models.file import File
+from datetime import datetime, date
+from sqlalchemy import and_
 
-@view_config(route_name='create_task', renderer='plantask:templates/create_task.jinja2', request_method='GET', permission="admin")
+@view_config(route_name='create_task', renderer='plantask:templates/create_item.jinja2', request_method='GET', permission="admin")
 @verify_session
 def create_task_page(request):
     project_id = request.matchdict.get('project_id')
+
     project = request.dbsession.query(Project).get(project_id)
     if not project:
-        return HTTPFound(location=request.route_url('my_projects')) 
+        raise HTTPNotFound()
+
+    
+    form_config = {
+        'title': 'Create New Task',
+        'subtitle': f'For project: {project.name}',
+        'icon': 'bi bi-file-post',
+        'gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'accent_color': '#667eea',
+        'name_label': 'Task Name',
+        'name_placeholder': 'Enter a descriptive task name...',
+        'description_placeholder': 'Describe what needs to be accomplished...',
+        'button_text': 'Create Task',
+        'action': request.route_url('create_task', project_id=project.id),
+        'show_date': True,
+        'max_date': None
+    }
     
     return {
         'project': project,
-        'current_date': date.today().isoformat()
+        'current_date': date.today().isoformat(),
+        'form_config': form_config
     }
 
 
-@view_config(route_name='create_task', renderer='plantask:templates/create_task.jinja2', request_method='POST', permission="admin")
+@view_config(route_name='create_task', renderer='plantask:templates/create_item.jinja2', request_method='POST', permission="admin")
 @verify_session
 def create_task(request):
     project_id = request.matchdict.get('project_id')
+    
     project = request.dbsession.query(Project).get(project_id)
     if not project:
-        return HTTPFound(location=request.route_url('my_projects')) 
+        raise HTTPNotFound()
 
     task_name = request.params.get('name')
     task_description = request.params.get('description')
     due_date = request.params.get('due_date')
 
+    form_config = {
+        'title': 'Create New Task',
+        'subtitle': f'For project: {project.name}',
+        'icon': 'bi bi-list-check',
+        'gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'accent_color': '#667eea',
+        'name_label': 'Task Name',
+        'name_placeholder': 'Enter a descriptive task name...',
+        'description_placeholder': 'Describe what needs to be accomplished...',
+        'button_text': 'Create Task',
+        'action': request.route_url('create_task', project_id=project.id),
+        'show_date': True,
+        'max_date': None
+    }
+
     if not task_name or not task_description or not due_date:       #check if all field are complete
         return {
             'project': project,
             'current_date': date.today().isoformat(),
+            'form_config': form_config,
             'error_ping': 'All fields are required.'
         }
 
@@ -64,7 +101,7 @@ def create_task(request):
                         task_id = new_task.id,
                         timestamp = datetime.now(),
                         action = 'task_created',
-                        changes = f"{new_task.__repr__()}"
+                        changes = f"{new_task.task_title}"
         )
         request.dbsession.add(activity_log_task_created)
         request.dbsession.flush()
@@ -76,6 +113,7 @@ def create_task(request):
         return {
             'project': project,
             'current_date': date.today().isoformat(),
+            'form_config': form_config,
             'error_ping': 'An error occurred while creating the task. Please try again.'
         }
 
@@ -85,9 +123,26 @@ def create_task(request):
 def task_by_id(request):
     try:
         task_id = int(request.matchdict.get('id'))
+        user_id = request.session.get('user_id')
+        
         task = request.dbsession.query(Task).filter_by(id=task_id).first()
         if not task:
-            return HTTPNotFound("Task not found")
+            raise HTTPNotFound()
+            
+        # Check if user is a member of the project
+        current_user_assoc = (
+            request.dbsession.query(ProjectsUser)
+            .filter(
+                ProjectsUser.project_id == task.project_id,
+                ProjectsUser.user_id == user_id,
+                ProjectsUser.active == True
+            )
+            .first()
+        )
+
+        if not current_user_assoc:
+            return HTTPFound(location=request.route_url('invalid_permissions'))
+            
         project = request.dbsession.query(Project).filter_by(id=task.project_id).first()
         microtasks = request.dbsession.query(Microtask).filter_by(task_id=task.id, active=True).all()
         tasks_files = request.dbsession.query(TasksFile).filter_by(tasks_id=task.id).all()
@@ -121,10 +176,10 @@ def task_by_id(request):
             'labels': assigned_labels,
             'project_labels': project_labels_ordered,
             'assigned_label_ids': assigned_label_ids,
-            'task_id': task.id  # to pass to template if needed
+            'task_id': task_id
         }
     except Exception:
-        return HTTPNotFound("Task not found")
+        return HTTPFound(location=request.route_url('invalid_permissions'))
 
     
 
@@ -133,9 +188,25 @@ def task_by_id(request):
 def edit_task(request):
     try:
         task_id = int(request.matchdict.get('id'))
+        user_id = request.session.get('user_id')
+        
         task = request.dbsession.query(Task).filter_by(id=task_id).first()
         if not task:
-            return HTTPNotFound("Task not found")
+            raise HTTPNotFound()
+
+        # Check if user is a member of the project
+        current_user_assoc = (
+            request.dbsession.query(ProjectsUser)
+            .filter(
+                ProjectsUser.project_id == task.project_id,
+                ProjectsUser.user_id == user_id,
+                ProjectsUser.active == True
+            )
+            .first()
+        )
+
+        if not current_user_assoc:
+            return HTTPFound(location=request.route_url('invalid_permissions'))
 
         # Get form data
         name = request.POST.get('name', '').strip()
@@ -160,7 +231,7 @@ def edit_task(request):
                 project_id=task.project_id,
                 timestamp=datetime.now(),
                 action='task_edited_title',
-                changes=f"old: {old_title} --> new: {name}"
+                changes=f"{old_title}, {name}"
             )
             request.dbsession.add(activity_log_title_changed)
 
@@ -174,7 +245,7 @@ def edit_task(request):
                 project_id=task.project_id,
                 timestamp=datetime.now(),
                 action='task_edited_description',
-                changes=f"old: {old_description} --> new: {description}"
+                changes=f"{old_description}, {description}"
             )
             request.dbsession.add(activity_log_description_changed)
 
@@ -189,7 +260,7 @@ def edit_task(request):
                 project_id=task.project_id,
                 timestamp=datetime.now(),
                 action='task_edited_duedate',
-                changes=f"old: {old_due_date.strftime('%Y-%m-%d')} --> new: {new_due_date.strftime('%Y-%m-%d')}"
+                changes=f"{old_due_date.strftime('%Y-%m-%d')}, {new_due_date.strftime('%Y-%m-%d')}"
             )
             request.dbsession.add(activity_log_due_date_changed)
 
@@ -198,16 +269,33 @@ def edit_task(request):
         return HTTPFound(location=request.route_url('task_by_id', id=task.id))
     except Exception as e:
         request.dbsession.rollback()
-        return HTTPBadRequest(f"Error editing task: {str(e)}")
+        return HTTPFound(location=request.route_url('invalid_permissions'))
 
 @view_config(route_name='delete_task', request_method='POST', permission="admin")
 @verify_session
 def delete_task(request):
     try:
         task_id = int(request.matchdict.get('id'))
+        user_id = request.session.get('user_id')
+        
         task = request.dbsession.query(Task).filter_by(id=task_id).first()
         if not task:
-            return HTTPNotFound("Task not found")
+            raise HTTPNotFound()
+
+        # Check if user is a member of the project
+        current_user_assoc = (
+            request.dbsession.query(ProjectsUser)
+            .filter(
+                ProjectsUser.project_id == task.project_id,
+                ProjectsUser.user_id == user_id,
+                ProjectsUser.active == True
+            )
+            .first()
+        )
+
+        if not current_user_assoc:
+            return HTTPFound(location=request.route_url('invalid_permissions'))
+            
         project_id = task.project_id
 
         if task.active:    
@@ -218,14 +306,14 @@ def delete_task(request):
                 task_id = task.id,
                 timestamp=datetime.now(),
                 action='task_removed',
-                changes=f"task.__repr__()"
+                changes=f"{task.task_title}"
             )
             request.dbsession.add(activity_log_deleted_task)
             request.dbsession.flush()
         return HTTPFound(location=request.route_url('project_by_id', id=project_id))
     except Exception as e:
         request.dbsession.rollback()
-        return HTTPBadRequest(f"Error deleting task: {str(e)}")
+        return HTTPFound(location=request.route_url('invalid_permissions'))
 
 
 @view_config(route_name='add_label', request_method='POST', permission="admin", require_csrf = True)
@@ -238,10 +326,18 @@ def add_label(request):
         relation = bool(request.POST.get('relation'))
         project = request.dbsession.query(Project).filter_by(id = project_id).first()
         if not project:
-            return HTTPNotFound("Project not found")
+            raise HTTPNotFound("Project not found")
        
         label = Label(project_id = project_id, label_name = label_name, label_hex_color = hex_color)
         request.dbsession.add(label)
+        label_added_log = ActivityLog(
+            user_id=request.session['user_id'],
+            project_id=project_id,
+            timestamp=datetime.now(),
+            action='project_added_label',
+            changes=f"{label.label_name}",
+        )
+        request.dbsession.add(label_added_log)
         request.dbsession.flush()
         if relation:
             task_id = int(request.POST.get('task_id'))
@@ -266,14 +362,12 @@ def assign_label(request):
         task_id = int(request.matchdict.get('id'))
         task = request.dbsession.query(Task).filter_by(id=task_id).first()
         if not task:
-            return HTTPNotFound("Task not found")
-        project_id = task.project_id
- 
+            raise HTTPNotFound("Task not found")
+        
         label_id = request.POST.get('label_id')
         if not label_id:
             return HTTPBadRequest("Label ID is required")
  
-        # Assuming you have a LabelsTask model to handle the many-to-many relationship
         labels_task = LabelsTask(
             labels_id=label_id,
             tasks_id=task.id
@@ -296,11 +390,37 @@ def toggle_label_for_task(request):
         labels_task = request.dbsession.query(LabelsTask).filter_by(labels_id=label_id, tasks_id=task_id).first()
         if labels_task:
             request.dbsession.delete(labels_task)
+
+            label = request.dbsession.query(Label).filter_by(id = label_id).first()
+
+            log_removed_label_task = ActivityLog(
+                user_id=request.session['user_id'],
+                task_id = task_id,
+                project_id = label.project_id,
+                timestamp=datetime.now(),
+                action='project_task_removed_label',
+                changes=f"{label.label_name}"
+            )
+            request.dbsession.add(log_removed_label_task)
+
             request.dbsession.flush()
             return Response('unassigned', status=200)
         else:
             new_labels_task = LabelsTask(labels_id=label_id, tasks_id=task_id)
             request.dbsession.add(new_labels_task)
+            
+            label = request.dbsession.query(Label).filter_by(id = label_id).first()
+
+            log_assigned_label_task = ActivityLog(
+                user_id=request.session['user_id'],
+                task_id = task_id,
+                project_id = label.project_id,
+                timestamp=datetime.now(),
+                action='project_task_assigned_label',
+                changes=f"{label.label_name}"
+            )
+            request.dbsession.add(log_assigned_label_task)
+            
             request.dbsession.flush()
             return Response('assigned', status=200)
     except Exception as e:
@@ -317,7 +437,7 @@ def edit_label(request):
         
         label = request.dbsession.query(Label).filter_by(id=label_id).first()
         if not label:
-            return HTTPNotFound("Label not found")
+            raise HTTPNotFound("Label not found")
 
         label.label_name = label_name
         label.label_hex_color = hex_color
@@ -334,3 +454,197 @@ def edit_label(request):
     except Exception as e:
         request.dbsession.rollback()
         return HTTPBadRequest(f"Error editing label: {str(e)}")
+
+@view_config(route_name="update_microtask_status", request_method="POST", renderer="json")
+@verify_session
+def update_microtask_status(request):
+    try:
+        data = request.json_body
+        microtask_id = int(data['microtask_id'])
+        new_status = data['new_status']
+
+        microtask = request.dbsession.query(Microtask).filter_by(id=microtask_id).first()
+        if not microtask:
+            return {"error": "Microtask not found"}
+
+        previous_status = microtask.status
+        if previous_status == new_status:
+            return {"message": "No status change"}
+        microtask.status = new_status
+
+        log_updated_microtask_status = ActivityLog(
+                user_id=request.session['user_id'],
+                project_id = microtask.task.project_id,
+                task_id = microtask.task_id,
+                microtask_id = microtask.id,
+                timestamp=datetime.now(),
+                action='microtask_edited_status',
+                changes=f"{microtask.status}"
+            )
+        request.dbsession.add(log_updated_microtask_status)
+
+        request.dbsession.flush()
+
+        return {"message": "Status updated"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@view_config(route_name="add_microtask_comment", request_method="POST", renderer="json")
+@verify_session
+def add_microtask_comment(request):
+    try:
+        # Get data from JSON body instead of POST
+        microtask_id = int(request.matchdict.get('microtask_id'))
+        data = request.json_body
+        content = data.get('content')
+
+        if not content:
+            return {"error": "Comment content cannot be empty"}
+
+        microtask = request.dbsession.query(Microtask).filter_by(id=microtask_id).first()
+        if not microtask:
+            return {"error": "Microtask not found"}
+
+        new_comment = MicrotaskComment(
+            user_id=request.session['user_id'],
+            microtask_id=microtask_id,
+            time_posted=datetime.now(),
+            content=content
+        )
+        request.dbsession.add(new_comment)
+
+        microtask_comment_added_log = ActivityLog(
+            user_id = request.session['user_id'],
+            microtask_id = microtask.id,
+            task_id = microtask.task_id,
+            project_id = microtask.task.project_id,
+            timestamp = datetime.now(),
+            action = "microtask_added_comment",
+            changes = content
+        )
+        request.dbsession.add(microtask_comment_added_log)        
+
+        request.dbsession.flush()
+
+        # Return the new comment data
+        return {
+            "message": "Comment added successfully",
+            "comment": {
+                "id": new_comment.id,
+                "user_id": new_comment.user_id,
+                "username": request.session.get('username'),
+                "time_posted": new_comment.time_posted.strftime('%Y-%m-%d %H:%M:%S'),
+                "content": new_comment.content
+            }
+        }
+    except Exception as e:
+        request.dbsession.rollback()
+        return {"error": str(e)}
+
+@view_config(route_name="get_microtask_comments", request_method="GET", renderer="json")
+@verify_session
+def get_microtask_comments(request):
+    try:
+        microtask_id = int(request.params.get('microtask_id'))
+        microtask = request.dbsession.query(Microtask).filter_by(id=microtask_id).first()
+
+        if not microtask:
+            return {"error": "Microtask not found"}
+
+        comments = []
+        for comment in microtask.comments:
+            user = comment.user
+            profile_picture_url = None
+            if user and user.user_image_id:
+                file = request.dbsession.query(File).filter_by(id=user.user_image_id).first()
+                if file:
+                    profile_picture_url = file.route
+            username = user.first_name + " " + user.last_name if user else "Unknown"
+            comments.append({
+                "id": comment.id,
+                "user_id": comment.user_id,
+                "username": username,
+                "profile_picture_url": profile_picture_url,
+                "content": comment.content,
+                "time_posted": comment.time_posted.strftime('%Y-%m-%d %H:%M:%S')
+            })
+
+        return {"comments": comments}
+    except Exception as e:
+        return {"error": str(e)}
+    
+@view_config(route_name="add_task_comment", request_method="POST", renderer="json")
+@verify_session
+def add_task_comment(request):
+    try:
+        task_id = int(request.matchdict.get('task_id'))
+        content = request.POST.get('content')
+
+        if not content:
+            return {"error": "Comment content cannot be empty"}
+
+        task = request.dbsession.query(Task).filter_by(id=task_id).first()
+        if not task:
+            return {"error": "Task not found"}
+
+        new_comment = TaskComment(
+            user_id=request.session['user_id'],
+            task_id=task_id,
+            time_posted=datetime.now(),
+            content=content
+        )
+        request.dbsession.add(new_comment)
+
+        comment_added_log = ActivityLog(
+            user_id = request.session['user_id'],
+            task_id = task_id,
+            project_id = task.project_id,
+            timestamp = datetime.now(),
+            action = "task_added_comment",
+            changes = content
+        )
+        request.dbsession.add(comment_added_log)
+
+        request.dbsession.flush()
+        return {
+            "message": "Comment added successfully",
+            "comment": {
+                "id": new_comment.id,
+                "user_id": new_comment.user_id,
+                "username": request.session.get('username'),
+                "time_posted": new_comment.time_posted.strftime('%Y-%m-%d %H:%M:%S'),
+                "content": new_comment.content
+            }
+        }
+    except Exception as e:
+        request.dbsession.rollback()
+        return {"error": str(e)}
+    
+@view_config(route_name="get_task_comments", request_method="GET", renderer="json")
+@verify_session
+def get_task_comments(request):
+    try:
+        task_id = int(request.params.get('task_id'))
+        task_c = request.dbsession.query(TaskComment).filter_by(task_id=task_id).all()
+        if not task_c:
+            return {"error": "No comments found for this task"}
+        comments = []
+        for c in task_c:
+            user = c.user
+            # Get the profile picture URL if available
+            profile_picture_url = None
+            if user and user.user_image_id:
+                file = request.dbsession.query(File).filter_by(id=user.user_image_id).first()
+                if file:
+                    profile_picture_url = file.route
+            username = user.first_name + " " + user.last_name if user else "Unknown"
+            comments.append({
+                "user_id": c.user_id,
+                "username": username,
+                "profile_picture_url": profile_picture_url,
+                "content": c.content,
+                "time_posted": c.time_posted.strftime('%Y-%m-%d %H:%M:%S')
+            })
+        return {"comments": comments}
+    except Exception as e:
+        return {"error": str(e)}
